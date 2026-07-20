@@ -22,10 +22,10 @@
   --text-primary: #0f172a;
   --text-secondary: #475569;
   --text-muted: #94a3b8;
-  --text-accent: #f97316; /* Orange */
+  --text-accent: #e85a2c; /* Softer Burnt Orange */
 
-  --accent-blue: #f97316; /* Reusing blue variable name but making it orange for backward compatibility */
-  --accent-blue-gradient: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  --accent-blue: #e85a2c; /* Reusing blue variable name but making it orange for backward compatibility */
+  --accent-blue-gradient: linear-gradient(135deg, #f05e2d 0%, #d14115 100%);
   --accent-green: #10b981;
   --accent-purple: #8b5cf6;
   --accent-amber: #f59e0b;
@@ -39,15 +39,15 @@
 
 :root[data-theme="dark"] {
   /* ── Dark Neumorphic Color Palette (Slate/Orange) ── */
-  --bg-primary: #2b2d31;
-  --bg-secondary: #202225;
-  --bg-neu-base: #26282c;
-  --bg-neu-inset: #202225;
-  --bg-card: #2b2d31;
+  --bg-primary: #26272b;
+  --bg-secondary: #1c1d21;
+  --bg-neu-base: #222327;
+  --bg-neu-inset: #1c1d21;
+  --bg-card: #26272b;
 
   /* Neumorphic Dual Shadow Tokens for Dark Mode */
-  --neu-shadow-dark: #1e1f22;
-  --neu-shadow-light: #383b40;
+  --neu-shadow-dark: #151619;
+  --neu-shadow-light: #37383d;
   
   --neu-flat: 8px 8px 16px var(--neu-shadow-dark), -8px -8px 16px var(--neu-shadow-light);
   --neu-flat-hover: 11px 11px 22px var(--neu-shadow-dark), -11px -11px 22px var(--neu-shadow-light);
@@ -59,10 +59,10 @@
   --text-primary: #f8fafc;
   --text-secondary: #cbd5e1;
   --text-muted: #64748b;
-  --text-accent: #f97316; /* Orange */
+  --text-accent: #e85a2c; /* Softer Burnt Orange */
 
-  --accent-blue: #f97316;
-  --accent-blue-gradient: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  --accent-blue: #e85a2c;
+  --accent-blue-gradient: linear-gradient(135deg, #f05e2d 0%, #d14115 100%);
   --accent-green: #10b981;
   --accent-purple: #8b5cf6;
   --accent-amber: #f59e0b;
