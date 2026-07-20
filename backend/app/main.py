@@ -18,12 +18,20 @@ os.makedirs(settings.pdf_output_dir, exist_ok=True)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup/shutdown lifecycle — create tables and upload directories."""
+    import logging
+    logger = logging.getLogger(__name__)
+
     # Create upload + PDF output directories
     os.makedirs(settings.upload_dir, exist_ok=True)
     os.makedirs(settings.pdf_output_dir, exist_ok=True)
 
-    # Create tables if they don't exist (dev convenience; use alembic in prod)
-    await init_db()
+    # Try to create tables, but don't crash if DB is temporarily unreachable
+    # (Neon free tier has cold starts too)
+    try:
+        await init_db()
+        logger.info("Database tables initialized successfully")
+    except Exception as e:
+        logger.warning(f"Database init skipped (will retry on first request): {e}")
 
     yield  # App runs here
 
