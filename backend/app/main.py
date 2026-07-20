@@ -65,6 +65,7 @@ app.include_router(pipeline.router, prefix="/api/pipeline", tags=["Pipeline"])
 app.include_router(settings_api.router, prefix="/api/settings", tags=["Settings"])
 
 
+@app.get("/")
 @app.get("/api/health")
 async def health_check():
     """Health check endpoint for uptime monitoring and cron pings."""
