@@ -1,43 +1,40 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  /* ── Color Palette ── */
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-neu-base: #141e33;
-  --bg-card: #152035;
+  /* ── Light Soft Neumorphic Color Palette ── */
+  --bg-primary: #e6ecf5;
+  --bg-secondary: #e6ecf5;
+  --bg-neu-base: #dcdeb5;
+  --bg-neu-inset: #dce2ed;
+  --bg-card: #e6ecf5;
 
-  /* Neumorphic Shadow Tokens */
-  --neu-shadow-dark: #0a0f1d;
-  --neu-shadow-light: #1e2c49;
+  /* Neumorphic Dual Shadow Tokens */
+  --neu-shadow-dark: #b8c2d1;
+  --neu-shadow-light: #ffffff;
   
-  --neu-flat: 6px 6px 14px var(--neu-shadow-dark), -6px -6px 14px var(--neu-shadow-light);
-  --neu-flat-hover: 8px 8px 18px var(--neu-shadow-dark), -8px -8px 18px var(--neu-shadow-light);
-  --neu-pressed: inset 4px 4px 8px var(--neu-shadow-dark), inset -4px -4px 8px var(--neu-shadow-light);
-  --neu-concave: linear-gradient(145deg, #121b2e, #18243c);
-  --neu-convex: linear-gradient(145deg, #18243c, #121b2e);
+  --neu-flat: 8px 8px 16px var(--neu-shadow-dark), -8px -8px 16px var(--neu-shadow-light);
+  --neu-flat-hover: 11px 11px 22px var(--neu-shadow-dark), -11px -11px 22px var(--neu-shadow-light);
+  --neu-pressed: inset 5px 5px 10px var(--neu-shadow-dark), inset -5px -5px 10px var(--neu-shadow-light);
 
-  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-subtle: rgba(255, 255, 255, 0.6);
   --border-accent: rgba(59, 130, 246, 0.4);
 
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --text-accent: #60a5fa;
+  --text-primary: #2d3748;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --text-accent: #2563eb;
 
   --accent-blue: #3b82f6;
   --accent-blue-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  --accent-green: #10b981;
-  --accent-green-gradient: linear-gradient(135deg, #10b981 0%, #047857 100%);
-  --accent-purple: #8b5cf6;
-  --accent-purple-gradient: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
-  --accent-amber: #f59e0b;
-  --accent-red: #ef4444;
+  --accent-green: #059669;
+  --accent-purple: #7c3aed;
+  --accent-amber: #d97706;
+  --accent-red: #dc2626;
 
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --radius-xl: 26px;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 30px;
 
   --sidebar-width: 260px;
 }
@@ -75,7 +72,7 @@ a:hover { text-decoration: underline; }
 .main-content {
   flex: 1;
   margin-left: var(--sidebar-width);
-  padding: 32px 40px;
+  padding: 36px 44px;
   min-height: 100vh;
 }
 
@@ -85,7 +82,7 @@ a:hover { text-decoration: underline; }
   border-radius: var(--radius-lg);
   box-shadow: var(--neu-flat);
   border: 1px solid var(--border-subtle);
-  padding: 24px;
+  padding: 26px;
   transition: all 0.25s ease;
 }
 
@@ -95,19 +92,19 @@ a:hover { text-decoration: underline; }
 }
 
 .neu-inset {
-  background: var(--bg-neu-base);
+  background: var(--bg-neu-inset);
   border-radius: var(--radius-md);
   box-shadow: var(--neu-pressed);
-  padding: 16px;
+  padding: 18px;
 }
 
 .neu-button {
   background: var(--bg-card);
   color: var(--text-primary);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-xl);
   box-shadow: var(--neu-flat);
-  padding: 10px 20px;
+  padding: 12px 22px;
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
@@ -132,33 +129,33 @@ a:hover { text-decoration: underline; }
   background: var(--accent-blue-gradient);
   color: #ffffff;
   border: none;
-  box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.4), -2px -2px 8px rgba(255, 255, 255, 0.1);
+  box-shadow: 6px 6px 14px rgba(59, 130, 246, 0.35), -4px -4px 10px rgba(255, 255, 255, 0.8);
 }
 
 .neu-button-primary:hover {
   color: #ffffff;
-  box-shadow: 6px 6px 16px rgba(0, 0, 0, 0.5), -2px -2px 10px rgba(255, 255, 255, 0.2);
+  box-shadow: 8px 8px 18px rgba(59, 130, 246, 0.45), -4px -4px 12px #ffffff;
 }
 
 .neu-button-danger {
   background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
   color: #ffffff;
   border: none;
-  box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 6px 6px 14px rgba(239, 68, 68, 0.35), -4px -4px 10px #ffffff;
 }
 
 .neu-button-danger:hover {
   color: #ffffff;
-  box-shadow: 6px 6px 16px rgba(0, 0, 0, 0.5);
+  box-shadow: 8px 8px 18px rgba(239, 68, 68, 0.45), -4px -4px 12px #ffffff;
 }
 
 .neu-input, .neu-select {
-  background: var(--bg-neu-base);
+  background: var(--bg-neu-inset);
   color: var(--text-primary);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: var(--radius-md);
   box-shadow: var(--neu-pressed);
-  padding: 12px 16px;
+  padding: 12px 18px;
   font-size: 14px;
   outline: none;
   width: 100%;
@@ -173,8 +170,8 @@ a:hover { text-decoration: underline; }
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
-  border-radius: 20px;
+  padding: 6px 14px;
+  border-radius: var(--radius-xl);
   font-size: 12px;
   font-weight: 600;
   box-shadow: var(--neu-flat);
@@ -195,14 +192,15 @@ a:hover { text-decoration: underline; }
 
 .neu-pill {
   border-radius: 30px;
-  padding: 8px 16px;
+  padding: 10px 18px;
   background: var(--bg-card);
   box-shadow: var(--neu-flat);
   cursor: pointer;
   border: 1px solid var(--border-subtle);
   transition: all 0.2s ease;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 13px;
+  color: var(--text-primary);
 }
 
 .neu-pill.selected {
@@ -217,9 +215,9 @@ a:hover { text-decoration: underline; }
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 10px;
-  border-radius: 5px;
-  background: var(--bg-neu-base);
+  height: 12px;
+  border-radius: 6px;
+  background: var(--bg-neu-inset);
   box-shadow: var(--neu-pressed);
   outline: none;
 }
@@ -227,18 +225,19 @@ a:hover { text-decoration: underline; }
 .neu-range::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  background: var(--accent-blue-gradient);
-  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.4);
+  background: var(--bg-card);
+  box-shadow: 4px 4px 8px var(--neu-shadow-dark), -4px -4px 8px var(--neu-shadow-light);
+  border: 2px solid var(--accent-blue);
   cursor: pointer;
 }
 
 /* Animations */
 @keyframes pulseGlow {
   0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+  70% { box-shadow: 0 0 0 12px rgba(59, 130, 246, 0); }
   100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
 }
 
