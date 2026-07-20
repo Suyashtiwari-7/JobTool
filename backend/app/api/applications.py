@@ -5,7 +5,7 @@ import os
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -268,3 +268,16 @@ async def download_cover_letter(
         filename=f"cover_letter_{app.batch_id}_{app_id}.pdf",
         media_type="application/pdf",
     )
+
+
+@router.delete("/clear")
+async def clear_applications(
+    db: AsyncSession = Depends(get_db),
+    _user: str = Depends(verify_token),
+):
+    """Clear all applications and pipeline history to reset review queue."""
+    from app.db.models import PipelineRun
+    await db.execute(delete(Application))
+    await db.execute(delete(PipelineRun))
+    await db.flush()
+    return {"message": "Application history and queue cleared successfully"}

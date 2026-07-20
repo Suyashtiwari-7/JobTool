@@ -11,7 +11,6 @@ from app.db.models import SearchFilter
 
 router = APIRouter()
 
-# Supported countries with Adzuna country codes
 SUPPORTED_COUNTRIES = {
     "in": "India",
     "us": "United States",
@@ -42,6 +41,9 @@ class FilterCreate(BaseModel):
     domain: str | None = None
     experience_level: str | None = None
     target_count: int = Field(default=20, ge=1, le=500)
+    schedule_start_time: str | None = "08:00"
+    schedule_end_time: str | None = "12:00"
+    continuous_hours: int | None = 12
 
 
 class FilterResponse(BaseModel):
@@ -52,6 +54,9 @@ class FilterResponse(BaseModel):
     domain: str | None
     experience_level: str | None
     target_count: int
+    schedule_start_time: str | None = "08:00"
+    schedule_end_time: str | None = "12:00"
+    continuous_hours: int | None = 12
     is_active: bool
 
     model_config = {"from_attributes": True}
@@ -76,7 +81,7 @@ async def get_active_filter(
 ):
     """Get the currently active search filter."""
     result = await db.execute(
-        select(SearchFilter).where(SearchFilter.is_active.is_(True)).limit(1)
+        select(SearchFilter).where(SearchFilter.is_active.is_(True)).order_by(SearchFilter.created_at.desc()).limit(1)
     )
     filt = result.scalar_one_or_none()
     if not filt:
@@ -91,19 +96,16 @@ async def create_or_update_filter(
     _user: str = Depends(verify_token),
 ):
     """Create or update the active search filter. Deactivates any previous filter."""
-    # Validate country codes
     invalid = [c for c in body.countries if c not in SUPPORTED_COUNTRIES]
     if invalid:
         raise HTTPException(status_code=400, detail=f"Invalid country codes: {invalid}")
 
-    # Deactivate existing filters
     result = await db.execute(
         select(SearchFilter).where(SearchFilter.is_active.is_(True))
     )
     for old in result.scalars().all():
         old.is_active = False
 
-    # Create new filter
     new_filter = SearchFilter(
         name=body.name,
         countries=body.countries,
@@ -111,6 +113,9 @@ async def create_or_update_filter(
         domain=body.domain,
         experience_level=body.experience_level,
         target_count=body.target_count,
+        schedule_start_time=body.schedule_start_time or "08:00",
+        schedule_end_time=body.schedule_end_time or "12:00",
+        continuous_hours=body.continuous_hours or 12,
         is_active=True,
     )
     db.add(new_filter)

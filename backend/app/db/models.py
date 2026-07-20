@@ -62,6 +62,7 @@ class Resume(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     filename = Column(String(255), nullable=False)
+    role_label = Column(String(100), nullable=True, default="General", doc="Target role/label for this resume")
     file_path = Column(String(500), nullable=False)
     raw_text = Column(Text, nullable=True, doc="Extracted plain text from PDF/DOCX")
     parsed_json = Column(JSONB, nullable=True, doc="LLM-structured resume data")
@@ -84,6 +85,9 @@ class SearchFilter(Base):
     domain = Column(String(100), nullable=True, doc="Industry/domain filter")
     experience_level = Column(String(50), nullable=True, doc="Entry/Mid/Senior/Lead/Executive")
     target_count = Column(Integer, nullable=False, default=20, doc="Number of top jobs to target")
+    schedule_start_time = Column(String(10), nullable=True, default="08:00", doc="Daily schedule window start")
+    schedule_end_time = Column(String(10), nullable=True, default="12:00", doc="Daily schedule window end")
+    continuous_hours = Column(Integer, nullable=True, default=12, doc="Continuous run duration in hours")
     is_active = Column(Boolean, default=True, doc="Active filter used by the pipeline")
     created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
     updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
