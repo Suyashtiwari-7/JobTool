@@ -1,0 +1,66 @@
+"""Default company slug lists for Greenhouse, Lever, and Ashby sources.
+
+These are well-known tech companies that use these ATS platforms.
+Users can add/remove companies via the Settings page.
+"""
+
+# Format: (slug, human_readable_name)
+DEFAULT_COMPANIES: dict[str, list[tuple[str, str]]] = {
+    "greenhouse": [
+        ("airbnb", "Airbnb"),
+        ("stripe", "Stripe"),
+        ("figma", "Figma"),
+        ("notion", "Notion"),
+        ("datadog", "Datadog"),
+        ("airtable", "Airtable"),
+        ("plaid", "Plaid"),
+        ("brex", "Brex"),
+        ("coinbase", "Coinbase"),
+        ("discord", "Discord"),
+        ("duolingo", "Duolingo"),
+        ("gusto", "Gusto"),
+        ("hashicorp", "HashiCorp"),
+        ("hubspot", "HubSpot"),
+        ("ironclad", "Ironclad"),
+        ("mongodb", "MongoDB"),
+        ("nerdwallet", "NerdWallet"),
+        ("okta", "Okta"),
+        ("pagerduty", "PagerDuty"),
+        ("pinterest", "Pinterest"),
+        ("reddit", "Reddit"),
+        ("robinhood", "Robinhood"),
+        ("samsara", "Samsara"),
+        ("snyk", "Snyk"),
+        ("sourcegraph", "Sourcegraph"),
+        ("squarespace", "Squarespace"),
+        ("twilio", "Twilio"),
+        ("wealthsimple", "Wealthsimple"),
+    ],
+    "lever": [
+        ("netflix", "Netflix"),
+        ("shopify", "Shopify"),
+        ("twitch", "Twitch"),
+        ("included-health", "Included Health"),
+        ("navan", "Navan"),
+        ("anduril", "Anduril"),
+        ("cruise", "Cruise"),
+        ("faire", "Faire"),
+        ("impossible-foods", "Impossible Foods"),
+        ("lacework", "Lacework"),
+        ("replit", "Replit"),
+        ("rippling", "Rippling"),
+        ("scale", "Scale AI"),
+        ("tailscale", "Tailscale"),
+        ("vercel", "Vercel"),
+    ],
+    "ashby": [
+        ("ramp", "Ramp"),
+        ("anthropic", "Anthropic"),
+        ("linear", "Linear"),
+        ("mercury", "Mercury"),
+        ("retool", "Retool"),
+        ("vercel", "Vercel"),
+        ("supabase", "Supabase"),
+        ("resend", "Resend"),
+    ],
+}
