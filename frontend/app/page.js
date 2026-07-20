@@ -229,12 +229,46 @@ export default function DashboardPage() {
       ) : (
         <>
           {/* ── Top Stats Bar ── */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 20, marginBottom: 32 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 20, marginBottom: 24 }}>
             <StatBox label="Total Processed" value={stats?.total || 0} icon="📁" />
             <StatBox label="Queued Review" value={stats?.queued || 0} icon="⏳" highlight="#3b82f6" />
             <StatBox label="Applied" value={stats?.applied || 0} icon="✅" highlight="#10b981" />
             <StatBox label="Interviews/Responses" value={(stats?.response_received || 0) + (stats?.interview || 0)} icon="🎉" highlight="#8b5cf6" />
             <StatBox label="Avg Match Score" value={stats?.avg_match_score ? `${Math.round(stats.avg_match_score)}%` : '—'} icon="🎯" />
+          </div>
+
+          {/* ── MASTER AUTOMATION ENGINE BANNER ── */}
+          <div className="neu-card" style={{ marginBottom: 32, background: running ? 'linear-gradient(135deg, #059669 0%, #047857 100%)' : 'var(--bg-card)', color: running ? '#ffffff' : 'var(--text-primary)', border: '2px solid var(--accent-blue)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 20 }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <h2 style={{ fontSize: 20, fontWeight: 800 }}>🚀 Master Automation Engine</h2>
+                <span className={`neu-badge ${running ? 'neu-badge-active' : 'neu-badge-info'}`}>
+                  {running ? '🟢 RUNNING ON CLOUD' : '⏸️ IDLE / READY'}
+                </span>
+              </div>
+              <p style={{ fontSize: 13, color: running ? '#e2e8f0' : 'var(--text-secondary)', marginTop: 6 }}>
+                {running
+                  ? `Sourcing & tailoring top ${targetCount || 50} best role openings continuously for ${continuousHours || 12} Hours...`
+                  : `Configured to target ${targetCount || 50} best role openings across selected domains. Click START below to begin.`}
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+              <button
+                onClick={handleRunPipeline}
+                disabled={running}
+                className={`neu-button ${running ? '' : 'neu-button-primary'}`}
+                style={{
+                  padding: '14px 28px',
+                  fontSize: 16,
+                  fontWeight: 800,
+                  borderRadius: 30,
+                  boxShadow: running ? 'none' : '0 8px 24px rgba(59, 130, 246, 0.4)',
+                }}
+              >
+                {running ? '⚡ PIPELINE IS ACTIVE...' : '▶️ START AUTOMATED PIPELINE NOW'}
+              </button>
+            </div>
           </div>
 
           {/* ── 3 Neumorphic Cards Grid ── */}
@@ -439,6 +473,16 @@ export default function DashboardPage() {
                     <span>48 Hrs</span>
                   </div>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={handleRunPipeline}
+                  disabled={running}
+                  className={`neu-button ${running ? '' : 'neu-button-primary'}`}
+                  style={{ width: '100%', justifyContent: 'center', marginTop: 4, padding: '12px' }}
+                >
+                  {running ? '⚡ PIPELINE IS ACTIVE...' : '▶️ START AUTOMATED PIPELINE'}
+                </button>
 
                 <div className="neu-inset" style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>
                   <span style={{ color: 'var(--accent-green)', fontWeight: 600 }}>🟢 Automated Cloud Processing: </span>
