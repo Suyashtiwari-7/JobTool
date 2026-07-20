@@ -5,13 +5,25 @@ from sqlalchemy.orm import DeclarativeBase
 
 from app.config import settings
 
+# Sanitize database URL for asyncpg (asyncpg does not accept ?sslmode= parameter)
+db_url = settings.database_url
+if "?sslmode=" in db_url:
+    db_url = db_url.split("?sslmode=")[0]
+elif "&sslmode=" in db_url:
+    db_url = db_url.split("&sslmode=")[0]
+
+connect_args = {}
+if "localhost" not in db_url and "127.0.0.1" not in db_url:
+    connect_args["ssl"] = "require"
+
 # Create async engine — pool settings tuned for free-tier Neon PG
 engine = create_async_engine(
-    settings.database_url,
+    db_url,
     echo=False,
     pool_size=5,
     max_overflow=10,
     pool_pre_ping=True,  # Detect stale connections (important for serverless PG)
+    connect_args=connect_args,
 )
 
 # Session factory
