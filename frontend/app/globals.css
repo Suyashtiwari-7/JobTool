@@ -38,16 +38,16 @@
 }
 
 :root[data-theme="dark"] {
-  /* ── Dark Neumorphic Color Palette (Orange/Black) ── */
-  --bg-primary: #0a0a0a;
-  --bg-secondary: #121212;
-  --bg-neu-base: #171717;
-  --bg-neu-inset: #0f0f0f;
-  --bg-card: #171717;
+  /* ── Dark Neumorphic Color Palette (Slate/Orange) ── */
+  --bg-primary: #2b2d31;
+  --bg-secondary: #202225;
+  --bg-neu-base: #26282c;
+  --bg-neu-inset: #202225;
+  --bg-card: #2b2d31;
 
   /* Neumorphic Dual Shadow Tokens for Dark Mode */
-  --neu-shadow-dark: #050505;
-  --neu-shadow-light: #242424;
+  --neu-shadow-dark: #1e1f22;
+  --neu-shadow-light: #383b40;
   
   --neu-flat: 8px 8px 16px var(--neu-shadow-dark), -8px -8px 16px var(--neu-shadow-light);
   --neu-flat-hover: 11px 11px 22px var(--neu-shadow-dark), -11px -11px 22px var(--neu-shadow-light);

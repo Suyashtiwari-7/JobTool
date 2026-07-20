@@ -219,13 +219,29 @@ export default function DashboardPage() {
             🧹 {clearing ? 'Clearing...' : 'Clear History'}
           </button>
 
-          <button
+          <div 
             onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-            className="neu-button"
-            style={{ padding: '12px 16px', fontSize: 15 }}
+            className="neu-inset" 
+            style={{ width: 120, height: 46, borderRadius: 30, position: 'relative', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0 4px', border: '1px solid var(--border-subtle)' }}
           >
-            {theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode'}
-          </button>
+            <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', padding: '0 14px', fontSize: 12, fontWeight: 800, color: 'var(--text-muted)' }}>
+              <span>ON</span>
+              <span>OFF</span>
+            </div>
+            <div style={{
+              width: 56, height: 38, borderRadius: 24, background: 'var(--bg-card)', 
+              boxShadow: 'var(--neu-flat)', 
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontWeight: 800, fontSize: 12,
+              position: 'absolute',
+              transition: 'transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)',
+              transform: theme === 'light' ? 'translateX(0px)' : 'translateX(56px)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border-subtle)'
+            }}>
+              {theme === 'light' ? '☀️' : '🌙'}
+            </div>
+          </div>
         </div>
       </div>
 
