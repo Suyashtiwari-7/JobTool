@@ -344,18 +344,32 @@ export default function DashboardPage() {
                 </div>
 
                 <div>
-                  <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: 8 }}>
-                    Max Target Applications ({targetCount} best openings)
+                  <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
+                    Max Target Applications (Type exact number or click preset)
                   </label>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    {[10, 50, 100, 150, 200].map((num) => (
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 8 }}>
+                    <input
+                      type="number"
+                      min="1"
+                      max="1000"
+                      value={targetCount}
+                      onChange={(e) => setTargetCount(e.target.value === '' ? '' : parseInt(e.target.value))}
+                      className="neu-input"
+                      placeholder="e.g. 100, 150, 250"
+                      style={{ flex: 1 }}
+                    />
+                    <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>openings</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {[10, 50, 100, 150, 200, 300].map((num) => (
                       <button
                         key={num}
                         type="button"
                         onClick={() => setTargetCount(num)}
                         className={`neu-pill ${targetCount === num ? 'selected' : ''}`}
+                        style={{ padding: '6px 12px', fontSize: 12 }}
                       >
-                        {num} Openings
+                        {num}
                       </button>
                     ))}
                   </div>
@@ -395,27 +409,40 @@ export default function DashboardPage() {
 
                 <div>
                   <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
-                    Continuous Run Duration ({continuousHours} Hours)
+                    Continuous Run Duration (Type Hours or Slider)
                   </label>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 8 }}>
+                    <input
+                      type="number"
+                      min="1"
+                      max="72"
+                      value={continuousHours}
+                      onChange={(e) => setContinuousHours(e.target.value === '' ? '' : parseInt(e.target.value))}
+                      className="neu-input"
+                      placeholder="e.g. 12, 24"
+                      style={{ width: 100 }}
+                    />
+                    <span style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 600 }}>Hours</span>
+                  </div>
                   <input
                     type="range"
                     min="1"
-                    max="24"
-                    value={continuousHours}
-                    onChange={(e) => setContinuousHours(e.target.value)}
+                    max="48"
+                    value={continuousHours || 12}
+                    onChange={(e) => setContinuousHours(parseInt(e.target.value))}
                     className="neu-range"
                   />
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
                     <span>1 Hr</span>
-                    <span>6 Hrs</span>
-                    <span>12 Hrs (Recommended)</span>
+                    <span>12 Hrs</span>
                     <span>24 Hrs</span>
+                    <span>48 Hrs</span>
                   </div>
                 </div>
 
                 <div className="neu-inset" style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>
-                  <span style={{ color: 'var(--accent-green)', fontWeight: 600 }}>🟢 Cloud Webhook Active: </span>
-                  Pipeline will trigger automatically every day during your selected timeframe on Render.
+                  <span style={{ color: 'var(--accent-green)', fontWeight: 600 }}>🟢 Automated Cloud Processing: </span>
+                  Automated tailoring runs in the background. Applications & PDFs automatically expire after 15 days to keep cloud storage clean.
                 </div>
               </div>
             </div>

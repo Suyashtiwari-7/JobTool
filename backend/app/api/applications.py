@@ -1,6 +1,8 @@
 """Application review queue endpoints."""
 
 import os
+import re
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
@@ -14,6 +16,26 @@ from app.db.database import get_db
 from app.db.models import Application, ApplicationStatus, Job
 
 router = APIRouter()
+
+
+async def cleanup_old_applications(db: AsyncSession):
+    """Auto-delete applications and generated PDF files older than 15 days."""
+    cutoff = datetime.now(timezone.utc) - timedelta(days=15)
+    result = await db.execute(select(Application).where(Application.created_at < cutoff))
+    old_apps = result.scalars().all()
+    for app in old_apps:
+        if app.tailored_resume_pdf and os.path.exists(app.tailored_resume_pdf):
+            try:
+                os.remove(app.tailored_resume_pdf)
+            except Exception:
+                pass
+        if app.cover_letter_pdf and os.path.exists(app.cover_letter_pdf):
+            try:
+                os.remove(app.cover_letter_pdf)
+            except Exception:
+                pass
+        await db.delete(app)
+    await db.flush()
 
 
 class JobSummary(BaseModel):
@@ -73,7 +95,8 @@ async def get_stats(
     db: AsyncSession = Depends(get_db),
     _user: str = Depends(verify_token),
 ):
-    """Dashboard statistics for all applications."""
+    """Dashboard statistics for all applications (triggers 15-day cleanup)."""
+    await cleanup_old_applications(db)
     result = await db.execute(select(Application))
     apps = result.scalars().all()
 
@@ -228,20 +251,24 @@ async def download_tailored_resume(
     db: AsyncSession = Depends(get_db),
     _user: str = Depends(verify_token),
 ):
-    """Download the tailored resume PDF for an application."""
+    """Download the tailored resume PDF formatted as Company_JobTitle_Resume.pdf."""
     result = await db.execute(
-        select(Application).where(Application.id == app_id)
+        select(Application).options(joinedload(Application.job)).where(Application.id == app_id)
     )
-    app = result.scalar_one_or_none()
+    app = result.unique().scalar_one_or_none()
     if not app or not app.tailored_resume_pdf:
         raise HTTPException(404, "Tailored resume PDF not found")
 
     if not os.path.exists(app.tailored_resume_pdf):
         raise HTTPException(404, "PDF file missing from server")
 
+    company = re.sub(r"[^\w\-_]", "_", app.job.company if app.job else "Company").strip("_")
+    title = re.sub(r"[^\w\-_]", "_", app.job.title if app.job else "Job").strip("_")
+    filename = f"{company}_{title}_Resume.pdf"
+
     return FileResponse(
         app.tailored_resume_pdf,
-        filename=f"resume_{app.batch_id}_{app_id}.pdf",
+        filename=filename,
         media_type="application/pdf",
     )
 
@@ -252,20 +279,24 @@ async def download_cover_letter(
     db: AsyncSession = Depends(get_db),
     _user: str = Depends(verify_token),
 ):
-    """Download the tailored cover letter PDF for an application."""
+    """Download the tailored cover letter PDF formatted as Company_JobTitle_CoverLetter.pdf."""
     result = await db.execute(
-        select(Application).where(Application.id == app_id)
+        select(Application).options(joinedload(Application.job)).where(Application.id == app_id)
     )
-    app = result.scalar_one_or_none()
+    app = result.unique().scalar_one_or_none()
     if not app or not app.cover_letter_pdf:
         raise HTTPException(404, "Cover letter PDF not found")
 
     if not os.path.exists(app.cover_letter_pdf):
         raise HTTPException(404, "PDF file missing from server")
 
+    company = re.sub(r"[^\w\-_]", "_", app.job.company if app.job else "Company").strip("_")
+    title = re.sub(r"[^\w\-_]", "_", app.job.title if app.job else "Job").strip("_")
+    filename = f"{company}_{title}_CoverLetter.pdf"
+
     return FileResponse(
         app.cover_letter_pdf,
-        filename=f"cover_letter_{app.batch_id}_{app_id}.pdf",
+        filename=filename,
         media_type="application/pdf",
     )
 
