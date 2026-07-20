@@ -165,24 +165,24 @@ a:hover { text-decoration: underline; }
   background: var(--accent-blue-gradient);
   color: #ffffff;
   border: none;
-  box-shadow: 6px 6px 14px rgba(59, 130, 246, 0.35), -4px -4px 10px rgba(255, 255, 255, 0.8);
+  box-shadow: var(--neu-flat);
 }
 
 .neu-button-primary:hover {
   color: #ffffff;
-  box-shadow: 8px 8px 18px rgba(59, 130, 246, 0.45), -4px -4px 12px #ffffff;
+  box-shadow: var(--neu-flat-hover);
 }
 
 .neu-button-danger {
   background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
   color: #ffffff;
   border: none;
-  box-shadow: 6px 6px 14px rgba(239, 68, 68, 0.35), -4px -4px 10px #ffffff;
+  box-shadow: var(--neu-flat);
 }
 
 .neu-button-danger:hover {
   color: #ffffff;
-  box-shadow: 8px 8px 18px rgba(239, 68, 68, 0.45), -4px -4px 12px #ffffff;
+  box-shadow: var(--neu-flat-hover);
 }
 
 .neu-input, .neu-select {
