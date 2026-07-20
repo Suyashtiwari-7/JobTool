@@ -260,26 +260,6 @@ export default function DashboardPage() {
             <StatBox label="Avg Match Score" value={stats?.avg_match_score ? `${Math.round(stats.avg_match_score)}%` : '—'} icon="🎯" />
           </div>
 
-          {/* ── MASTER AUTOMATION ENGINE BANNER ── */}
-          <div className="neu-card" style={{ marginBottom: 32, background: running ? 'linear-gradient(135deg, #059669 0%, #047857 100%)' : 'var(--bg-card)', color: running ? '#ffffff' : 'var(--text-primary)', border: '2px solid var(--accent-blue)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 20 }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <h2 style={{ fontSize: 20, fontWeight: 800 }}>🚀 Master Automation Engine</h2>
-                <span className={`neu-badge ${running ? 'neu-badge-active' : 'neu-badge-info'}`}>
-                  {running ? '🟢 RUNNING ON CLOUD' : '⏸️ IDLE / READY'}
-                </span>
-              </div>
-              <p style={{ fontSize: 13, color: running ? '#e2e8f0' : 'var(--text-secondary)', marginTop: 6 }}>
-                {running
-                  ? `Sourcing & tailoring top ${targetCount || 50} best role openings continuously for ${continuousHours || 12} Hours...`
-                  : `Configured to target ${targetCount || 50} best role openings across selected domains. Click START below to begin.`}
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <span style={{ fontWeight: 600 }}>{running ? 'Engine Active' : 'Ready'}</span>
-            </div>
-          </div>
 
           {/* ── 3 Neumorphic Cards Grid ── */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 24, marginBottom: 32 }}>
@@ -374,18 +354,6 @@ export default function DashboardPage() {
                   />
                 </div>
 
-                <div>
-                  <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
-                    Industry Domain / Sector
-                  </label>
-                  <input
-                    type="text"
-                    value={domain}
-                    onChange={(e) => setDomain(e.target.value)}
-                    className="neu-input"
-                    placeholder="e.g. Fintech, SaaS, AI/ML"
-                  />
-                </div>
 
                 <div>
                   <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
@@ -404,19 +372,7 @@ export default function DashboardPage() {
                     />
                     <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>openings</span>
                   </div>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    {[10, 50, 100, 150, 200, 300].map((num) => (
-                      <button
-                        key={num}
-                        type="button"
-                        onClick={() => setTargetCount(num)}
-                        className={`neu-pill ${targetCount === num ? 'selected' : ''}`}
-                        style={{ padding: '6px 12px', fontSize: 12 }}
-                      >
-                        {num}
-                      </button>
-                    ))}
-                  </div>
+
                 </div>
 
                 <button type="submit" disabled={savingFilter} className="neu-button" style={{ marginTop: 6, justifyContent: 'center' }}>
