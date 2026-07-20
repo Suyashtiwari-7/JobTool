@@ -197,10 +197,10 @@ export default function DashboardPage() {
     <AuthLayout>
       {/* ── Top Header Bar ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <img src="/logo.png" alt="JobTool Logo" style={{ width: 48, height: 48, borderRadius: 12, objectFit: 'cover', boxShadow: 'var(--neu-flat)' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          <img src="/logo.png" alt="JobTool Logo" style={{ width: 72, height: 72, borderRadius: 16, objectFit: 'cover', boxShadow: 'var(--neu-flat)' }} />
           <div>
-            <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)' }}>
+            <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
               ⚡ Status: Cloud Engine
             </h1>
             <p style={{ color: 'var(--text-secondary)', fontSize: 14, fontWeight: 600, marginTop: 4 }}>
