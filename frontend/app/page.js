@@ -198,7 +198,7 @@ export default function DashboardPage() {
       {/* ── Top Header Bar ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ background: 'var(--accent-blue-gradient)', color: '#fff', width: 48, height: 48, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 800 }}>JT</div>
+          <img src="/logo.png" alt="JobTool Logo" style={{ width: 48, height: 48, borderRadius: 12, objectFit: 'cover', boxShadow: 'var(--neu-flat)' }} />
           <div>
             <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)' }}>
               ⚡ Status: Cloud Engine
