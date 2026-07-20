@@ -30,6 +30,7 @@ export default function DashboardPage() {
   const [uploading, setUploading] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [savingFilter, setSavingFilter] = useState(false);
+  const [theme, setTheme] = useState('light');
 
   // Form states
   const [newRoleLabel, setNewRoleLabel] = useState('Fullstack Developer');
@@ -47,6 +48,10 @@ export default function DashboardPage() {
   useEffect(() => {
     loadAllData();
   }, []);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
 
   async function loadAllData() {
     try {
@@ -192,13 +197,16 @@ export default function DashboardPage() {
     <AuthLayout>
       {/* ── Top Header Bar ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
-        <div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--text-primary)' }}>
-            JobTool Control Center
-          </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 4 }}>
-            Single-Page Automated Application Pipeline & Resume Manager
-          </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div style={{ background: 'var(--accent-blue-gradient)', color: '#fff', width: 48, height: 48, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 800 }}>JT</div>
+          <div>
+            <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)' }}>
+              ⚡ Status: Cloud Engine
+            </h1>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 14, fontWeight: 600, marginTop: 4 }}>
+              Auto-Sourcing: {running ? <span style={{ color: 'var(--accent-green)' }}>Active</span> : 'Standby'}
+            </p>
+          </div>
         </div>
 
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
@@ -212,12 +220,11 @@ export default function DashboardPage() {
           </button>
 
           <button
-            onClick={handleRunPipeline}
-            disabled={running}
-            className={`neu-button neu-button-primary ${running ? 'pulse-active' : ''}`}
-            style={{ padding: '12px 24px', fontSize: 15 }}
+            onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+            className="neu-button"
+            style={{ padding: '12px 16px', fontSize: 15 }}
           >
-            ⚡ {running ? 'Pipeline Active...' : 'Run Pipeline Now'}
+            {theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode'}
           </button>
         </div>
       </div>
@@ -254,20 +261,7 @@ export default function DashboardPage() {
             </div>
 
             <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <button
-                onClick={handleRunPipeline}
-                disabled={running}
-                className={`neu-button ${running ? '' : 'neu-button-primary'}`}
-                style={{
-                  padding: '14px 28px',
-                  fontSize: 16,
-                  fontWeight: 800,
-                  borderRadius: 30,
-                  boxShadow: running ? 'none' : '0 8px 24px rgba(59, 130, 246, 0.4)',
-                }}
-              >
-                {running ? '⚡ PIPELINE IS ACTIVE...' : '▶️ START AUTOMATED PIPELINE NOW'}
-              </button>
+              <span style={{ fontWeight: 600 }}>{running ? 'Engine Active' : 'Ready'}</span>
             </div>
           </div>
 
@@ -466,23 +460,13 @@ export default function DashboardPage() {
                     onChange={(e) => setContinuousHours(parseInt(e.target.value))}
                     className="neu-range"
                   />
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
-                    <span>1 Hr</span>
-                    <span>12 Hrs</span>
-                    <span>24 Hrs</span>
-                    <span>48 Hrs</span>
-                  </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+                  <span>1 Hr</span>
+                  <span>12 Hrs</span>
+                  <span>24 Hrs</span>
+                  <span>48 Hrs</span>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={handleRunPipeline}
-                  disabled={running}
-                  className={`neu-button ${running ? '' : 'neu-button-primary'}`}
-                  style={{ width: '100%', justifyContent: 'center', marginTop: 4, padding: '12px' }}
-                >
-                  {running ? '⚡ PIPELINE IS ACTIVE...' : '▶️ START AUTOMATED PIPELINE'}
-                </button>
+              </div>
 
                 <div className="neu-inset" style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>
                   <span style={{ color: 'var(--accent-green)', fontWeight: 600 }}>🟢 Automated Cloud Processing: </span>
@@ -491,6 +475,26 @@ export default function DashboardPage() {
               </div>
             </div>
 
+          </div>
+
+          {/* ── BIG CENTERED RUN BUTTON ── */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 40 }}>
+            <button
+              onClick={handleRunPipeline}
+              disabled={running}
+              className={`neu-button ${running ? '' : 'neu-button-primary'} ${running ? 'pulse-active' : ''}`}
+              style={{
+                padding: '20px 60px',
+                fontSize: 22,
+                fontWeight: 800,
+                borderRadius: 50,
+                boxShadow: running ? 'none' : '0 12px 30px rgba(249, 115, 22, 0.4)',
+                minWidth: '350px',
+                justifyContent: 'center'
+              }}
+            >
+              {running ? '⚡ PIPELINE IS RUNNING...' : '▶️ RUN'}
+            </button>
           </div>
 
           {/* ── Applications Feed & Queue ── */}

@@ -1,42 +1,77 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-:root {
-  /* ── Light Soft Neumorphic Color Palette ── */
-  --bg-primary: #e6ecf5;
-  --bg-secondary: #e6ecf5;
-  --bg-neu-base: #dcdeb5;
-  --bg-neu-inset: #dce2ed;
-  --bg-card: #e6ecf5;
+:root[data-theme="light"] {
+  /* ── Light Soft Neumorphic Color Palette (Orange/White) ── */
+  --bg-primary: #f8fafc;
+  --bg-secondary: #f1f5f9;
+  --bg-neu-base: #ffffff;
+  --bg-neu-inset: #e2e8f0;
+  --bg-card: #ffffff;
 
   /* Neumorphic Dual Shadow Tokens */
-  --neu-shadow-dark: #b8c2d1;
+  --neu-shadow-dark: #d1d5db;
   --neu-shadow-light: #ffffff;
   
   --neu-flat: 8px 8px 16px var(--neu-shadow-dark), -8px -8px 16px var(--neu-shadow-light);
   --neu-flat-hover: 11px 11px 22px var(--neu-shadow-dark), -11px -11px 22px var(--neu-shadow-light);
   --neu-pressed: inset 5px 5px 10px var(--neu-shadow-dark), inset -5px -5px 10px var(--neu-shadow-light);
 
-  --border-subtle: rgba(255, 255, 255, 0.6);
-  --border-accent: rgba(59, 130, 246, 0.4);
+  --border-subtle: rgba(0, 0, 0, 0.05);
+  --border-accent: rgba(249, 115, 22, 0.4);
 
-  --text-primary: #2d3748;
-  --text-secondary: #64748b;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
   --text-muted: #94a3b8;
-  --text-accent: #2563eb;
+  --text-accent: #f97316; /* Orange */
 
-  --accent-blue: #3b82f6;
-  --accent-blue-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  --accent-green: #059669;
-  --accent-purple: #7c3aed;
-  --accent-amber: #d97706;
-  --accent-red: #dc2626;
+  --accent-blue: #f97316; /* Reusing blue variable name but making it orange for backward compatibility */
+  --accent-blue-gradient: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  --accent-green: #10b981;
+  --accent-purple: #8b5cf6;
+  --accent-amber: #f59e0b;
+  --accent-red: #ef4444;
 
   --radius-sm: 10px;
   --radius-md: 16px;
   --radius-lg: 24px;
   --radius-xl: 30px;
+}
 
-  --sidebar-width: 260px;
+:root[data-theme="dark"] {
+  /* ── Dark Neumorphic Color Palette (Orange/Black) ── */
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #121212;
+  --bg-neu-base: #171717;
+  --bg-neu-inset: #0f0f0f;
+  --bg-card: #171717;
+
+  /* Neumorphic Dual Shadow Tokens for Dark Mode */
+  --neu-shadow-dark: #050505;
+  --neu-shadow-light: #242424;
+  
+  --neu-flat: 8px 8px 16px var(--neu-shadow-dark), -8px -8px 16px var(--neu-shadow-light);
+  --neu-flat-hover: 11px 11px 22px var(--neu-shadow-dark), -11px -11px 22px var(--neu-shadow-light);
+  --neu-pressed: inset 5px 5px 10px var(--neu-shadow-dark), inset -5px -5px 10px var(--neu-shadow-light);
+
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-accent: rgba(249, 115, 22, 0.4);
+
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #64748b;
+  --text-accent: #f97316; /* Orange */
+
+  --accent-blue: #f97316;
+  --accent-blue-gradient: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  --accent-green: #10b981;
+  --accent-purple: #8b5cf6;
+  --accent-amber: #f59e0b;
+  --accent-red: #ef4444;
+
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 30px;
 }
 
 /* ── Reset & Base Styles ── */
@@ -71,9 +106,10 @@ a:hover { text-decoration: underline; }
 
 .main-content {
   flex: 1;
-  margin-left: var(--sidebar-width);
   padding: 36px 44px;
   min-height: 100vh;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 /* ── Neumorphic Utility Components ── */

@@ -2,11 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Sidebar from './Sidebar';
 import { isAuthenticated } from '../lib/api';
 
 /**
- * Wraps authenticated pages with sidebar + auth check.
+ * Wraps authenticated pages with auth check.
  */
 export default function AuthLayout({ children }) {
   const router = useRouter();
@@ -31,7 +30,6 @@ export default function AuthLayout({ children }) {
 
   return (
     <div className="app-layout">
-      <Sidebar />
       <main className="main-content">{children}</main>
     </div>
   );
