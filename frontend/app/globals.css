@@ -1,15 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root[data-theme="light"] {
-  /* ── Light Soft Neumorphic Color Palette (Orange/White) ── */
-  --bg-primary: #e4e9f0;
-  --bg-secondary: #d1d9e6;
-  --bg-neu-base: #e4e9f0;
-  --bg-neu-inset: #d1d9e6;
-  --bg-card: #e4e9f0;
+  /* ── Light Soft Neumorphic Color Palette (Neutral White/Gray) ── */
+  --bg-primary: #efefef;
+  --bg-secondary: #e3e3e3;
+  --bg-neu-base: #efefef;
+  --bg-neu-inset: #e3e3e3;
+  --bg-card: #efefef;
 
   /* Neumorphic Dual Shadow Tokens */
-  --neu-shadow-dark: #c4cfde;
+  --neu-shadow-dark: #c8c8c8;
   --neu-shadow-light: #ffffff;
   
   --neu-flat: 10px 10px 20px var(--neu-shadow-dark), -10px -10px 20px var(--neu-shadow-light);
