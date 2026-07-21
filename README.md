@@ -1,6 +1,4 @@
-# 🌟 JobTool — Your Personal AI Job Hunter
-
-![JobTool Logo](./frontend/public/logo.png)
+# <img src="./frontend/public/logo.png" height="36" align="top" style="border-radius: 8px;"> JobTool — Your Personal AI Job Hunter
 
 > **Imagine having a tireless personal assistant who searches the internet for jobs 24/7, reads every job description, compares it to your resume, and writes a custom application for you while you sleep.** 
 > 
