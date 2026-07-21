@@ -54,6 +54,11 @@ export default function DashboardPage() {
   const [personalLocation, setPersonalLocation] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [showContactMap, setShowContactMap] = useState({});
+
+  function handleToggleContact(id) {
+    setShowContactMap((prev) => ({ ...prev, [id]: !prev[id] }));
+  }
 
   // Filter form states
   const [keywords, setKeywords] = useState('software engineer, fullstack');
@@ -337,6 +342,7 @@ export default function DashboardPage() {
                 ) : (
                   resumes.map((r) => {
                     const parsed = r.parsed_json || {};
+                    const isContactVisible = !!showContactMap[r.id];
                     const contactInfo = [parsed.email, parsed.phone].filter(Boolean).join(' • ');
 
                     return (
@@ -357,8 +363,13 @@ export default function DashboardPage() {
                             {r.role_label} {r.is_active && '⭐ (Active)'}
                           </div>
                           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            📁 {r.filename} {contactInfo ? `• ${contactInfo}` : ''}
+                            📁 {r.filename}
                           </div>
+                          {isContactVisible && contactInfo && (
+                            <div style={{ fontSize: 11, color: 'var(--text-accent)', marginTop: 4, fontWeight: 600 }}>
+                              📧 {parsed.email || 'N/A'} • 📞 {parsed.phone || 'N/A'}
+                            </div>
+                          )}
                         </div>
 
                         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -373,17 +384,24 @@ export default function DashboardPage() {
                             ✏️ Edit
                           </button>
 
-                          {/* 👁️ View/Download PDF Button */}
-                          <a
-                            href={getSpecificResumeUrl(r.id)}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          {/* 👁️ Eye Button: Toggle Contact Info & View PDF */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleToggleContact(r.id);
+                              window.open(getSpecificResumeUrl(r.id), '_blank');
+                            }}
                             className="neu-button"
-                            style={{ padding: '6px 10px', fontSize: 12, textDecoration: 'none', color: 'var(--text-primary)' }}
-                            title="View original file"
+                            style={{
+                              padding: '6px 10px',
+                              fontSize: 12,
+                              color: isContactVisible ? 'var(--accent-blue)' : 'var(--text-primary)',
+                              border: isContactVisible ? '1px solid var(--accent-blue)' : 'none',
+                            }}
+                            title="Click to reveal email/phone & view PDF"
                           >
-                            👁️ View
-                          </a>
+                            👁️ View {isContactVisible ? '▲' : '▼'}
+                          </button>
 
                         {/* ⭐ Select Active Button */}
                         {!r.is_active && (
