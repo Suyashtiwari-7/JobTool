@@ -2,7 +2,7 @@
 
 > **Imagine having a tireless personal assistant who searches the internet for jobs 24/7, reads every job description, compares it to your resume, and writes a custom application for you while you sleep.** 
 > 
-> **That is JobTool.**
+> **That is JobTool.** https://job-tool-alpha.vercel.app/
 
 ---
 
