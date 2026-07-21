@@ -335,51 +335,55 @@ export default function DashboardPage() {
                     No resumes uploaded yet. Select your file below to upload!
                   </div>
                 ) : (
-                  resumes.map((r) => (
-                    <div
-                      key={r.id}
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        padding: '10px 14px',
-                        borderRadius: 12,
-                        background: r.is_active ? 'rgba(249, 115, 22, 0.12)' : 'var(--bg-neu-base)',
-                        border: r.is_active ? '1px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
-                      }}
-                    >
-                      <div style={{ flex: 1, minWidth: 0, marginRight: 8 }}>
-                        <div style={{ fontWeight: 700, fontSize: 13, color: r.is_active ? 'var(--text-accent)' : 'var(--text-primary)' }}>
-                          {r.role_label} {r.is_active && '⭐ (Active)'}
-                        </div>
-                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {r.filename}
-                        </div>
-                      </div>
+                  resumes.map((r) => {
+                    const parsed = r.parsed_json || {};
+                    const contactInfo = [parsed.email, parsed.phone].filter(Boolean).join(' • ');
 
-                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                        {/* ✏️ Pen Edit Button */}
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEditModal(r)}
-                          className="neu-button"
-                          style={{ padding: '6px 10px', fontSize: 12 }}
-                          title="Edit details (Pen)"
-                        >
-                          ✏️
-                        </button>
+                    return (
+                      <div
+                        key={r.id}
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          padding: '10px 14px',
+                          borderRadius: 12,
+                          background: r.is_active ? 'rgba(249, 115, 22, 0.12)' : 'var(--bg-neu-base)',
+                          border: r.is_active ? '1px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
+                        }}
+                      >
+                        <div style={{ flex: 1, minWidth: 0, marginRight: 8 }}>
+                          <div style={{ fontWeight: 700, fontSize: 13, color: r.is_active ? 'var(--text-accent)' : 'var(--text-primary)' }}>
+                            {r.role_label} {r.is_active && '⭐ (Active)'}
+                          </div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            📁 {r.filename} {contactInfo ? `• ${contactInfo}` : ''}
+                          </div>
+                        </div>
 
-                        {/* 👁️ View/Download PDF Button */}
-                        <a
-                          href={getSpecificResumeUrl(r.id)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="neu-button"
-                          style={{ padding: '6px 10px', fontSize: 12, textDecoration: 'none', color: 'var(--text-primary)' }}
-                          title="View PDF file"
-                        >
-                          👁️
-                        </a>
+                        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                          {/* ✏️ Pen Edit Button */}
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditModal(r)}
+                            className="neu-button"
+                            style={{ padding: '6px 10px', fontSize: 12 }}
+                            title="Edit details (Pen)"
+                          >
+                            ✏️ Edit
+                          </button>
+
+                          {/* 👁️ View/Download PDF Button */}
+                          <a
+                            href={getSpecificResumeUrl(r.id)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="neu-button"
+                            style={{ padding: '6px 10px', fontSize: 12, textDecoration: 'none', color: 'var(--text-primary)' }}
+                            title="View original file"
+                          >
+                            👁️ View
+                          </a>
 
                         {/* ⭐ Select Active Button */}
                         {!r.is_active && (
@@ -402,8 +406,8 @@ export default function DashboardPage() {
                         </button>
                       </div>
                     </div>
-                  ))
-                )}
+                  );
+                }))}
               </div>
 
               {/* Upload Form */}
@@ -412,41 +416,63 @@ export default function DashboardPage() {
                   ➕ Upload New Resume & Personal Info
                 </div>
 
-                <input
-                  type="text"
-                  placeholder="Full Name (optional)"
-                  value={personalName}
-                  onChange={(e) => setPersonalName(e.target.value)}
-                  className="neu-input"
-                  style={{ width: '100%' }}
-                />
+                <div>
+                  <label style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: 4 }}>
+                    Full Name (optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. John Doe"
+                    value={personalName}
+                    onChange={(e) => setPersonalName(e.target.value)}
+                    className="neu-input"
+                    style={{ width: '100%' }}
+                  />
+                </div>
 
-                <input
-                  type="email"
-                  placeholder="Email Address"
-                  value={personalEmail}
-                  onChange={(e) => setPersonalEmail(e.target.value)}
-                  className="neu-input"
-                  style={{ width: '100%' }}
-                />
+                <div>
+                  <label style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: 4 }}>
+                    Email Address <span style={{ color: 'var(--accent-red)' }}>*</span>
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="email@example.com"
+                    value={personalEmail}
+                    onChange={(e) => setPersonalEmail(e.target.value)}
+                    className="neu-input"
+                    style={{ width: '100%' }}
+                    required
+                  />
+                </div>
 
-                <input
-                  type="text"
-                  placeholder="Phone Number"
-                  value={personalPhone}
-                  onChange={(e) => setPersonalPhone(e.target.value)}
-                  className="neu-input"
-                  style={{ width: '100%' }}
-                />
+                <div>
+                  <label style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: 4 }}>
+                    Phone Number <span style={{ color: 'var(--accent-red)' }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="+1 (555) 000-0000"
+                    value={personalPhone}
+                    onChange={(e) => setPersonalPhone(e.target.value)}
+                    className="neu-input"
+                    style={{ width: '100%' }}
+                    required
+                  />
+                </div>
 
-                <input
-                  type="text"
-                  placeholder="City / Location"
-                  value={personalLocation}
-                  onChange={(e) => setPersonalLocation(e.target.value)}
-                  className="neu-input"
-                  style={{ width: '100%' }}
-                />
+                <div>
+                  <label style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: 4 }}>
+                    City / Location (optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. New York, NY / Remote"
+                    value={personalLocation}
+                    onChange={(e) => setPersonalLocation(e.target.value)}
+                    className="neu-input"
+                    style={{ width: '100%' }}
+                  />
+                </div>
 
                 {/* 📁 Drag & Drop Dropzone */}
                 <div
