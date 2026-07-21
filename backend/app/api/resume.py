@@ -35,11 +35,15 @@ class ResumeResponse(BaseModel):
 @router.post("/upload", response_model=ResumeResponse)
 async def upload_resume(
     file: UploadFile = File(...),
-    role_label: str = Form("General"),
+    role_label: str = Form("Main Resume"),
+    name: str | None = Form(None),
+    email: str | None = Form(None),
+    phone: str | None = Form(None),
+    location: str | None = Form(None),
     db: AsyncSession = Depends(get_db),
     _user: str = Depends(verify_token),
 ):
-    """Upload a PDF or DOCX resume with an optional target role label."""
+    """Upload a PDF or DOCX resume with optional personal details."""
     # Validate file extension
     ext = os.path.splitext(file.filename or "")[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
@@ -68,15 +72,28 @@ async def upload_resume(
             os.remove(file_path)
         raise HTTPException(500, f"Failed to parse resume: {str(e)}")
 
+    # Merge manually provided personal info into parsed_json if provided
+    parsed_json = parsed_json or {}
+    if name:
+        parsed_json["name"] = name
+    if email:
+        parsed_json["email"] = email
+    if phone:
+        parsed_json["phone"] = phone
+    if location:
+        parsed_json["location"] = location
+
     # Deactivate previous resumes
     result = await db.execute(select(Resume).where(Resume.is_active.is_(True)))
     for old in result.scalars().all():
         old.is_active = False
 
+    effective_label = role_label or name or "Main Resume"
+
     # Create new resume record
     resume = Resume(
         filename=file.filename or safe_filename,
-        role_label=role_label or "General",
+        role_label=effective_label,
         file_path=file_path,
         raw_text=raw_text,
         parsed_json=parsed_json,

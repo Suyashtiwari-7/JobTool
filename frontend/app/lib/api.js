@@ -118,10 +118,14 @@ export async function listResumes() {
   return apiFetch('/api/resume/list');
 }
 
-export async function uploadResume(file, roleLabel = 'Main Resume') {
+export async function uploadResume(file, personalInfo = {}) {
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('role_label', roleLabel || 'Main Resume');
+  if (personalInfo.role_label) formData.append('role_label', personalInfo.role_label);
+  if (personalInfo.name) formData.append('name', personalInfo.name);
+  if (personalInfo.email) formData.append('email', personalInfo.email);
+  if (personalInfo.phone) formData.append('phone', personalInfo.phone);
+  if (personalInfo.location) formData.append('location', personalInfo.location);
   return apiFetch('/api/resume/upload', {
     method: 'POST',
     body: formData,

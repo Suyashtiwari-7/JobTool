@@ -48,7 +48,10 @@ export default function DashboardPage() {
   });
 
   // Form states
-  const [newRoleLabel, setNewRoleLabel] = useState('Main Resume');
+  const [personalName, setPersonalName] = useState('');
+  const [personalEmail, setPersonalEmail] = useState('');
+  const [personalPhone, setPersonalPhone] = useState('');
+  const [personalLocation, setPersonalLocation] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
 
   // Filter form states
@@ -129,15 +132,25 @@ export default function DashboardPage() {
     }
   }
 
-  // Handle Resume Upload with Role Label
+  // Handle Resume Upload with Personal Info
   async function handleResumeUpload(e) {
     e.preventDefault();
     if (!selectedFile) return alert('Please select a PDF or DOCX file.');
     setUploading(true);
     try {
-      await uploadResume(selectedFile, newRoleLabel);
+      await uploadResume(selectedFile, {
+        name: personalName,
+        email: personalEmail,
+        phone: personalPhone,
+        location: personalLocation,
+        role_label: personalName ? `${personalName}'s Resume` : 'Main Resume',
+      });
       setSelectedFile(null);
-      alert(`✅ Uploaded resume for role: ${newRoleLabel}`);
+      setPersonalName('');
+      setPersonalEmail('');
+      setPersonalPhone('');
+      setPersonalLocation('');
+      alert('✅ Uploaded resume and personal info successfully!');
       const updatedList = await listResumes();
       setResumes(updatedList);
     } catch (err) {
@@ -394,13 +407,40 @@ export default function DashboardPage() {
 
               {/* Upload Form */}
               <form onSubmit={handleResumeUpload} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginTop: 4 }}>
+                  ➕ Upload New Resume & Personal Info
+                </div>
                 <input
                   type="text"
-                  placeholder="Resume Label (e.g. Main Resume)"
-                  value={newRoleLabel}
-                  onChange={(e) => setNewRoleLabel(e.target.value)}
+                  placeholder="Full Name (optional)"
+                  value={personalName}
+                  onChange={(e) => setPersonalName(e.target.value)}
                   className="neu-input"
-                  required
+                />
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input
+                    type="email"
+                    placeholder="Email Address"
+                    value={personalEmail}
+                    onChange={(e) => setPersonalEmail(e.target.value)}
+                    className="neu-input"
+                    style={{ flex: 1 }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Phone Number"
+                    value={personalPhone}
+                    onChange={(e) => setPersonalPhone(e.target.value)}
+                    className="neu-input"
+                    style={{ flex: 1 }}
+                  />
+                </div>
+                <input
+                  type="text"
+                  placeholder="City / Location"
+                  value={personalLocation}
+                  onChange={(e) => setPersonalLocation(e.target.value)}
+                  className="neu-input"
                 />
                 <input
                   type="file"
@@ -544,13 +584,13 @@ export default function DashboardPage() {
             </button>
           </div>
 
-          {/* ── Applications Feed & Queue ── */}
-          <div className="neu-card">
+          {/* ── Applications Feed & Queue (Tabular View) ── */}
+          <div className="neu-card" style={{ overflowX: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <div>
                 <h3 style={{ fontSize: 18, fontWeight: 700 }}>📋 Tailored Applications Feed</h3>
                 <p style={{ color: 'var(--text-muted)', fontSize: 12, marginTop: 2 }}>
-                  Review matched roles, tailored resumes, and cover letters
+                  Review matched roles, tailored resumes, and cover letters in tabular format
                 </p>
               </div>
 
@@ -558,69 +598,104 @@ export default function DashboardPage() {
             </div>
 
             {applications.length === 0 ? (
-              <div style={{ textAlignment: 'center', padding: '40px 0', color: 'var(--text-muted)', fontSize: 14 }}>
-                No job applications generated yet. Click <strong>"Run Pipeline Now"</strong> above to source and tailor applications!
+              <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)', fontSize: 14 }}>
+                No job applications generated yet. Click <strong>"▶️ RUN"</strong> above to source and tailor applications!
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {applications.map((app) => (
-                  <div
-                    key={app.id}
-                    className="neu-inset"
-                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}
-                  >
-                    <div style={{ flex: 1, minWidth: 240 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                        <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
-                          {app.job.title}
-                        </span>
-                        <span className="neu-badge neu-badge-active">
-                          🎯 {Math.round(app.match_score)}% Match
-                        </span>
-                      </div>
-                      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-                        🏢 <strong>{app.job.company}</strong> • 📍 {app.job.location || 'Remote'} • 🌐 Source: {app.job.source}
-                      </div>
-                    </div>
+              <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', fontSize: 13 }}>
+                <thead>
+                  <tr style={{ color: 'var(--text-muted)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <th style={{ textAlign: 'left', padding: '8px 12px' }}>Company & Role</th>
+                    <th style={{ textAlign: 'left', padding: '8px 12px' }}>Resume Uploaded / Used</th>
+                    <th style={{ textAlign: 'left', padding: '8px 12px' }}>Time & Date</th>
+                    <th style={{ textAlign: 'left', padding: '8px 12px' }}>Status</th>
+                    <th style={{ textAlign: 'right', padding: '8px 12px' }}>Actions & PDFs</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {applications.map((app) => {
+                    const appDate = app.created_at ? new Date(app.created_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'Recently';
+                    const activeRes = resumes.find((r) => r.is_active) || resumes[0];
+                    const resumeUsed = activeRes ? `${activeRes.role_label} (${activeRes.filename})` : 'Main Resume';
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      {/* Status Selector */}
-                      <select
-                        value={app.status}
-                        onChange={(e) => handleStatusChange(app.id, e.target.value)}
-                        className="neu-select"
-                        style={{ width: 130, padding: '6px 12px', fontSize: 12 }}
-                      >
-                        <option value="queued">Queued</option>
-                        <option value="reviewed">Reviewed</option>
-                        <option value="applied">Applied</option>
-                        <option value="interview">Interview</option>
-                        <option value="rejected">Rejected</option>
-                      </select>
+                    return (
+                      <tr key={app.id} className="neu-inset" style={{ borderRadius: 12 }}>
+                        <td style={{ padding: '12px 14px', borderRadius: '12px 0 0 12px' }}>
+                          <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: 14 }}>
+                            🏢 {app.job.company}
+                          </div>
+                          <div style={{ color: 'var(--text-secondary)', fontSize: 12, marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span>{app.job.title}</span>
+                            <span className="neu-badge neu-badge-active" style={{ fontSize: 10, padding: '2px 6px' }}>
+                              🎯 {Math.round(app.match_score)}%
+                            </span>
+                          </div>
+                        </td>
 
-                      {/* Downloads */}
-                      <a
-                        href={getResumePdfUrl(app.id)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="neu-button"
-                        style={{ padding: '6px 12px', fontSize: 12 }}
-                      >
-                        📄 Resume PDF
-                      </a>
-                      <a
-                        href={getCoverLetterPdfUrl(app.id)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="neu-button"
-                        style={{ padding: '6px 12px', fontSize: 12 }}
-                      >
-                        ✉️ Cover Letter
-                      </a>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                        <td style={{ padding: '12px 14px', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                          📄 {resumeUsed}
+                        </td>
+
+                        <td style={{ padding: '12px 14px', color: 'var(--text-muted)', fontSize: 12 }}>
+                          ⏰ {appDate}
+                        </td>
+
+                        <td style={{ padding: '12px 14px' }}>
+                          <select
+                            value={app.status}
+                            onChange={(e) => handleStatusChange(app.id, e.target.value)}
+                            className="neu-select"
+                            style={{ padding: '6px 10px', fontSize: 12 }}
+                          >
+                            <option value="queued">Queued</option>
+                            <option value="reviewed">Reviewed</option>
+                            <option value="applied">Applied</option>
+                            <option value="interview">Interview</option>
+                            <option value="rejected">Rejected</option>
+                          </select>
+                        </td>
+
+                        <td style={{ padding: '12px 14px', textAlign: 'right', borderRadius: '0 12px 12px 0' }}>
+                          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                            <a
+                              href={getResumePdfUrl(app.id)}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="neu-button"
+                              style={{ padding: '6px 10px', fontSize: 11 }}
+                              title="Download Tailored Resume"
+                            >
+                              📄 Resume PDF
+                            </a>
+                            <a
+                              href={getCoverLetterPdfUrl(app.id)}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="neu-button"
+                              style={{ padding: '6px 10px', fontSize: 11 }}
+                              title="Download Personal Cover Letter"
+                            >
+                              ✉️ Cover Letter
+                            </a>
+                            {app.job.url && (
+                              <a
+                                href={app.job.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="neu-button neu-button-primary"
+                                style={{ padding: '6px 10px', fontSize: 11, textDecoration: 'none' }}
+                                title="Apply on company website"
+                              >
+                                🌐 Apply
+                              </a>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             )}
           </div>
 

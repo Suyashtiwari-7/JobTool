@@ -113,7 +113,7 @@ Return ONLY the Markdown content. No explanation."""
 
 # ── Cover Letter Generation ──────────────────────────────
 
-COVER_LETTER_PROMPT = """Write a short, professional cover letter for this job application.
+COVER_LETTER_PROMPT = """Write a highly personalized, compelling, and professional cover letter for this job application.
 
 CANDIDATE RESUME:
 ---
@@ -128,12 +128,14 @@ Description:
 {job_description}
 ---
 
-GUIDELINES:
-- Keep it concise: 3-4 paragraphs maximum
-- Opening: Express genuine interest in the specific role and company
-- Body: Highlight 2-3 most relevant experiences/skills from the resume that match the job
-- Closing: Brief enthusiasm + availability
-- Professional but not generic — reference specific details from the job description
-- Do NOT invent experience the candidate doesn't have
+CRITICAL PERSONALIZATION GUIDELINES:
+- **Tailored to the Company & Role**: Specifically address {job_company} and reference core challenges or requirements mentioned in the job description.
+- **Showcase Specific Impact**: Connect candidate's exact prior achievements, tools, and experiences directly to what {job_company} is seeking.
+- **Structure**:
+  1. **Engaging Opening**: Express enthusiastic interest in joining {job_company} as a {job_title}, mentioning what stands out about their mission/product.
+  2. **Core Value Proposition**: 2 concise paragraphs highlighting candidate's most relevant past projects, technical stack, and measurable contributions.
+  3. **Confident Closing**: Reiterate alignment with {job_company}'s goals and express eagerness for an interview.
+- Do NOT use generic boilerplate sentences.
+- Do NOT invent experiences or metrics the candidate doesn't have.
 
-Return ONLY the cover letter text in Markdown format. No subject line, no "Dear Hiring Manager" — start directly with the content. Do not include explanations or notes."""
+Return ONLY the cover letter text in clean Markdown format suitable for PDF rendering. Start directly with the text."""
