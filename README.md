@@ -2,7 +2,7 @@
 
 > **Imagine having a tireless personal assistant who searches the internet for jobs 24/7, reads every job description, compares it to your resume, and writes a custom application for you while you sleep.** 
 > 
-> **That is JobTool.** https://job-tool-alpha.vercel.app/
+> **That is JobTool.**
 
 ---
 
@@ -26,17 +26,13 @@ Built with a gorgeous, modern "Neumorphic" design (available in both Light and D
 
 ---
 
-## 🚀 How It Works (The Complete Journey)
+## 🚀 How It Works (Step-by-Step)
 
-Here is exactly what happens when you use JobTool:
+Using JobTool is as easy as 1-2-3:
 
-1. **Upload & Setup:** First, you upload your base resume to the dashboard and type in the kind of job you are looking for (e.g., "Software Engineer").
-2. **Hit RUN & Relax:** You click the massive "RUN" button and just wait. That's it! You can sit back and let the system take over.
-3. **The Engine Hunts:** JobTool scours 7 different job platforms across the internet, pulling in hundreds of live, open job postings.
-4. **AI Scanning & Matching:** The AI reads every single job description and scans your resume. It filters out the junk and only picks the absolute **top, best jobs** that perfectly fit your experience.
-5. **Auto-Tailoring:** For every perfect match it finds, the AI completely rewrites your resume and drafts a custom Cover Letter designed specifically to beat that company's hiring system.
-6. **You Apply:** You simply click "Apply" on the dashboard using your newly generated, perfectly tailored PDFs. 
-7. **Get Hired!** Because your applications are now hyper-targeted and AI-optimized, all you have to do is check your email or wait for your phone to ring from recruiters asking for an interview!
+1. **Upload Your Resume:** Head over to the dashboard and upload your standard PDF or Word resume. Tell JobTool what role that resume is for.
+2. **Set Your Target:** Type in the keywords you want (e.g., "Software Engineer, Remote") and set how many jobs you want it to find.
+3. **Hit RUN:** Click the massive "RUN" button. The Cloud Engine wakes up, searches the internet, filters out the bad jobs, and delivers the best matches straight to your dashboard!
 
 ---
 
