@@ -53,6 +53,7 @@ export default function DashboardPage() {
   const [personalPhone, setPersonalPhone] = useState('');
   const [personalLocation, setPersonalLocation] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Filter form states
   const [keywords, setKeywords] = useState('software engineer, fullstack');
@@ -406,50 +407,100 @@ export default function DashboardPage() {
               </div>
 
               {/* Upload Form */}
-              <form onSubmit={handleResumeUpload} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <form onSubmit={handleResumeUpload} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginTop: 4 }}>
                   ➕ Upload New Resume & Personal Info
                 </div>
+
                 <input
                   type="text"
                   placeholder="Full Name (optional)"
                   value={personalName}
                   onChange={(e) => setPersonalName(e.target.value)}
                   className="neu-input"
+                  style={{ width: '100%' }}
                 />
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <input
-                    type="email"
-                    placeholder="Email Address"
-                    value={personalEmail}
-                    onChange={(e) => setPersonalEmail(e.target.value)}
-                    className="neu-input"
-                    style={{ flex: 1 }}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Phone Number"
-                    value={personalPhone}
-                    onChange={(e) => setPersonalPhone(e.target.value)}
-                    className="neu-input"
-                    style={{ flex: 1 }}
-                  />
-                </div>
+
+                <input
+                  type="email"
+                  placeholder="Email Address"
+                  value={personalEmail}
+                  onChange={(e) => setPersonalEmail(e.target.value)}
+                  className="neu-input"
+                  style={{ width: '100%' }}
+                />
+
+                <input
+                  type="text"
+                  placeholder="Phone Number"
+                  value={personalPhone}
+                  onChange={(e) => setPersonalPhone(e.target.value)}
+                  className="neu-input"
+                  style={{ width: '100%' }}
+                />
+
                 <input
                   type="text"
                   placeholder="City / Location"
                   value={personalLocation}
                   onChange={(e) => setPersonalLocation(e.target.value)}
                   className="neu-input"
+                  style={{ width: '100%' }}
                 />
-                <input
-                  type="file"
-                  accept=".pdf,.docx"
-                  onChange={(e) => setSelectedFile(e.target.files[0])}
-                  style={{ fontSize: 12, color: 'var(--text-secondary)', padding: '6px 0' }}
-                  required
-                />
-                <button type="submit" disabled={uploading} className="neu-button neu-button-primary" style={{ width: '100%', justifyContent: 'center' }}>
+
+                {/* 📁 Drag & Drop Dropzone */}
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDragging(true);
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    setIsDragging(false);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setIsDragging(false);
+                    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                      setSelectedFile(e.dataTransfer.files[0]);
+                    }
+                  }}
+                  onClick={() => document.getElementById('resume-file-input').click()}
+                  className="neu-inset"
+                  style={{
+                    padding: '20px 16px',
+                    textAlign: 'center',
+                    borderRadius: 14,
+                    border: isDragging ? '2px dashed var(--accent-blue)' : '2px dashed var(--border-subtle)',
+                    background: isDragging ? 'rgba(249, 115, 22, 0.12)' : 'var(--bg-neu-inset)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  <div style={{ fontSize: 24, marginBottom: 4 }}>📁</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>
+                    {selectedFile ? `📄 ${selectedFile.name}` : 'Drag & Drop Resume PDF/DOCX here'}
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+                    {selectedFile
+                      ? `${(selectedFile.size / 1024).toFixed(1)} KB — Click to change file`
+                      : 'or click to browse files from your device'}
+                  </div>
+                  <input
+                    id="resume-file-input"
+                    type="file"
+                    accept=".pdf,.docx"
+                    onChange={(e) => setSelectedFile(e.target.files[0])}
+                    style={{ display: 'none' }}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={uploading}
+                  className="neu-button neu-button-primary"
+                  style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}
+                >
                   {uploading ? 'Processing File...' : '➕ Upload Resume'}
                 </button>
               </form>

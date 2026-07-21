@@ -36,23 +36,38 @@ async def parse_resume_file(file_path: str, extension: str) -> tuple[str, dict]:
 
     logger.info(f"Extracted {len(raw_text)} chars from resume")
 
-    # Step 2: Structure via LLM
-    prompt = RESUME_PARSE_PROMPT.format(resume_text=raw_text)
-    llm_response = await llm_call(prompt, json_mode=True)
-
-    # Parse the LLM response as JSON
+    # Step 2: Structure via LLM (with robust fallback if LLM quota exceeded or fails)
+    parsed = {}
     try:
-        parsed = json.loads(llm_response)
-    except json.JSONDecodeError:
-        # Try to extract JSON from markdown code block
-        if "```json" in llm_response:
-            json_str = llm_response.split("```json")[1].split("```")[0].strip()
-            parsed = json.loads(json_str)
-        elif "```" in llm_response:
-            json_str = llm_response.split("```")[1].split("```")[0].strip()
-            parsed = json.loads(json_str)
-        else:
-            raise ValueError(f"LLM returned invalid JSON: {llm_response[:200]}")
+        prompt = RESUME_PARSE_PROMPT.format(resume_text=raw_text)
+        llm_response = await llm_call(prompt, json_mode=True)
+
+        try:
+            parsed = json.loads(llm_response)
+        except json.JSONDecodeError:
+            if "```json" in llm_response:
+                json_str = llm_response.split("```json")[1].split("```")[0].strip()
+                parsed = json.loads(json_str)
+            elif "```" in llm_response:
+                json_str = llm_response.split("```")[1].split("```")[0].strip()
+                parsed = json.loads(json_str)
+            else:
+                parsed = {}
+    except Exception as e:
+        logger.warning(f"LLM parsing failed or quota exceeded ({e}). Using raw text fallback.")
+        lines = [l.strip() for l in raw_text.splitlines() if l.strip()]
+        parsed = {
+            "name": lines[0] if lines else "Candidate",
+            "email": None,
+            "phone": None,
+            "location": None,
+            "summary": raw_text[:300],
+            "skills": [],
+            "experience": [],
+            "education": [],
+            "certifications": [],
+            "links": []
+        }
 
     logger.info(f"Parsed resume: {parsed.get('name', 'Unknown')} — {len(parsed.get('skills', []))} skills found")
     return raw_text, parsed
