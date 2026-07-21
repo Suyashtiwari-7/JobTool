@@ -1,130 +1,73 @@
-# JobTool — AI-Powered Job Application Pipeline
+# 🌟 JobTool — Your Personal AI Job Hunter
 
-Cloud-hosted job application pipeline that sources jobs from 7 public APIs, scores them against your resume, generates tailored resumes and cover letters using AI, and presents a review dashboard — all running independently of your laptop.
+![JobTool Logo](./frontend/public/logo.png)
 
-## Architecture
+> **Imagine having a tireless personal assistant who searches the internet for jobs 24/7, reads every job description, compares it to your resume, and writes a custom application for you while you sleep.** 
+> 
+> **That is JobTool.**
 
-```
-Frontend (Vercel)  ──▶  Backend (Render)  ──▶  Database (Neon PostgreSQL)
-                           │
-                           ├── Job APIs (Adzuna, Greenhouse, Lever, Ashby, Arbeitnow, RemoteOK, The Muse)
-                           ├── LLM APIs (Gemini → Groq → DeepSeek failover)
-                           └── PDF Generation (WeasyPrint)
-                           
-Cron-job.org  ──▶  Backend /api/pipeline/run/cron (daily trigger)
-```
+---
 
-## Features
+## 🤔 What is JobTool?
 
-- **7 Job Source Integrations**: Adzuna (multi-country), Greenhouse, Lever, Ashby, Arbeitnow, RemoteOK, The Muse
-- **Smart Deduplication**: Fuzzy matching to remove duplicates across sources
-- **AI Resume Parsing**: Upload PDF/DOCX, get structured JSON via LLM
-- **AI Job Scoring**: Score each job against your resume (0-100)
-- **AI Resume Tailoring**: Light, truthful adjustments to match each job description
-- **AI Cover Letters**: Custom cover letter generated per job
-- **PDF Generation**: Professional PDFs for tailored resumes and cover letters
-- **Review Queue Dashboard**: Card-based queue with score badges, status tracking, one-click apply
-- **Multi-Provider LLM**: Automatic failover across Gemini, Groq, DeepSeek
-- **Cloud Cron**: Daily pipeline runs via cron-job.org (independent of your laptop)
+Finding a job can feel like a full-time job itself. You have to scroll through endless job boards, read hundreds of descriptions, and manually tweak your resume for every single application. 
 
-## Quick Start (Local Development)
+**JobTool automates this entire process using Artificial Intelligence.**
 
-### Prerequisites
-- Python 3.11+
-- Node.js 18+
-- PostgreSQL (or use a free Neon database)
+Built with a gorgeous, modern "Neumorphic" design (available in both Light and Dark mode), JobTool is a cloud-based dashboard that does the heavy lifting for you. You just tell it what kind of job you want and upload your resume. The engine will automatically scour the internet for the best job openings, use AI to read the job requirements, and instantly tell you how good of a match you are!
 
-### 1. Clone and setup backend
+---
 
+## ✨ Magic Features
+
+- **🤖 AI-Powered Matchmaker:** JobTool uses advanced AI to read your resume and compare it against live job postings, giving you a "Match Score" so you know exactly which jobs are worth your time.
+- **🌍 Automated Global Sourcing:** It automatically pulls live job openings from 7 different platforms (including Adzuna, Arbeitnow, RemoteOK, and The Muse). 
+- **📄 Multi-Role Resumes:** You can upload multiple resumes! Want to apply as a "Frontend Developer" and a "Product Manager"? Upload a resume for both, and JobTool handles the rest.
+- **🎨 Stunning Neumorphic UI:** Designed with premium aesthetics in mind. Soft shadows, smooth gradients, and a sleek toggle between a bright Light Mode and a stealthy Dark Mode.
+- **☁️ 100% Cloud Powered:** You don't need to keep your laptop open. The JobTool engine runs in the cloud (Vercel and Render), meaning it hunts for jobs for you even while you are offline.
+
+---
+
+## 🚀 How It Works (Step-by-Step)
+
+Using JobTool is as easy as 1-2-3:
+
+1. **Upload Your Resume:** Head over to the dashboard and upload your standard PDF or Word resume. Tell JobTool what role that resume is for.
+2. **Set Your Target:** Type in the keywords you want (e.g., "Software Engineer, Remote") and set how many jobs you want it to find.
+3. **Hit RUN:** Click the massive "RUN" button. The Cloud Engine wakes up, searches the internet, filters out the bad jobs, and delivers the best matches straight to your dashboard!
+
+---
+
+## 🛠️ Under the Hood (For the Geeks!)
+
+If you are a developer, here is the technology powering the magic:
+
+- **Frontend:** Built with **Next.js (React)** and custom Vanilla CSS to achieve the beautiful Neumorphic design system. Hosted on **Vercel**.
+- **Backend:** Built with **Python and FastAPI** for blazing fast performance. Hosted on **Render**.
+- **Database:** Powered by **Neon PostgreSQL** to safely store your application history and resumes.
+- **AI Brain:** Uses Large Language Models (LLMs) to parse unstructured resume data and intelligently score job descriptions.
+- **PDF Generation:** Automatically generates perfectly formatted PDF cover letters using WeasyPrint.
+
+---
+
+## 💻 Want to run it yourself?
+
+If you want to download this code and run it on your own computer:
+
+### 1. Start the Backend (The Brain)
 ```bash
 cd backend
-cp ../.env.example .env
-# Edit .env with your API keys and database URL
-
 python -m venv .venv
-.venv\Scripts\activate  # Windows
-# source .venv/bin/activate  # macOS/Linux
-
-pip install -e .
+source .venv/bin/activate  # Or .venv\Scripts\activate on Windows
+pip install -r requirements.txt
+uvicorn app.main:app --reload
 ```
 
-### 2. Setup frontend
-
+### 2. Start the Frontend (The Dashboard)
 ```bash
 cd frontend
 npm install
-```
-
-### 3. Set environment variables
-
-Edit `backend/.env`:
-```
-DATABASE_URL=postgresql+asyncpg://user:pass@localhost:5432/jobtool
-GEMINI_API_KEY=your-key
-ADZUNA_APP_ID=your-id
-ADZUNA_APP_KEY=your-key
-APP_PASSWORD=your-password
-```
-
-### 4. Run
-
-```bash
-# Terminal 1: Backend
-cd backend
-uvicorn app.main:app --reload --port 8000
-
-# Terminal 2: Frontend
-cd frontend
 npm run dev
 ```
 
-Open http://localhost:3000
-
-## Deployment ($0/month)
-
-### 1. Database — Neon (Free)
-1. Go to [neon.tech](https://neon.tech) → Create a free project
-2. Copy the connection string (change `postgres://` to `postgresql+asyncpg://`)
-
-### 2. Backend — Render (Free)
-1. Push code to GitHub
-2. Go to [render.com](https://render.com) → New → Web Service
-3. Connect your repo, set root directory to `backend`
-4. Runtime: Docker
-5. Plan: Free
-6. Add environment variables from `.env.example`
-7. Note the deployed URL (e.g., `https://jobtool-api.onrender.com`)
-
-### 3. Frontend — Vercel (Free)
-1. Go to [vercel.com](https://vercel.com) → Import project
-2. Set root directory to `frontend`
-3. Add env variable: `NEXT_PUBLIC_API_URL=https://jobtool-api.onrender.com`
-4. Deploy
-
-### 4. Cron — cron-job.org (Free)
-1. Go to [cron-job.org](https://cron-job.org) → Create a free account
-2. Create a new cron job:
-   - URL: `https://jobtool-api.onrender.com/api/pipeline/run/cron`
-   - Method: POST
-   - Schedule: Daily at your preferred time
-   - Headers: `X-Cron-Secret: your-cron-secret-from-env`
-
-## API Keys Needed (All Free)
-
-| Service | URL | Free Tier |
-|---------|-----|-----------|
-| Adzuna | [developer.adzuna.com](https://developer.adzuna.com) | 2,500 req/month |
-| Google Gemini | [aistudio.google.com](https://aistudio.google.com) | 1,500 req/day |
-| Groq | [console.groq.com](https://console.groq.com) | 1,000 req/day |
-| DeepSeek | [platform.deepseek.com](https://platform.deepseek.com) | Trial credits |
-
-Greenhouse, Lever, Ashby, Arbeitnow, RemoteOK, and The Muse APIs are all free and require no API key.
-
-## Tech Stack
-
-- **Backend**: Python FastAPI + SQLAlchemy + asyncpg
-- **Frontend**: Next.js (React)
-- **Database**: PostgreSQL (Neon)
-- **LLM**: Google Gemini / Groq / DeepSeek (failover chain)
-- **PDF**: WeasyPrint
-- **Hosting**: Render (backend) + Vercel (frontend) + cron-job.org (scheduler)
+Open `http://localhost:3000` in your browser and enjoy your automated job hunt!
