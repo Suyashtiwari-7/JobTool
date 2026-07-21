@@ -195,6 +195,80 @@ async def delete_resume(
     return {"message": "Resume deleted"}
 
 
+class ResumeUpdateRequest(BaseModel):
+    role_label: str | None = None
+    name: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    location: str | None = None
+
+
+@router.put("/{resume_id}", response_model=ResumeResponse)
+async def update_resume_details(
+    resume_id: int,
+    payload: ResumeUpdateRequest,
+    db: AsyncSession = Depends(get_db),
+    _user: str = Depends(verify_token),
+):
+    """Update details (role label, contact info) of a specific resume."""
+    result = await db.execute(select(Resume).where(Resume.id == resume_id))
+    resume = result.scalar_one_or_none()
+    if not resume:
+        raise HTTPException(404, "Resume not found")
+
+    if payload.role_label is not None:
+        resume.role_label = payload.role_label
+
+    parsed = resume.parsed_json or {}
+    if payload.name is not None:
+        parsed["name"] = payload.name
+    if payload.email is not None:
+        parsed["email"] = payload.email
+    if payload.phone is not None:
+        parsed["phone"] = payload.phone
+    if payload.location is not None:
+        parsed["location"] = payload.location
+
+    resume.parsed_json = parsed
+    # Mark modified for SQLAlchemy JSON tracking
+    from sqlalchemy.orm.attributes import flag_modified
+    flag_modified(resume, "parsed_json")
+
+    await db.flush()
+    await db.refresh(resume)
+
+    return ResumeResponse(
+        id=resume.id,
+        filename=resume.filename,
+        role_label=resume.role_label or "General",
+        parsed_json=resume.parsed_json,
+        uploaded_at=resume.uploaded_at.isoformat(),
+        is_active=resume.is_active,
+    )
+
+
+@router.get("/{resume_id}/file")
+async def get_resume_file(
+    resume_id: int,
+    db: AsyncSession = Depends(get_db),
+    _user: str = Depends(verify_token),
+):
+    """Serve a specific uploaded resume file by ID."""
+    result = await db.execute(select(Resume).where(Resume.id == resume_id))
+    resume = result.scalar_one_or_none()
+    if not resume:
+        raise HTTPException(404, "Resume not found")
+
+    if not os.path.exists(resume.file_path):
+        raise HTTPException(404, "Resume file not found on server")
+
+    return FileResponse(
+        resume.file_path,
+        filename=resume.filename,
+        media_type="application/octet-stream",
+    )
+
+
 @router.get("/download")
 async def download_resume(
     db: AsyncSession = Depends(get_db),

@@ -10,7 +10,9 @@ import {
   listResumes,
   uploadResume,
   activateResume,
+  updateResume,
   deleteResume,
+  getSpecificResumeUrl,
   getApplications,
   updateApplicationStatus,
   clearApplications,
@@ -32,8 +34,21 @@ export default function DashboardPage() {
   const [savingFilter, setSavingFilter] = useState(false);
   const [theme, setTheme] = useState('light');
 
+  // Filter Mode Switcher state: 'limits' | 'schedule'
+  const [filterMode, setFilterMode] = useState('limits');
+
+  // Resume Editing State (Pen Button)
+  const [editingResume, setEditingResume] = useState(null);
+  const [editForm, setEditForm] = useState({
+    role_label: '',
+    name: '',
+    email: '',
+    phone: '',
+    location: '',
+  });
+
   // Form states
-  const [newRoleLabel, setNewRoleLabel] = useState('Fullstack Developer');
+  const [newRoleLabel, setNewRoleLabel] = useState('Main Resume');
   const [selectedFile, setSelectedFile] = useState(null);
 
   // Filter form states
@@ -155,6 +170,34 @@ export default function DashboardPage() {
     }
   }
 
+  // Open Edit Pen Modal for Resume
+  function handleOpenEditModal(resume) {
+    setEditingResume(resume);
+    const parsed = resume.parsed_json || {};
+    setEditForm({
+      role_label: resume.role_label || 'Main Resume',
+      name: parsed.name || '',
+      email: parsed.email || '',
+      phone: parsed.phone || '',
+      location: parsed.location || '',
+    });
+  }
+
+  // Save Edit Resume Details
+  async function handleSaveEditResume(e) {
+    e.preventDefault();
+    if (!editingResume) return;
+    try {
+      await updateResume(editingResume.id, editForm);
+      alert('✅ Resume details updated!');
+      setEditingResume(null);
+      const updatedList = await listResumes();
+      setResumes(updatedList);
+    } catch (err) {
+      alert('Update failed: ' + err.message);
+    }
+  }
+
   // Handle Filter & Schedule Save
   async function handleSaveFilter(e) {
     e.preventDefault();
@@ -267,15 +310,15 @@ export default function DashboardPage() {
             {/* Card 1: Multi-Resume Manager */}
             <div className="neu-card">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <h3 style={{ fontSize: 16, fontWeight: 700 }}>📄 Multi-Role Resumes</h3>
-                <span className="neu-badge neu-badge-info">{resumes.length} Uploaded</span>
+                <h3 style={{ fontSize: 16, fontWeight: 700 }}>📄 Uploaded Resumes</h3>
+                <span className="neu-badge neu-badge-info">Resumes Uploaded: {resumes.length}</span>
               </div>
 
               {/* Resume List */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20, maxHeight: 180, overflowY: 'auto' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20, maxHeight: 220, overflowY: 'auto' }}>
                 {resumes.length === 0 ? (
-                  <div style={{ fontSize: 13, color: 'var(--text-muted)', padding: '12px 0' }}>
-                    No resumes uploaded yet. Upload your first resume below!
+                  <div style={{ fontSize: 13, color: 'var(--text-muted)', padding: '12px 0', textAlign: 'center' }}>
+                    No resumes uploaded yet. Select your file below to upload!
                   </div>
                 ) : (
                   resumes.map((r) => (
@@ -283,28 +326,64 @@ export default function DashboardPage() {
                       key={r.id}
                       style={{
                         display: 'flex',
-                        justify: 'space-between',
+                        justifyContent: 'space-between',
                         alignItems: 'center',
                         padding: '10px 14px',
                         borderRadius: 12,
-                        background: r.is_active ? 'rgba(59, 130, 246, 0.12)' : 'var(--bg-neu-base)',
+                        background: r.is_active ? 'rgba(249, 115, 22, 0.12)' : 'var(--bg-neu-base)',
                         border: r.is_active ? '1px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
                       }}
                     >
-                      <div>
-                        <div style={{ fontWeight: 600, fontSize: 13, color: r.is_active ? 'var(--text-accent)' : 'var(--text-primary)' }}>
+                      <div style={{ flex: 1, minWidth: 0, marginRight: 8 }}>
+                        <div style={{ fontWeight: 700, fontSize: 13, color: r.is_active ? 'var(--text-accent)' : 'var(--text-primary)' }}>
                           {r.role_label} {r.is_active && '⭐ (Active)'}
                         </div>
-                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{r.filename}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {r.filename}
+                        </div>
                       </div>
 
-                      <div style={{ display: 'flex', gap: 6 }}>
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                        {/* ✏️ Pen Edit Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditModal(r)}
+                          className="neu-button"
+                          style={{ padding: '6px 10px', fontSize: 12 }}
+                          title="Edit details (Pen)"
+                        >
+                          ✏️
+                        </button>
+
+                        {/* 👁️ View/Download PDF Button */}
+                        <a
+                          href={getSpecificResumeUrl(r.id)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="neu-button"
+                          style={{ padding: '6px 10px', fontSize: 12, textDecoration: 'none', color: 'var(--text-primary)' }}
+                          title="View PDF file"
+                        >
+                          👁️
+                        </a>
+
+                        {/* ⭐ Select Active Button */}
                         {!r.is_active && (
-                          <button onClick={() => handleActivateResume(r.id)} className="neu-button" style={{ padding: '4px 8px', fontSize: 11 }}>
+                          <button
+                            onClick={() => handleActivateResume(r.id)}
+                            className="neu-button"
+                            style={{ padding: '6px 10px', fontSize: 11 }}
+                          >
                             Select
                           </button>
                         )}
-                        <button onClick={() => handleDeleteResume(r.id)} className="neu-button" style={{ padding: '4px 8px', fontSize: 11, color: '#ef4444' }}>
+
+                        {/* ✕ Delete Button */}
+                        <button
+                          onClick={() => handleDeleteResume(r.id)}
+                          className="neu-button"
+                          style={{ padding: '6px 10px', fontSize: 11, color: '#ef4444' }}
+                        >
                           ✕
                         </button>
                       </div>
@@ -317,7 +396,7 @@ export default function DashboardPage() {
               <form onSubmit={handleResumeUpload} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <input
                   type="text"
-                  placeholder="Target Role (e.g. Fullstack Engineer)"
+                  placeholder="Resume Label (e.g. Main Resume)"
                   value={newRoleLabel}
                   onChange={(e) => setNewRoleLabel(e.target.value)}
                   className="neu-input"
@@ -331,120 +410,116 @@ export default function DashboardPage() {
                   required
                 />
                 <button type="submit" disabled={uploading} className="neu-button neu-button-primary" style={{ width: '100%', justifyContent: 'center' }}>
-                  {uploading ? 'Parsing Resume...' : '➕ Upload Resume for Role'}
+                  {uploading ? 'Processing File...' : '➕ Upload Resume'}
                 </button>
               </form>
             </div>
 
-            {/* Card 2: Search Filters & Application Limit */}
+            {/* Card 2: Filter Mode Switcher (Domain Limits OR Schedule Timers) */}
             <div className="neu-card">
-              <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>🎯 Domain & Application Limits</h3>
+              {/* Tab Mode Selector */}
+              <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+                <button
+                  type="button"
+                  onClick={() => setFilterMode('limits')}
+                  className={`neu-button ${filterMode === 'limits' ? 'neu-button-primary' : ''}`}
+                  style={{ flex: 1, padding: '10px', fontSize: 13, fontWeight: 700, justifyContent: 'center' }}
+                >
+                  🎯 Domain & Limits
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterMode('schedule')}
+                  className={`neu-button ${filterMode === 'schedule' ? 'neu-button-primary' : ''}`}
+                  style={{ flex: 1, padding: '10px', fontSize: 13, fontWeight: 700, justifyContent: 'center' }}
+                >
+                  ⏰ Schedule & Timers
+                </button>
+              </div>
 
               <form onSubmit={handleSaveFilter} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <div>
-                  <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
-                    Role Keywords (comma separated)
-                  </label>
-                  <input
-                    type="text"
-                    value={keywords}
-                    onChange={(e) => setKeywords(e.target.value)}
-                    className="neu-input"
-                    placeholder="e.g. software engineer, react, python"
-                  />
-                </div>
+                {filterMode === 'limits' ? (
+                  <>
+                    <div>
+                      <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
+                        Role Keywords (comma separated)
+                      </label>
+                      <input
+                        type="text"
+                        value={keywords}
+                        onChange={(e) => setKeywords(e.target.value)}
+                        className="neu-input"
+                        placeholder="e.g. software engineer, react, python"
+                      />
+                    </div>
 
+                    <div>
+                      <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
+                        Max Target Applications
+                      </label>
+                      <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                        <input
+                          type="number"
+                          min="1"
+                          max="1000"
+                          value={targetCount}
+                          onChange={(e) => setTargetCount(e.target.value === '' ? '' : parseInt(e.target.value))}
+                          className="neu-input"
+                          placeholder="e.g. 50, 100"
+                          style={{ flex: 1 }}
+                        />
+                        <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>openings</span>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
+                        Daily Automated Schedule Window
+                      </label>
+                      <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                        <input
+                          type="time"
+                          value={scheduleStart}
+                          onChange={(e) => setScheduleStart(e.target.value)}
+                          className="neu-input"
+                        />
+                        <span style={{ color: 'var(--text-muted)' }}>to</span>
+                        <input
+                          type="time"
+                          value={scheduleEnd}
+                          onChange={(e) => setScheduleEnd(e.target.value)}
+                          className="neu-input"
+                        />
+                      </div>
+                    </div>
 
-                <div>
-                  <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
-                    Max Target Applications (Type exact number or click preset)
-                  </label>
-                  <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 8 }}>
-                    <input
-                      type="number"
-                      min="1"
-                      max="1000"
-                      value={targetCount}
-                      onChange={(e) => setTargetCount(e.target.value === '' ? '' : parseInt(e.target.value))}
-                      className="neu-input"
-                      placeholder="e.g. 100, 150, 250"
-                      style={{ flex: 1 }}
-                    />
-                    <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>openings</span>
-                  </div>
+                    <div>
+                      <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
+                        Continuous Run Duration (Hours)
+                      </label>
+                      <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                        <input
+                          type="number"
+                          min="1"
+                          max="72"
+                          value={continuousHours}
+                          onChange={(e) => setContinuousHours(e.target.value === '' ? '' : parseInt(e.target.value))}
+                          className="neu-input"
+                          placeholder="e.g. 12"
+                          style={{ flex: 1 }}
+                        />
+                        <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>hours</span>
+                      </div>
+                    </div>
+                  </>
+                )}
 
-                </div>
-
-                <button type="submit" disabled={savingFilter} className="neu-button" style={{ marginTop: 6, justifyContent: 'center' }}>
-                  {savingFilter ? 'Saving...' : '💾 Save Target Filters'}
+                <button type="submit" disabled={savingFilter} className="neu-button" style={{ marginTop: 10, justifyContent: 'center' }}>
+                  {savingFilter ? 'Saving Filters...' : '💾 Save Target Filters'}
                 </button>
               </form>
-            </div>
-
-            {/* Card 3: Schedule & Automation Duration */}
-            <div className="neu-card">
-              <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>⏰ Schedule & Duration Timers</h3>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <div>
-                  <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
-                    Daily Automated Schedule Window
-                  </label>
-                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                    <input
-                      type="time"
-                      value={scheduleStart}
-                      onChange={(e) => setScheduleStart(e.target.value)}
-                      className="neu-input"
-                    />
-                    <span style={{ color: 'var(--text-muted)' }}>to</span>
-                    <input
-                      type="time"
-                      value={scheduleEnd}
-                      onChange={(e) => setScheduleEnd(e.target.value)}
-                      className="neu-input"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
-                    Continuous Run Duration (Type Hours or Slider)
-                  </label>
-                  <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 8 }}>
-                    <input
-                      type="number"
-                      min="1"
-                      max="72"
-                      value={continuousHours}
-                      onChange={(e) => setContinuousHours(e.target.value === '' ? '' : parseInt(e.target.value))}
-                      className="neu-input"
-                      placeholder="e.g. 12, 24"
-                      style={{ width: 100 }}
-                    />
-                    <span style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 600 }}>Hours</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="1"
-                    max="48"
-                    value={continuousHours || 12}
-                    onChange={(e) => setContinuousHours(parseInt(e.target.value))}
-                    className="neu-range"
-                  />
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
-                  <span>1 Hr</span>
-                  <span>12 Hrs</span>
-                  <span>24 Hrs</span>
-                  <span>48 Hrs</span>
-                </div>
-              </div>
-
-                <div className="neu-inset" style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>
-                  <span style={{ color: 'var(--accent-green)', fontWeight: 600 }}>🟢 Automated Cloud Processing: </span>
-                  Automated tailoring runs in the background. Applications & PDFs automatically expire after 15 days to keep cloud storage clean.
-                </div>
-              </div>
             </div>
 
           </div>
@@ -548,6 +623,129 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
+
+          {/* ── Edit Resume Modal (Pen Tool) ── */}
+          {editingResume && (
+            <div
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                backdropFilter: 'blur(4px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1000,
+                padding: 20,
+              }}
+            >
+              <div
+                className="neu-card"
+                style={{
+                  width: '100%',
+                  maxWidth: 480,
+                  padding: '32px 28px',
+                  boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                  <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>✏️ Edit Resume Details</h3>
+                  <button
+                    onClick={() => setEditingResume(null)}
+                    className="neu-button"
+                    style={{ padding: '4px 10px', fontSize: 13 }}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <form onSubmit={handleSaveEditResume} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div>
+                    <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: 4 }}>
+                      Resume Label
+                    </label>
+                    <input
+                      type="text"
+                      className="neu-input"
+                      value={editForm.role_label}
+                      onChange={(e) => setEditForm({ ...editForm, role_label: e.target.value })}
+                      placeholder="e.g. Main Resume"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: 4 }}>
+                      Candidate Name
+                    </label>
+                    <input
+                      type="text"
+                      className="neu-input"
+                      value={editForm.name}
+                      onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                      placeholder="Full Name"
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: 4 }}>
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      className="neu-input"
+                      value={editForm.email}
+                      onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                      placeholder="e.g. email@domain.com"
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: 4 }}>
+                      Phone Number
+                    </label>
+                    <input
+                      type="text"
+                      className="neu-input"
+                      value={editForm.phone}
+                      onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                      placeholder="e.g. +1 555-123-4567"
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: 4 }}>
+                      Location / Address
+                    </label>
+                    <input
+                      type="text"
+                      className="neu-input"
+                      value={editForm.location}
+                      onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
+                      placeholder="e.g. New York, NY / Remote"
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+                    <button type="submit" className="neu-button neu-button-primary" style={{ flex: 1, justifyContent: 'center' }}>
+                      💾 Save Details
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditingResume(null)}
+                      className="neu-button"
+                      style={{ flex: 1, justifyContent: 'center' }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </>
       )}
     </AuthLayout>

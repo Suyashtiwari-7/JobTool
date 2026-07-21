@@ -75,16 +75,16 @@ Return ONLY valid JSON:
 
 # ── Resume Tailoring ─────────────────────────────────────
 
-RESUME_TAILOR_PROMPT = """You are a resume optimization expert. Lightly tailor this resume for the target job.
+RESUME_TAILOR_PROMPT = """You are a subtle, professional resume optimization assistant. Lightly tweak this resume for ATS-friendliness for the target job.
 
-RULES — FOLLOW STRICTLY:
-- ONLY rephrase existing bullet points to better match the job description keywords
-- ONLY reorder skills to prioritize relevant ones first
-- ONLY adjust the summary to highlight relevant experience
-- Do NOT invent new experience, projects, or skills the candidate doesn't have
-- Do NOT fabricate metrics or achievements
-- Do NOT change company names, dates, or education
-- Keep changes minimal and truthful — this is a LIGHT adjustment, not a rewrite
+CRITICAL RULES — FOLLOW STRICTLY:
+- Keep tweaks VERY MINIMAL, SUBTLE, and TRUTHFUL. This must NOT feel like a rewrite.
+- The candidate will speak to these exact bullet points in an interview — do NOT change their core voice, style, or actual accomplishments.
+- ONLY subtly adjust word choices or add missing keywords from the job description if they directly match the candidate's existing work.
+- ONLY reorder skills so the most relevant ones appear first.
+- Do NOT invent new experience, projects, tools, or skills the candidate doesn't have.
+- Do NOT fabricate metrics, percentages, or achievements.
+- Do NOT change company names, job titles, employment dates, or education details.
 
 ORIGINAL RESUME (JSON):
 ---
@@ -102,9 +102,9 @@ Description:
 Return the tailored resume as clean Markdown format suitable for PDF generation.
 Include:
 - Name and contact info at the top
-- Professional summary (tailored)
+- Professional summary (subtly aligned)
 - Skills section (reordered for relevance)
-- Experience section (with lightly rephrased bullets)
+- Experience section (with very subtly tweaked bullets)
 - Education section
 - Certifications (if any)
 

@@ -118,10 +118,10 @@ export async function listResumes() {
   return apiFetch('/api/resume/list');
 }
 
-export async function uploadResume(file, roleLabel = 'General') {
+export async function uploadResume(file, roleLabel = 'Main Resume') {
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('role_label', roleLabel);
+  formData.append('role_label', roleLabel || 'Main Resume');
   return apiFetch('/api/resume/upload', {
     method: 'POST',
     body: formData,
@@ -132,8 +132,20 @@ export async function activateResume(id) {
   return apiFetch(`/api/resume/${id}/activate`, { method: 'PUT' });
 }
 
+export async function updateResume(id, updateData) {
+  return apiFetch(`/api/resume/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(updateData),
+  });
+}
+
 export async function deleteResume(id) {
   return apiFetch(`/api/resume/${id}`, { method: 'DELETE' });
+}
+
+export function getSpecificResumeUrl(id) {
+  const token = getToken();
+  return `${API_URL}/api/resume/${id}/file${token ? `?token=${token}` : ''}`;
 }
 
 // ── Applications ────────────────────────────────────────
