@@ -196,6 +196,12 @@ export async function generateOutreachEmail(id) {
   });
 }
 
+export async function estimateSalary(id) {
+  return apiFetch(`/api/applications/${id}/estimate-salary`, {
+    method: 'POST',
+  });
+}
+
 export function getResumePdfUrl(id) {
   return `${API_URL}/api/applications/${id}/resume-pdf`;
 }

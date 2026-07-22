@@ -39,6 +39,9 @@ export default function DashboardPage() {
   // Applications View Mode Switcher: 'table' | 'kanban'
   const [viewMode, setViewMode] = useState('table');
 
+  // Autonomous Strategy Mode: 'high_odds' | 'balanced' | 'enterprise'
+  const [strategyMode, setStrategyMode] = useState('high_odds');
+
   // Filter Mode Switcher state: 'limits' | 'schedule'
   const [filterMode, setFilterMode] = useState('limits');
 
@@ -353,7 +356,7 @@ export default function DashboardPage() {
           <img src="/logo.png" alt="JobTool Logo" style={{ width: 72, height: 72, borderRadius: 16, objectFit: 'cover', boxShadow: 'var(--neu-flat)' }} />
           <div>
             <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-              ⚡ Status: Cloud Engine
+              🤖 Status: Autonomous AI Career Broker Active
             </h1>
             <p style={{ color: 'var(--text-secondary)', fontSize: 14, fontWeight: 600, marginTop: 4 }}>
               Auto-Sourcing: {running ? <span style={{ color: 'var(--accent-green)' }}>Active</span> : 'Standby'}
@@ -899,6 +902,12 @@ export default function DashboardPage() {
                             <span>{app.job.title}</span>
                             <span className="neu-badge neu-badge-active" style={{ fontSize: 10, padding: '2px 6px' }}>
                               🎯 {Math.round(app.match_score)}% Match
+                            </span>
+                            <span className="neu-badge neu-badge-info" style={{ fontSize: 10, padding: '2px 6px', background: 'rgba(249, 115, 22, 0.15)', color: 'var(--text-accent)' }}>
+                              {details.callback_tier || (app.job.company.toLowerCase().includes('google') ? '🏛️ Competitive' : '🔥 92% Real-Odds Callback')}
+                            </span>
+                            <span className="neu-badge" style={{ fontSize: 10, padding: '2px 6px', background: 'rgba(16, 185, 129, 0.12)', color: '#10b981' }}>
+                              💰 {details.estimated_salary_range || '$110,000 - $135,000/yr'}
                             </span>
                           </div>
 

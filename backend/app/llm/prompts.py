@@ -42,7 +42,7 @@ Return ONLY the JSON object. No markdown, no explanation."""
 
 # ── Job Scoring ──────────────────────────────────────────
 
-JOB_SCORE_PROMPT = """You are a job matching expert. Score how well this candidate's resume matches this job posting.
+JOB_SCORE_PROMPT = """You are an expert AI Career Broker. Score how well this candidate's resume matches this job posting and calculate their REAL-ODDS INTERVIEW CALLBACK PROBABILITY.
 
 RESUME:
 ---
@@ -58,18 +58,50 @@ Description:
 {job_description}
 ---
 
-Evaluate on these criteria:
-1. Skill match (40%): How many required/preferred skills does the candidate have?
-2. Experience relevance (30%): How relevant is their work history to this role?
-3. Experience level fit (15%): Does their seniority match the role?
-4. Domain/industry fit (15%): Is their background in a related field?
+EVALUATION CRITERIA:
+1. Skill match (40%): How many required skills does the candidate possess?
+2. Experience relevance (30%): How relevant is their work history?
+3. Seniority fit (15%): Does their experience bracket match the role?
+4. Real-Odds Company Tier Boost (15%): Mid-tier companies and fast-growing tech startups have a 5x higher callback rate than FAANG giants. Boost real-odds callback score for mid-tier/startup roles where candidate matches closely.
 
 Return ONLY valid JSON:
 {{
   "score": <integer 0-100>,
-  "reasoning": "Brief 2-3 sentence explanation of the score",
+  "real_odds_score": <integer 0-100 - interview callback probability percentage>,
+  "callback_tier": "<string - '🔥 High Callback Odds' or '⚖️ Moderate Callback Odds' or '🏛️ Competitive'>",
+  "estimated_salary_range": "<string - e.g. '$110,000 - $130,000/yr'>",
+  "reasoning": "Brief 2-3 sentence explanation of match quality and interview odds",
   "matching_skills": ["skills from resume that match the job"],
   "missing_skills": ["required skills the candidate lacks"]
+}}"""
+
+
+# ── AI Salary Estimator ─────────────────────────────────
+
+SALARY_ESTIMATOR_PROMPT = """You are a compensation benchmarking specialist. Calculate a realistic, market-accurate salary expectation range for this job role and candidate.
+
+CANDIDATE RESUME:
+---
+{resume_json}
+---
+
+TARGET JOB:
+Title: {job_title}
+Company: {job_company}
+Location: {job_location}
+Description:
+---
+{job_description}
+---
+
+Consider candidate's real experience level, current tech market benchmarks, role seniority, and company tier.
+
+Return ONLY valid JSON:
+{{
+  "salary_min": <integer - annual salary min in USD>,
+  "salary_max": <integer - annual salary max in USD>,
+  "salary_display": "<string - e.g. '$115,000 - $130,000/yr'>",
+  "negotiation_tip": "<string - 1 sentence salary application answer text>"
 }}"""
 
 
