@@ -88,30 +88,23 @@ async def llm_call(prompt: str, json_mode: bool = False) -> str:
 
 
 async def _call_gemini(prompt: str, json_mode: bool) -> str:
-    """Call Google Gemini API with multi-model fallback chain."""
+    """Call Google Gemini 1.5 Flash API directly."""
     genai.configure(api_key=settings.gemini_api_key)
 
     generation_config = {}
     if json_mode:
         generation_config["response_mime_type"] = "application/json"
 
-    models_to_try = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro", "gemini-pro"]
-    last_error = None
+    # Direct fast call to stable Gemini 1.5 Flash
+    model = genai.GenerativeModel(
+        "gemini-1.5-flash",
+        generation_config=generation_config if generation_config else None,
+    )
+    response = model.generate_content(prompt)
+    if response and response.text:
+        return response.text
 
-    for model_name in models_to_try:
-        try:
-            model = genai.GenerativeModel(
-                model_name,
-                generation_config=generation_config if generation_config else None,
-            )
-            response = model.generate_content(prompt)
-            if response and response.text:
-                return response.text
-        except Exception as e:
-            last_error = e
-            logger.warning(f"Gemini model {model_name} failed ({e}). Trying next model...")
-
-    raise RuntimeError(f"Gemini models failed: {last_error}")
+    raise RuntimeError("Gemini Flash returned empty response")
 
 
 async def _call_groq(prompt: str, json_mode: bool) -> str:
