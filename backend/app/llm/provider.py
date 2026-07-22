@@ -25,11 +25,13 @@ class LLMProvider:
 
 def _get_providers() -> list[LLMProvider]:
     """Build ordered list of available providers based on configured keys.
-    Priority: Groq (Llama 3.3 70B - Ultra Powerful & Fast) -> Gemini -> DeepSeek
+    Priority: Groq (Llama 3.3 70B) -> OpenRouter (DeepSeek V3/Llama 3.3) -> Gemini -> DeepSeek Direct
     """
     providers = []
     if settings.groq_api_key:
         providers.append(LLMProvider(name="groq", available=True))
+    if settings.openrouter_api_key:
+        providers.append(LLMProvider(name="openrouter", available=True))
     if settings.gemini_api_key:
         providers.append(LLMProvider(name="gemini", available=True))
     if settings.deepseek_api_key:
@@ -53,7 +55,7 @@ async def llm_call(prompt: str, json_mode: bool = False) -> str:
     """
     providers = _get_providers()
     if not providers:
-        raise RuntimeError("No LLM API keys configured. Set GEMINI_API_KEY, GROQ_API_KEY, or DEEPSEEK_API_KEY.")
+        raise RuntimeError("No LLM API keys configured. Set GEMINI_API_KEY, GROQ_API_KEY, OPENROUTER_API_KEY, or DEEPSEEK_API_KEY.")
 
     errors: list[str] = []
 
@@ -61,10 +63,12 @@ async def llm_call(prompt: str, json_mode: bool = False) -> str:
         try:
             logger.info(f"Attempting LLM call with {provider.name}")
 
-            if provider.name == "gemini":
-                return await _call_gemini(prompt, json_mode)
-            elif provider.name == "groq":
+            if provider.name == "groq":
                 return await _call_groq(prompt, json_mode)
+            elif provider.name == "openrouter":
+                return await _call_openrouter(prompt, json_mode)
+            elif provider.name == "gemini":
+                return await _call_gemini(prompt, json_mode)
             elif provider.name == "deepseek":
                 return await _call_deepseek(prompt, json_mode)
 
@@ -143,6 +147,30 @@ async def _call_deepseek(prompt: str, json_mode: bool) -> str:
 
     kwargs = {
         "model": "deepseek-chat",
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.3,
+        "max_tokens": 4096,
+    }
+    if json_mode:
+        kwargs["response_format"] = {"type": "json_object"}
+
+    response = await client.chat.completions.create(**kwargs)
+    return response.choices[0].message.content or ""
+
+
+async def _call_openrouter(prompt: str, json_mode: bool) -> str:
+    """Call OpenRouter API (DeepSeek V3 / Llama 3.3 70B)."""
+    client = AsyncOpenAI(
+        api_key=settings.openrouter_api_key,
+        base_url="https://openrouter.ai/api/v1",
+        default_headers={
+            "HTTP-Referer": "https://github.com/Suyashtiwari-7/JobTool",
+            "X-Title": "JobTool Autonomous Agent",
+        }
+    )
+
+    kwargs = {
+        "model": "deepseek/deepseek-chat",
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.3,
         "max_tokens": 4096,

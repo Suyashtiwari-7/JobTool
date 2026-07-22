@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     # ── LLM Providers ──
     gemini_api_key: str = Field(default="", description="Google Gemini API key")
     groq_api_key: str = Field(default="", description="Groq API key")
+    openrouter_api_key: str = Field(default="", description="OpenRouter API key")
     deepseek_api_key: str = Field(default="", description="DeepSeek API key")
 
     # ── Frontend ──
