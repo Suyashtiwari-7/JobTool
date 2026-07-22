@@ -562,6 +562,11 @@ export default function DashboardPage() {
                     style={{ width: '100%' }}
                     required
                   />
+                  {personalEmail && (
+                    <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4, fontWeight: 600 }}>
+                      🔒 Masked Privacy View: <span style={{ color: 'var(--text-accent)' }}>{maskEmail(personalEmail)}</span> (Revealed via 👁️ View)
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -577,6 +582,11 @@ export default function DashboardPage() {
                     style={{ width: '100%' }}
                     required
                   />
+                  {personalPhone && (
+                    <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4, fontWeight: 600 }}>
+                      🔒 Masked Privacy View: <span style={{ color: 'var(--text-accent)' }}>{maskPhone(personalPhone)}</span> (Revealed via 👁️ View)
+                    </div>
+                  )}
                 </div>
 
                 <div>
