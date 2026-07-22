@@ -95,7 +95,7 @@ async def _call_gemini(prompt: str, json_mode: bool) -> str:
     if json_mode:
         generation_config["response_mime_type"] = "application/json"
 
-    models_to_try = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]
+    models_to_try = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro", "gemini-pro"]
     last_error = None
 
     for model_name in models_to_try:
