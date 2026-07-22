@@ -571,22 +571,12 @@ export default function DashboardPage() {
                     Email Address <span style={{ color: 'var(--accent-red)' }}>*</span>
                   </label>
                   <div style={{ position: 'relative', width: '100%' }}>
-                    <input
-                      type="email"
-                      placeholder="email@example.com"
-                      value={showEmailText ? personalEmail : (personalEmail ? maskEmail(personalEmail) : '')}
-                      onChange={(e) => setPersonalEmail(e.target.value)}
-                      onFocus={() => setShowEmailText(true)}
-                      className="neu-input"
-                      style={{ width: '100%', paddingRight: 42 }}
-                      required
-                    />
                     <button
                       type="button"
                       onClick={() => setShowEmailText(!showEmailText)}
                       style={{
                         position: 'absolute',
-                        right: 12,
+                        left: 12,
                         top: '50%',
                         transform: 'translateY(-50%)',
                         background: 'none',
@@ -594,11 +584,22 @@ export default function DashboardPage() {
                         cursor: 'pointer',
                         fontSize: 14,
                         color: showEmailText ? 'var(--text-accent)' : 'var(--text-muted)',
+                        zIndex: 2,
                       }}
                       title={showEmailText ? 'Mask Email' : 'Reveal Email'}
                     >
                       {showEmailText ? '👁️' : '🙈'}
                     </button>
+                    <input
+                      type="email"
+                      placeholder="email@example.com"
+                      value={showEmailText ? personalEmail : (personalEmail ? maskEmail(personalEmail) : '')}
+                      onChange={(e) => setPersonalEmail(e.target.value)}
+                      onFocus={() => setShowEmailText(true)}
+                      className="neu-input"
+                      style={{ width: '100%', paddingLeft: 42 }}
+                      required
+                    />
                   </div>
                 </div>
 
@@ -632,8 +633,27 @@ export default function DashboardPage() {
                       <option value="+49">🇩🇪 +49</option>
                     </select>
 
-                    {/* Separate Phone Digits Field with embedded Eye button */}
+                    {/* Separate Phone Digits Field with embedded Eye button on LEFT */}
                     <div style={{ position: 'relative', flex: 1 }}>
+                      <button
+                        type="button"
+                        onClick={() => setShowPhoneText(!showPhoneText)}
+                        style={{
+                          position: 'absolute',
+                          left: 12,
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          fontSize: 14,
+                          color: showPhoneText ? 'var(--text-accent)' : 'var(--text-muted)',
+                          zIndex: 2,
+                        }}
+                        title={showPhoneText ? 'Mask Phone' : 'Reveal Phone'}
+                      >
+                        {showPhoneText ? '👁️' : '🙈'}
+                      </button>
                       <input
                         type="text"
                         placeholder="98765 43210"
@@ -644,27 +664,9 @@ export default function DashboardPage() {
                         }}
                         onFocus={() => setShowPhoneText(true)}
                         className="neu-input"
-                        style={{ width: '100%', paddingRight: 42 }}
+                        style={{ width: '100%', paddingLeft: 42 }}
                         required
                       />
-                      <button
-                        type="button"
-                        onClick={() => setShowPhoneText(!showPhoneText)}
-                        style={{
-                          position: 'absolute',
-                          right: 12,
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer',
-                          fontSize: 14,
-                          color: showPhoneText ? 'var(--text-accent)' : 'var(--text-muted)',
-                        }}
-                        title={showPhoneText ? 'Mask Phone' : 'Reveal Phone'}
-                      >
-                        {showPhoneText ? '👁️' : '🙈'}
-                      </button>
                     </div>
                   </div>
                 </div>
