@@ -24,12 +24,14 @@ class LLMProvider:
 
 
 def _get_providers() -> list[LLMProvider]:
-    """Build ordered list of available providers based on configured keys."""
+    """Build ordered list of available providers based on configured keys.
+    Priority: Groq (Llama 3.3 70B - Ultra Powerful & Fast) -> Gemini -> DeepSeek
+    """
     providers = []
-    if settings.gemini_api_key:
-        providers.append(LLMProvider(name="gemini", available=True))
     if settings.groq_api_key:
         providers.append(LLMProvider(name="groq", available=True))
+    if settings.gemini_api_key:
+        providers.append(LLMProvider(name="gemini", available=True))
     if settings.deepseek_api_key:
         providers.append(LLMProvider(name="deepseek", available=True))
     return providers
@@ -96,7 +98,7 @@ async def _call_gemini(prompt: str, json_mode: bool) -> str:
         generation_config["response_mime_type"] = "application/json"
 
     # Try stable gemini-1.5-flash first, then Google's dynamic 'gemini-flash' alias
-    models_to_try = ["gemini-1.5-flash", "gemini-flash", "gemini-1.5-pro"]
+    models_to_try = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-flash"]
     last_error = None
 
     for m_name in models_to_try:
