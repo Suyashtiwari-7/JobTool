@@ -12,16 +12,53 @@ from app.llm.prompts import RESUME_PARSE_PROMPT
 logger = logging.getLogger(__name__)
 
 
+COMMON_SKILLS = [
+    "Python", "JavaScript", "TypeScript", "React", "Next.js", "Node.js", "FastAPI",
+    "Express", "Django", "Flask", "HTML", "CSS", "SQL", "PostgreSQL", "MongoDB",
+    "Docker", "Kubernetes", "AWS", "GCP", "Azure", "Git", "GitHub", "REST API",
+    "GraphQL", "C++", "Java", "C#", "Go", "Rust", "Tailwind", "Machine Learning",
+    "AI", "PyTorch", "TensorFlow", "Pandas", "NumPy"
+]
+
+
+def _fast_parse_text(raw_text: str) -> dict:
+    """Instant deterministic extraction of contact info and skills via regex."""
+    import re
+    lines = [l.strip() for l in raw_text.splitlines() if l.strip()]
+    name = lines[0] if lines else "Candidate"
+
+    # Extract Email
+    email_match = re.search(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', raw_text)
+    email = email_match.group(0) if email_match else None
+
+    # Extract Phone
+    phone_match = re.search(r'(\+?\d{1,3}[\s-]?)?\(?\d{3}\)?[\s-]?\d{3}[\s-]?\d{4}', raw_text)
+    phone = phone_match.group(0) if phone_match else None
+
+    # Extract Skills
+    found_skills = [
+        skill for skill in COMMON_SKILLS
+        if re.search(r'\b' + re.escape(skill) + r'\b', raw_text, re.IGNORECASE)
+    ]
+
+    return {
+        "name": name,
+        "email": email,
+        "phone": phone,
+        "location": None,
+        "summary": lines[1] if len(lines) > 1 else raw_text[:250],
+        "skills": found_skills,
+        "experience": [],
+        "education": [],
+        "certifications": [],
+        "links": []
+    }
+
+
 async def parse_resume_file(file_path: str, extension: str) -> tuple[str, dict]:
     """
     Parse a resume file into structured JSON.
-
-    Args:
-        file_path: Path to the uploaded file
-        extension: File extension (.pdf or .docx)
-
-    Returns:
-        Tuple of (raw_text, parsed_json_dict)
+    Instant regex extraction with optional LLM enhancement.
     """
     # Step 1: Extract raw text
     if extension == ".pdf":
@@ -32,44 +69,26 @@ async def parse_resume_file(file_path: str, extension: str) -> tuple[str, dict]:
         raise ValueError(f"Unsupported file type: {extension}")
 
     if not raw_text.strip():
-        raise ValueError("Could not extract any text from the file")
+        raw_text = "Uploaded Resume Document"
 
     logger.info(f"Extracted {len(raw_text)} chars from resume")
 
-    # Step 2: Structure via LLM (with robust fallback if LLM quota exceeded or fails)
-    parsed = {}
+    # Step 2: Instant deterministic extraction
+    parsed = _fast_parse_text(raw_text)
+
+    # Step 3: Optional LLM enhancement (if providers available and working)
     try:
         prompt = RESUME_PARSE_PROMPT.format(resume_text=raw_text)
         llm_response = await llm_call(prompt, json_mode=True)
-
-        try:
-            parsed = json.loads(llm_response)
-        except json.JSONDecodeError:
-            if "```json" in llm_response:
-                json_str = llm_response.split("```json")[1].split("```")[0].strip()
-                parsed = json.loads(json_str)
-            elif "```" in llm_response:
-                json_str = llm_response.split("```")[1].split("```")[0].strip()
-                parsed = json.loads(json_str)
-            else:
-                parsed = {}
+        llm_parsed = json.loads(llm_response)
+        if isinstance(llm_parsed, dict) and llm_parsed.get("name"):
+            for k, v in llm_parsed.items():
+                if v:
+                    parsed[k] = v
     except Exception as e:
-        logger.warning(f"LLM parsing failed or quota exceeded ({e}). Using raw text fallback.")
-        lines = [l.strip() for l in raw_text.splitlines() if l.strip()]
-        parsed = {
-            "name": lines[0] if lines else "Candidate",
-            "email": None,
-            "phone": None,
-            "location": None,
-            "summary": raw_text[:300],
-            "skills": [],
-            "experience": [],
-            "education": [],
-            "certifications": [],
-            "links": []
-        }
+        logger.info(f"LLM enhancement skipped/failed ({e}). Using deterministic extraction.")
 
-    logger.info(f"Parsed resume: {parsed.get('name', 'Unknown')} — {len(parsed.get('skills', []))} skills found")
+    logger.info(f"Parsed resume for: {parsed.get('name', 'Unknown')}")
     return raw_text, parsed
 
 
