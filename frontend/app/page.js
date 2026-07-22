@@ -96,6 +96,15 @@ export default function DashboardPage() {
     return `${prefix} (***) ***-${visibleLast4}`;
   }
 
+  function maskPhoneDigits(digits) {
+    if (!digits || typeof digits !== 'string') return '';
+    const clean = digits.trim();
+    if (clean.length <= 4) return '****';
+    const visibleLast4 = clean.slice(-4);
+    const stars = '*'.repeat(Math.max(3, clean.length - 4));
+    return `${stars}-${visibleLast4}`;
+  }
+
   // Real-Time Applications Feed Search State
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -105,6 +114,8 @@ export default function DashboardPage() {
   // Form states
   const [personalName, setPersonalName] = useState('');
   const [personalEmail, setPersonalEmail] = useState('');
+  const [countryCode, setCountryCode] = useState('+91');
+  const [phoneDigits, setPhoneDigits] = useState('');
   const [personalPhone, setPersonalPhone] = useState('');
   const [personalLocation, setPersonalLocation] = useState('');
   const [showEmailText, setShowEmailText] = useState(false);
@@ -200,11 +211,14 @@ export default function DashboardPage() {
     e.preventDefault();
     if (!selectedFile) return alert('Please select a PDF or DOCX file.');
     setUploading(true);
+
+    const fullPhone = personalPhone || (phoneDigits ? `${countryCode} ${phoneDigits}` : '');
+
     try {
       await uploadResume(selectedFile, {
         name: personalName,
         email: personalEmail,
-        phone: personalPhone,
+        phone: fullPhone,
         location: personalLocation,
         role_label: personalName ? `${personalName}'s Resume` : 'Main Resume',
       });
@@ -212,6 +226,7 @@ export default function DashboardPage() {
       setPersonalName('');
       setPersonalEmail('');
       setPersonalPhone('');
+      setPhoneDigits('');
       setPersonalLocation('');
       alert('✅ Uploaded resume and personal info successfully!');
       const updatedList = await listResumes();
@@ -591,35 +606,66 @@ export default function DashboardPage() {
                   <label style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: 4 }}>
                     Phone Number <span style={{ color: 'var(--accent-red)' }}>*</span>
                   </label>
-                  <div style={{ position: 'relative', width: '100%' }}>
-                    <input
-                      type="text"
-                      placeholder="+1 (555) 000-0000"
-                      value={showPhoneText ? personalPhone : (personalPhone ? maskPhone(personalPhone) : '')}
-                      onChange={(e) => setPersonalPhone(e.target.value)}
-                      onFocus={() => setShowPhoneText(true)}
-                      className="neu-input"
-                      style={{ width: '100%', paddingRight: 42 }}
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPhoneText(!showPhoneText)}
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    {/* Distinct Country Code Prefix Box */}
+                    <select
+                      value={countryCode}
+                      onChange={(e) => setCountryCode(e.target.value)}
+                      className="neu-select"
                       style={{
-                        position: 'absolute',
-                        right: 12,
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        background: 'none',
-                        border: 'none',
+                        width: 105,
+                        fontWeight: 700,
+                        color: 'var(--text-accent)',
+                        background: 'var(--bg-neu-inset)',
+                        fontSize: 13,
+                        padding: '12px 6px',
+                        textAlign: 'center',
+                        flexShrink: 0,
                         cursor: 'pointer',
-                        fontSize: 14,
-                        color: showPhoneText ? 'var(--text-accent)' : 'var(--text-muted)',
                       }}
-                      title={showPhoneText ? 'Mask Phone' : 'Reveal Phone'}
                     >
-                      {showPhoneText ? '👁️' : '🙈'}
-                    </button>
+                      <option value="+91">🇮🇳 +91</option>
+                      <option value="+1">🇺🇸 +1</option>
+                      <option value="+44">🇬🇧 +44</option>
+                      <option value="+61">🇦🇺 +61</option>
+                      <option value="+971">🇦🇪 +971</option>
+                      <option value="+49">🇩🇪 +49</option>
+                    </select>
+
+                    {/* Separate Phone Digits Field with embedded Eye button */}
+                    <div style={{ position: 'relative', flex: 1 }}>
+                      <input
+                        type="text"
+                        placeholder="98765 43210"
+                        value={showPhoneText ? (phoneDigits || personalPhone) : (phoneDigits ? maskPhoneDigits(phoneDigits) : (personalPhone ? maskPhone(personalPhone) : ''))}
+                        onChange={(e) => {
+                          setPhoneDigits(e.target.value);
+                          setPersonalPhone(e.target.value);
+                        }}
+                        onFocus={() => setShowPhoneText(true)}
+                        className="neu-input"
+                        style={{ width: '100%', paddingRight: 42 }}
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPhoneText(!showPhoneText)}
+                        style={{
+                          position: 'absolute',
+                          right: 12,
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          fontSize: 14,
+                          color: showPhoneText ? 'var(--text-accent)' : 'var(--text-muted)',
+                        }}
+                        title={showPhoneText ? 'Mask Phone' : 'Reveal Phone'}
+                      >
+                        {showPhoneText ? '👁️' : '🙈'}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
