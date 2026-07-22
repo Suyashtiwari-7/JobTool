@@ -1,5 +1,4 @@
-"""Resume upload, multi-resume management, and parsing endpoints."""
-
+import logging
 import os
 import uuid
 
@@ -14,6 +13,8 @@ from app.config import settings
 from app.db.database import get_db
 from app.db.models import Resume
 from app.resume.parser import parse_resume_file
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
