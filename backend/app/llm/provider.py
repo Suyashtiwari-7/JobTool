@@ -95,16 +95,24 @@ async def _call_gemini(prompt: str, json_mode: bool) -> str:
     if json_mode:
         generation_config["response_mime_type"] = "application/json"
 
-    # Direct fast call to stable Gemini 1.5 Flash
-    model = genai.GenerativeModel(
-        "gemini-1.5-flash",
-        generation_config=generation_config if generation_config else None,
-    )
-    response = model.generate_content(prompt)
-    if response and response.text:
-        return response.text
+    # Try stable gemini-1.5-flash first, then Google's dynamic 'gemini-flash' alias
+    models_to_try = ["gemini-1.5-flash", "gemini-flash", "gemini-1.5-pro"]
+    last_error = None
 
-    raise RuntimeError("Gemini Flash returned empty response")
+    for m_name in models_to_try:
+        try:
+            model = genai.GenerativeModel(
+                m_name,
+                generation_config=generation_config if generation_config else None,
+            )
+            response = model.generate_content(prompt)
+            if response and response.text:
+                return response.text
+        except Exception as e:
+            last_error = e
+            logger.warning(f"Gemini model {m_name} call failed: {e}")
+
+    raise RuntimeError(f"Gemini Flash API failed: {last_error}")
 
 
 async def _call_groq(prompt: str, json_mode: bool) -> str:
