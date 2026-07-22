@@ -139,3 +139,62 @@ CRITICAL PERSONALIZATION GUIDELINES:
 - Do NOT invent experiences or metrics the candidate doesn't have.
 
 Return ONLY the cover letter text in clean Markdown format suitable for PDF rendering. Start directly with the text."""
+
+
+# ── Screening Question Assistant ────────────────────────
+
+SCREENING_QUESTION_PROMPT = """You are a job application assistant. Write a clear, highly persuasive, and tailored answer to the following screening question for a job application.
+
+CANDIDATE RESUME:
+---
+{resume_json}
+---
+
+TARGET JOB:
+Title: {job_title}
+Company: {job_company}
+Description:
+---
+{job_description}
+---
+
+SCREENING QUESTION TO ANSWER:
+"{question}"
+
+GUIDELINES:
+- Write 1-2 concise, impact-driven paragraphs (150-250 words max).
+- Direct, confident, and specific — reference candidate's real experience that answers the prompt.
+- Tailor specifically to {job_company} and the {job_title} role.
+- Do NOT use generic filler or invent experience not present in the resume.
+
+Return ONLY the final answer text."""
+
+
+# ── Recruiter Outreach Email Generator ─────────────────
+
+RECRUITER_OUTREACH_PROMPT = """Write a personalized, high-converting cold outreach email & LinkedIn InMail message to a recruiter or hiring manager at {job_company} for the {job_title} role.
+
+CANDIDATE RESUME:
+---
+{resume_json}
+---
+
+TARGET JOB:
+Title: {job_title}
+Company: {job_company}
+Description:
+---
+{job_description}
+---
+
+Provide TWO options in clean Markdown format:
+
+1. **LinkedIn InMail Message** (Under 100 words - short, punchy, curiosity-inducing)
+2. **Cold Email to Recruiter** (Complete with Subject Line & 3 short paragraphs)
+
+GUIDELINES:
+- Address the recruiter professionally (e.g., "Hi [Hiring Manager / Recruiter Name]")
+- Highlight 1-2 specific achievements or skills from the resume that directly solve key problems in the job description.
+- Keep tone confident, warm, and professional with a low-friction call to action (e.g., "Open to a brief 5-min chat next week?").
+
+Return ONLY the Markdown content."""

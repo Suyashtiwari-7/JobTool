@@ -312,3 +312,85 @@ async def clear_applications(
     await db.execute(delete(PipelineRun))
     await db.flush()
     return {"message": "Application history and queue cleared successfully"}
+
+
+class ScreeningRequest(BaseModel):
+    question: str
+
+
+@router.post("/{app_id}/screening-answer")
+async def generate_screening_answer(
+    app_id: int,
+    payload: ScreeningRequest,
+    db: AsyncSession = Depends(get_db),
+    _user: str = Depends(verify_token),
+):
+    """Generate an AI-tailored answer to a custom application screening question."""
+    from app.db.models import Resume
+    from app.llm.prompts import SCREENING_QUESTION_PROMPT
+    from app.llm.provider import llm_call
+
+    result = await db.execute(
+        select(Application).options(joinedload(Application.job)).where(Application.id == app_id)
+    )
+    app = result.unique().scalar_one_or_none()
+    if not app:
+        raise HTTPException(404, "Application not found")
+
+    res_result = await db.execute(
+        select(Resume).where(Resume.is_active.is_(True)).order_by(Resume.uploaded_at.desc()).limit(1)
+    )
+    resume = res_result.scalar_one_or_none()
+    resume_data = resume.parsed_json if resume else {}
+
+    prompt = SCREENING_QUESTION_PROMPT.format(
+        resume_json=resume_data,
+        job_title=app.job.title if app.job else "Role",
+        job_company=app.job.company if app.job else "Company",
+        job_description=app.job.description if app.job else "",
+        question=payload.question,
+    )
+
+    try:
+        answer = await llm_call(prompt)
+        return {"answer": answer}
+    except Exception as e:
+        raise HTTPException(500, f"Failed to generate screening answer: {str(e)}")
+
+
+@router.post("/{app_id}/outreach-email")
+async def generate_outreach_email(
+    app_id: int,
+    db: AsyncSession = Depends(get_db),
+    _user: str = Depends(verify_token),
+):
+    """Generate a personalized cold email & LinkedIn InMail for recruiters."""
+    from app.db.models import Resume
+    from app.llm.prompts import RECRUITER_OUTREACH_PROMPT
+    from app.llm.provider import llm_call
+
+    result = await db.execute(
+        select(Application).options(joinedload(Application.job)).where(Application.id == app_id)
+    )
+    app = result.unique().scalar_one_or_none()
+    if not app:
+        raise HTTPException(404, "Application not found")
+
+    res_result = await db.execute(
+        select(Resume).where(Resume.is_active.is_(True)).order_by(Resume.uploaded_at.desc()).limit(1)
+    )
+    resume = res_result.scalar_one_or_none()
+    resume_data = resume.parsed_json if resume else {}
+
+    prompt = RECRUITER_OUTREACH_PROMPT.format(
+        resume_json=resume_data,
+        job_title=app.job.title if app.job else "Role",
+        job_company=app.job.company if app.job else "Company",
+        job_description=app.job.description if app.job else "",
+    )
+
+    try:
+        outreach = await llm_call(prompt)
+        return {"outreach": outreach}
+    except Exception as e:
+        raise HTTPException(500, f"Failed to generate recruiter outreach: {str(e)}")

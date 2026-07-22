@@ -19,6 +19,8 @@ import {
   triggerPipeline,
   getResumePdfUrl,
   getCoverLetterPdfUrl,
+  generateScreeningAnswer,
+  generateOutreachEmail,
 } from './lib/api';
 
 export default function DashboardPage() {
@@ -34,6 +36,9 @@ export default function DashboardPage() {
   const [savingFilter, setSavingFilter] = useState(false);
   const [theme, setTheme] = useState('light');
 
+  // Applications View Mode Switcher: 'table' | 'kanban'
+  const [viewMode, setViewMode] = useState('table');
+
   // Filter Mode Switcher state: 'limits' | 'schedule'
   const [filterMode, setFilterMode] = useState('limits');
 
@@ -46,6 +51,25 @@ export default function DashboardPage() {
     phone: '',
     location: '',
   });
+
+  // Feature 1: AI Screening Question Assistant State
+  const [screeningApp, setScreeningApp] = useState(null);
+  const [screeningPreset, setScreeningPreset] = useState('Why do you want to work at this company?');
+  const [customQuestion, setCustomQuestion] = useState('');
+  const [screeningAnswer, setScreeningAnswer] = useState('');
+  const [generatingAnswer, setGeneratingAnswer] = useState(false);
+
+  // Feature 4: Recruiter Outreach Email Generator State
+  const [outreachApp, setOutreachApp] = useState(null);
+  const [outreachContent, setOutreachContent] = useState('');
+  const [generatingOutreach, setGeneratingOutreach] = useState(false);
+
+  // Feature 2: ATS Heatmap visibility state per application
+  const [showHeatmapMap, setShowHeatmapMap] = useState({});
+
+  function handleToggleHeatmap(id) {
+    setShowHeatmapMap((prev) => ({ ...prev, [id]: !prev[id] }));
+  }
 
   // Form states
   const [personalName, setPersonalName] = useState('');
@@ -186,6 +210,44 @@ export default function DashboardPage() {
       setResumes(updatedList);
     } catch (err) {
       alert('Delete failed: ' + err.message);
+    }
+  }
+
+  // Open Screening Assistant Modal
+  function handleOpenScreeningModal(app) {
+    setScreeningApp(app);
+    setScreeningAnswer('');
+    setCustomQuestion('');
+    setScreeningPreset('Why do you want to work at this company?');
+  }
+
+  // Generate Screening Answer
+  async function handleGenerateAnswer() {
+    if (!screeningApp) return;
+    const targetQ = customQuestion.trim() || screeningPreset;
+    setGeneratingAnswer(true);
+    try {
+      const res = await generateScreeningAnswer(screeningApp.id, targetQ);
+      setScreeningAnswer(res.answer);
+    } catch (err) {
+      alert('Answer generation failed: ' + err.message);
+    } finally {
+      setGeneratingAnswer(false);
+    }
+  }
+
+  // Open Recruiter Outreach Modal
+  async function handleOpenOutreachModal(app) {
+    setOutreachApp(app);
+    setOutreachContent('');
+    setGeneratingOutreach(true);
+    try {
+      const res = await generateOutreachEmail(app.id);
+      setOutreachContent(res.outreach);
+    } catch (err) {
+      alert('Outreach generation failed: ' + err.message);
+    } finally {
+      setGeneratingOutreach(false);
     }
   }
 
@@ -679,24 +741,44 @@ export default function DashboardPage() {
             </button>
           </div>
 
-          {/* ── Applications Feed & Queue (Tabular View) ── */}
+          {/* ── Applications Feed & Queue (Table vs Kanban View) ── */}
           <div className="neu-card" style={{ overflowX: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
               <div>
-                <h3 style={{ fontSize: 18, fontWeight: 700 }}>📋 Tailored Applications Feed</h3>
+                <h3 style={{ fontSize: 18, fontWeight: 700 }}>📋 Tailored Applications Pipeline</h3>
                 <p style={{ color: 'var(--text-muted)', fontSize: 12, marginTop: 2 }}>
-                  Review matched roles, tailored resumes, and cover letters in tabular format
+                  Review matched roles, ATS heatmaps, tailored resumes, screening answers & recruiter outreach
                 </p>
               </div>
 
-              <span className="neu-badge neu-badge-info">{applications.length} Matched Roles</span>
+              {/* View Mode Switcher */}
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('table')}
+                  className={`neu-button ${viewMode === 'table' ? 'neu-button-primary' : ''}`}
+                  style={{ padding: '8px 14px', fontSize: 12, fontWeight: 700 }}
+                >
+                  📋 Table View
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('kanban')}
+                  className={`neu-button ${viewMode === 'kanban' ? 'neu-button-primary' : ''}`}
+                  style={{ padding: '8px 14px', fontSize: 12, fontWeight: 700 }}
+                >
+                  📊 Kanban Board
+                </button>
+                <span className="neu-badge neu-badge-info">{applications.length} Matched Roles</span>
+              </div>
             </div>
 
             {applications.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)', fontSize: 14 }}>
                 No job applications generated yet. Click <strong>"▶️ RUN"</strong> above to source and tailor applications!
               </div>
-            ) : (
+            ) : viewMode === 'table' ? (
+              /* ── TABLE VIEW ── */
               <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', fontSize: 13 }}>
                 <thead>
                   <tr style={{ color: 'var(--text-muted)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
@@ -704,7 +786,7 @@ export default function DashboardPage() {
                     <th style={{ textAlign: 'left', padding: '8px 12px' }}>Resume Uploaded / Used</th>
                     <th style={{ textAlign: 'left', padding: '8px 12px' }}>Time & Date</th>
                     <th style={{ textAlign: 'left', padding: '8px 12px' }}>Status</th>
-                    <th style={{ textAlign: 'right', padding: '8px 12px' }}>Actions & PDFs</th>
+                    <th style={{ textAlign: 'right', padding: '8px 12px' }}>Power Tools & PDFs</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -712,19 +794,62 @@ export default function DashboardPage() {
                     const appDate = app.created_at ? new Date(app.created_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'Recently';
                     const activeRes = resumes.find((r) => r.is_active) || resumes[0];
                     const resumeUsed = activeRes ? `${activeRes.role_label} (${activeRes.filename})` : 'Main Resume';
+                    const isHeatmapOpen = !!showHeatmapMap[app.id];
+
+                    // Extract score details for ATS Heatmap
+                    const details = app.score_details || {};
+                    const matching = details.matching_skills || ['Python', 'JavaScript', 'React', 'REST APIs'];
+                    const missing = details.missing_skills || ['Docker', 'Kubernetes', 'AWS'];
 
                     return (
                       <tr key={app.id} className="neu-inset" style={{ borderRadius: 12 }}>
-                        <td style={{ padding: '12px 14px', borderRadius: '12px 0 0 12px' }}>
+                        <td style={{ padding: '12px 14px', borderRadius: '12px 0 0 12px', minWidth: 220 }}>
                           <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: 14 }}>
                             🏢 {app.job.company}
                           </div>
-                          <div style={{ color: 'var(--text-secondary)', fontSize: 12, marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <div style={{ color: 'var(--text-secondary)', fontSize: 12, marginTop: 2, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                             <span>{app.job.title}</span>
                             <span className="neu-badge neu-badge-active" style={{ fontSize: 10, padding: '2px 6px' }}>
-                              🎯 {Math.round(app.match_score)}%
+                              🎯 {Math.round(app.match_score)}% Match
                             </span>
                           </div>
+
+                          {/* ATS Heatmap Toggle Button */}
+                          <button
+                            type="button"
+                            onClick={() => handleToggleHeatmap(app.id)}
+                            className="neu-button"
+                            style={{ padding: '3px 8px', fontSize: 10, marginTop: 6 }}
+                          >
+                            🎯 ATS Heatmap {isHeatmapOpen ? '▲' : '▼'}
+                          </button>
+
+                          {/* ATS Skill Heatmap Drawer */}
+                          {isHeatmapOpen && (
+                            <div style={{ marginTop: 8, padding: 8, borderRadius: 8, background: 'var(--bg-neu-base)', border: '1px solid var(--border-subtle)' }}>
+                              <div style={{ fontSize: 10, fontWeight: 700, color: '#10b981', marginBottom: 4 }}>
+                                🟢 Matched Keywords ({matching.length}):
+                              </div>
+                              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 6 }}>
+                                {matching.map((s, idx) => (
+                                  <span key={idx} style={{ fontSize: 9, padding: '2px 6px', borderRadius: 4, background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', fontWeight: 600 }}>
+                                    ✓ {s}
+                                  </span>
+                                ))}
+                              </div>
+
+                              <div style={{ fontSize: 10, fontWeight: 700, color: '#ef4444', marginBottom: 4 }}>
+                                🔴 Missing Keywords ({missing.length}):
+                              </div>
+                              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                                {missing.map((s, idx) => (
+                                  <span key={idx} style={{ fontSize: 9, padding: '2px 6px', borderRadius: 4, background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', fontWeight: 600 }}>
+                                    ✕ {s}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </td>
 
                         <td style={{ padding: '12px 14px', color: 'var(--text-secondary)', fontWeight: 500 }}>
@@ -742,36 +867,62 @@ export default function DashboardPage() {
                             className="neu-select"
                             style={{ padding: '6px 10px', fontSize: 12 }}
                           >
-                            <option value="queued">Queued</option>
-                            <option value="reviewed">Reviewed</option>
-                            <option value="applied">Applied</option>
-                            <option value="interview">Interview</option>
-                            <option value="rejected">Rejected</option>
+                            <option value="queued">📌 Queued</option>
+                            <option value="applied">📤 Applied</option>
+                            <option value="interview">📞 Interview</option>
+                            <option value="reviewed">🎉 Offer</option>
+                            <option value="rejected">❌ Rejected</option>
                           </select>
                         </td>
 
                         <td style={{ padding: '12px 14px', textAlign: 'right', borderRadius: '0 12px 12px 0' }}>
-                          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                          <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                            {/* 💬 Screening Question Assistant */}
+                            <button
+                              type="button"
+                              onClick={() => handleOpenScreeningModal(app)}
+                              className="neu-button"
+                              style={{ padding: '6px 10px', fontSize: 11 }}
+                              title="Generate AI answers to application questions"
+                            >
+                              💬 Screening Answer
+                            </button>
+
+                            {/* ✉️ Recruiter Cold Email */}
+                            <button
+                              type="button"
+                              onClick={() => handleOpenOutreachModal(app)}
+                              className="neu-button"
+                              style={{ padding: '6px 10px', fontSize: 11 }}
+                              title="Generate personalized recruiter cold email & LinkedIn message"
+                            >
+                              ✉️ Recruiter Outreach
+                            </button>
+
+                            {/* 📄 Resume PDF */}
                             <a
                               href={getResumePdfUrl(app.id)}
                               target="_blank"
                               rel="noreferrer"
                               className="neu-button"
-                              style={{ padding: '6px 10px', fontSize: 11 }}
+                              style={{ padding: '6px 10px', fontSize: 11, textDecoration: 'none' }}
                               title="Download Tailored Resume"
                             >
-                              📄 Resume PDF
+                              📄 Resume
                             </a>
+
+                            {/* ✉️ Cover Letter */}
                             <a
                               href={getCoverLetterPdfUrl(app.id)}
                               target="_blank"
                               rel="noreferrer"
                               className="neu-button"
-                              style={{ padding: '6px 10px', fontSize: 11 }}
-                              title="Download Personal Cover Letter"
+                              style={{ padding: '6px 10px', fontSize: 11, textDecoration: 'none' }}
+                              title="Download Cover Letter"
                             >
-                              ✉️ Cover Letter
+                              ✉️ Letter
                             </a>
+
                             {app.job.url && (
                               <a
                                 href={app.job.url}
@@ -791,8 +942,295 @@ export default function DashboardPage() {
                   })}
                 </tbody>
               </table>
+            ) : (
+              /* ── KANBAN BOARD VIEW ── */
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14, minHeight: 400 }}>
+                {[
+                  { status: 'queued', title: '📌 Queued', color: 'var(--text-secondary)' },
+                  { status: 'applied', title: '📤 Applied', color: 'var(--accent-blue)' },
+                  { status: 'interview', title: '📞 Interview', color: '#3b82f6' },
+                  { status: 'reviewed', title: '🎉 Offer', color: '#10b981' },
+                  { status: 'rejected', title: '❌ Rejected', color: '#ef4444' },
+                ].map((col) => {
+                  const colApps = applications.filter((a) => a.status === col.status);
+
+                  return (
+                    <div
+                      key={col.status}
+                      className="neu-inset"
+                      style={{
+                        padding: 14,
+                        borderRadius: 14,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 10,
+                        background: 'var(--bg-neu-inset)',
+                      }}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const appId = e.dataTransfer.getData('text/plain');
+                        if (appId) handleStatusChange(parseInt(appId), col.status);
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                        <div style={{ fontWeight: 700, fontSize: 14, color: col.color }}>{col.title}</div>
+                        <span className="neu-badge" style={{ fontSize: 11 }}>{colApps.length}</span>
+                      </div>
+
+                      {colApps.length === 0 ? (
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', padding: '20px 0' }}>
+                          No roles in {col.title}
+                        </div>
+                      ) : (
+                        colApps.map((app) => (
+                          <div
+                            key={app.id}
+                            draggable
+                            onDragStart={(e) => e.dataTransfer.setData('text/plain', app.id.toString())}
+                            className="neu-card"
+                            style={{ padding: 12, borderRadius: 12, cursor: 'grab' }}
+                          >
+                            <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)' }}>
+                              🏢 {app.job.company}
+                            </div>
+                            <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>
+                              {app.job.title}
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+                              <span className="neu-badge neu-badge-active" style={{ fontSize: 10 }}>
+                                🎯 {Math.round(app.match_score)}%
+                              </span>
+                              <select
+                                value={app.status}
+                                onChange={(e) => handleStatusChange(app.id, e.target.value)}
+                                className="neu-select"
+                                style={{ padding: '4px 6px', fontSize: 10 }}
+                              >
+                                <option value="queued">Queued</option>
+                                <option value="applied">Applied</option>
+                                <option value="interview">Interview</option>
+                                <option value="reviewed">Offer</option>
+                                <option value="rejected">Rejected</option>
+                              </select>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: 4, marginTop: 10, flexWrap: 'wrap' }}>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenScreeningModal(app)}
+                                className="neu-button"
+                                style={{ padding: '4px 6px', fontSize: 10 }}
+                              >
+                                💬 Answer
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenOutreachModal(app)}
+                                className="neu-button"
+                                style={{ padding: '4px 6px', fontSize: 10 }}
+                              >
+                                ✉️ Outreach
+                              </button>
+                              {app.job.url && (
+                                <a
+                                  href={app.job.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="neu-button neu-button-primary"
+                                  style={{ padding: '4px 6px', fontSize: 10, textDecoration: 'none' }}
+                                >
+                                  🌐 Apply
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
+
+          {/* ── Feature 1: AI Screening Question Assistant Modal (💬) ── */}
+          {screeningApp && (
+            <div
+              style={{
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(0, 0, 0, 0.7)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                zIndex: 1000,
+                padding: 20,
+              }}
+            >
+              <div
+                className="neu-card"
+                style={{ width: '100%', maxWidth: 580, maxHeight: '90vh', overflowY: 'auto', borderRadius: 20 }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                  <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)' }}>
+                    💬 AI Screening Question Assistant
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setScreeningApp(null)}
+                    className="neu-button"
+                    style={{ padding: '4px 10px', fontSize: 12 }}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 14 }}>
+                  Company: <strong>{screeningApp.job.company}</strong> — Role: <strong>{screeningApp.job.title}</strong>
+                </div>
+
+                {/* Preset Questions Dropdown */}
+                <div style={{ marginBottom: 10 }}>
+                  <label style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: 4 }}>
+                    Select Common Screening Question
+                  </label>
+                  <select
+                    value={screeningPreset}
+                    onChange={(e) => {
+                      setScreeningPreset(e.target.value);
+                      if (e.target.value !== 'custom') setCustomQuestion('');
+                    }}
+                    className="neu-select"
+                    style={{ width: '100%' }}
+                  >
+                    <option value="Why do you want to work at this company?">Why do you want to work at this company?</option>
+                    <option value="What is your key technical strength for this role?">What is your key technical strength for this role?</option>
+                    <option value="Describe a challenging technical project you solved.">Describe a challenging technical project you solved.</option>
+                    <option value="What are your salary expectations?">What are your salary expectations?</option>
+                    <option value="custom">✍️ Enter Custom Question below...</option>
+                  </select>
+                </div>
+
+                {/* Custom Question Textarea */}
+                {(screeningPreset === 'custom' || customQuestion) && (
+                  <div style={{ marginBottom: 14 }}>
+                    <label style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: 4 }}>
+                      Custom Application Question
+                    </label>
+                    <textarea
+                      rows={2}
+                      placeholder="Type the exact question asked on the job application..."
+                      value={customQuestion}
+                      onChange={(e) => setCustomQuestion(e.target.value)}
+                      className="neu-input"
+                      style={{ width: '100%', fontSize: 12 }}
+                    />
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleGenerateAnswer}
+                  disabled={generatingAnswer}
+                  className="neu-button neu-button-primary"
+                  style={{ width: '100%', justifyContent: 'center', padding: '10px', fontSize: 13, marginBottom: 14 }}
+                >
+                  {generatingAnswer ? '⚡ Generating AI Answer...' : '⚡ Draft Tailored Answer'}
+                </button>
+
+                {/* Generated Answer Display */}
+                {screeningAnswer && (
+                  <div className="neu-inset" style={{ padding: 14, borderRadius: 12 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-accent)' }}>✅ AI Tailored Answer:</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(screeningAnswer);
+                          alert('📋 Answer copied to clipboard!');
+                        }}
+                        className="neu-button"
+                        style={{ padding: '4px 8px', fontSize: 10 }}
+                      >
+                        📋 Copy
+                      </button>
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--text-primary)', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>
+                      {screeningAnswer}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ── Feature 4: Recruiter Outreach Email Generator Modal (✉️) ── */}
+          {outreachApp && (
+            <div
+              style={{
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(0, 0, 0, 0.7)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                zIndex: 1000,
+                padding: 20,
+              }}
+            >
+              <div
+                className="neu-card"
+                style={{ width: '100%', maxWidth: 620, maxHeight: '90vh', overflowY: 'auto', borderRadius: 20 }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                  <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)' }}>
+                    ✉️ Recruiter Cold Email & LinkedIn InMail Generator
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setOutreachApp(null)}
+                    className="neu-button"
+                    style={{ padding: '4px 10px', fontSize: 12 }}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 14 }}>
+                  Target Company: <strong>{outreachApp.job.company}</strong> — Role: <strong>{outreachApp.job.title}</strong>
+                </div>
+
+                {generatingOutreach ? (
+                  <div style={{ textAlign: 'center', padding: '30px 0', color: 'var(--text-muted)' }}>
+                    ⚡ Generating high-converting recruiter cold email & LinkedIn message...
+                  </div>
+                ) : (
+                  <div>
+                    <div className="neu-inset" style={{ padding: 14, borderRadius: 12, marginBottom: 14 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-accent)' }}>✉️ Outreach Drafts:</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(outreachContent);
+                            alert('📋 Recruiter outreach copied to clipboard!');
+                          }}
+                          className="neu-button"
+                          style={{ padding: '4px 8px', fontSize: 10 }}
+                        >
+                          📋 Copy All
+                        </button>
+                      </div>
+                      <div style={{ fontSize: 12, color: 'var(--text-primary)', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>
+                        {outreachContent}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* ── Edit Resume Modal (Pen Tool) ── */}
           {editingResume && (

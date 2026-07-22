@@ -183,6 +183,19 @@ export async function clearApplications() {
   return apiFetch('/api/applications/clear', { method: 'DELETE' });
 }
 
+export async function generateScreeningAnswer(id, question) {
+  return apiFetch(`/api/applications/${id}/screening-answer`, {
+    method: 'POST',
+    body: JSON.stringify({ question }),
+  });
+}
+
+export async function generateOutreachEmail(id) {
+  return apiFetch(`/api/applications/${id}/outreach-email`, {
+    method: 'POST',
+  });
+}
+
 export function getResumePdfUrl(id) {
   return `${API_URL}/api/applications/${id}/resume-pdf`;
 }
