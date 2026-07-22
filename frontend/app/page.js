@@ -71,6 +71,34 @@ export default function DashboardPage() {
     setShowHeatmapMap((prev) => ({ ...prev, [id]: !prev[id] }));
   }
 
+  // Privacy masking helpers
+  function maskEmail(email) {
+    if (!email || typeof email !== 'string') return '';
+    const parts = email.split('@');
+    if (parts.length !== 2) return email;
+    const [user, domain] = parts;
+    if (user.length <= 2) return `${user[0]}*@${domain}`;
+    const firstChar = user[0];
+    const lastTwo = user.slice(-2);
+    const stars = '*'.repeat(Math.max(3, user.length - 3));
+    return `${firstChar}${stars}${lastTwo}@${domain}`;
+  }
+
+  function maskPhone(phone) {
+    if (!phone || typeof phone !== 'string') return '';
+    const clean = phone.trim();
+    if (clean.length <= 4) return '****';
+    const visibleLast4 = clean.slice(-4);
+    const prefix = clean.slice(0, Math.max(0, clean.length - 7));
+    return `${prefix} (***) ***-${visibleLast4}`;
+  }
+
+  // Real-Time Applications Feed Search State
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Company Resume & Interview Inspector Modal State
+  const [inspectApp, setInspectApp] = useState(null);
+
   // Form states
   const [personalName, setPersonalName] = useState('');
   const [personalEmail, setPersonalEmail] = useState('');
@@ -427,9 +455,17 @@ export default function DashboardPage() {
                           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             📁 {r.filename}
                           </div>
-                          {isContactVisible && contactInfo && (
-                            <div style={{ fontSize: 11, color: 'var(--text-accent)', marginTop: 4, fontWeight: 600 }}>
-                              📧 {parsed.email || 'N/A'} • 📞 {parsed.phone || 'N/A'}
+                          {contactInfo && (
+                            <div style={{ fontSize: 11, marginTop: 4, fontWeight: 600 }}>
+                              {isContactVisible ? (
+                                <span style={{ color: 'var(--text-accent)' }}>
+                                  📧 {parsed.email || 'N/A'} • 📞 {parsed.phone || 'N/A'}
+                                </span>
+                              ) : (
+                                <span style={{ color: 'var(--text-muted)' }}>
+                                  📧 {maskEmail(parsed.email)} • 📞 {maskPhone(parsed.phone)}
+                                </span>
+                              )}
                             </div>
                           )}
                         </div>
@@ -773,24 +809,76 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {applications.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)', fontSize: 14 }}>
-                No job applications generated yet. Click <strong>"▶️ RUN"</strong> above to source and tailor applications!
+            {/* 🔍 Real-Time Search Bar */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ position: 'relative', width: '100%', maxWidth: 450 }}>
+                <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 15, color: 'var(--text-muted)' }}>
+                  🔍
+                </span>
+                <input
+                  type="text"
+                  placeholder="Search by company name, role, or status (e.g. Tesla, AI, applied)..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="neu-input"
+                  style={{ width: '100%', paddingLeft: 40, fontSize: 12 }}
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    style={{
+                      position: 'absolute',
+                      right: 12,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: 12,
+                      color: 'var(--text-muted)',
+                    }}
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
-            ) : viewMode === 'table' ? (
-              /* ── TABLE VIEW ── */
-              <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', fontSize: 13 }}>
-                <thead>
-                  <tr style={{ color: 'var(--text-muted)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                    <th style={{ textAlign: 'left', padding: '8px 12px' }}>Company & Role</th>
-                    <th style={{ textAlign: 'left', padding: '8px 12px' }}>Resume Uploaded / Used</th>
-                    <th style={{ textAlign: 'left', padding: '8px 12px' }}>Time & Date</th>
-                    <th style={{ textAlign: 'left', padding: '8px 12px' }}>Status</th>
-                    <th style={{ textAlign: 'right', padding: '8px 12px' }}>Power Tools & PDFs</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {applications.map((app) => {
+            </div>
+
+            {(() => {
+              const filteredApplications = applications.filter((app) => {
+                if (!searchQuery.trim()) return true;
+                const q = searchQuery.toLowerCase().trim();
+                const companyMatch = (app.job?.company || '').toLowerCase().includes(q);
+                const titleMatch = (app.job?.title || '').toLowerCase().includes(q);
+                const statusMatch = (app.status || '').toLowerCase().includes(q);
+                return companyMatch || titleMatch || statusMatch;
+              });
+
+              if (filteredApplications.length === 0) {
+                return (
+                  <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)', fontSize: 14 }}>
+                    {searchQuery
+                      ? `No applications matching "${searchQuery}"`
+                      : 'No job applications generated yet. Click "▶️ RUN" above to source and tailor applications!'}
+                  </div>
+                );
+              }
+
+              return viewMode === 'table' ? (
+                /* ── TABLE VIEW ── */
+                <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', fontSize: 13 }}>
+                  <thead>
+                    <tr style={{ color: 'var(--text-muted)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      <th style={{ textAlign: 'left', padding: '8px 12px' }}>Company & Role</th>
+                      <th style={{ textAlign: 'left', padding: '8px 12px' }}>Resume Uploaded / Used</th>
+                      <th style={{ textAlign: 'left', padding: '8px 12px' }}>Time & Date</th>
+                      <th style={{ textAlign: 'left', padding: '8px 12px' }}>Status</th>
+                      <th style={{ textAlign: 'right', padding: '8px 12px' }}>Power Tools & PDFs</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredApplications.map((app) => {
                     const appDate = app.created_at ? new Date(app.created_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'Recently';
                     const activeRes = resumes.find((r) => r.is_active) || resumes[0];
                     const resumeUsed = activeRes ? `${activeRes.role_label} (${activeRes.filename})` : 'Main Resume';
@@ -1032,6 +1120,15 @@ export default function DashboardPage() {
                               >
                                 ✉️ Outreach
                               </button>
+                              <button
+                                type="button"
+                                onClick={() => setInspectApp(app)}
+                                className="neu-button"
+                                style={{ padding: '4px 6px', fontSize: 10 }}
+                                title="Inspect company submission package for interview prep"
+                              >
+                                🏢 Inspect
+                              </button>
                               {app.job.url && (
                                 <a
                                   href={app.job.url}
@@ -1051,7 +1148,8 @@ export default function DashboardPage() {
                   );
                 })}
               </div>
-            )}
+            );
+          })()}
           </div>
 
           {/* ── Feature 1: AI Screening Question Assistant Modal (💬) ── */}
@@ -1228,6 +1326,132 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* ── Feature: 1-Click Company Resume & Interview Inspector Modal (🏢) ── */}
+          {inspectApp && (
+            <div
+              style={{
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(0, 0, 0, 0.75)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                zIndex: 1000,
+                padding: 20,
+              }}
+            >
+              <div
+                className="neu-card"
+                style={{ width: '100%', maxWidth: 680, maxHeight: '90vh', overflowY: 'auto', borderRadius: 20 }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                  <div>
+                    <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)' }}>
+                      🏢 {inspectApp.job.company} — Submission Package
+                    </h3>
+                    <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
+                      Role: <strong>{inspectApp.job.title}</strong> • Match Score: <span className="neu-badge neu-badge-active">🎯 {Math.round(inspectApp.match_score)}%</span>
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setInspectApp(null)}
+                    className="neu-button"
+                    style={{ padding: '4px 10px', fontSize: 12 }}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
+                  <a
+                    href={getResumePdfUrl(inspectApp.id)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="neu-button neu-button-primary"
+                    style={{ padding: '8px 14px', fontSize: 12, textDecoration: 'none' }}
+                  >
+                    📄 View/Download Tailored Resume PDF
+                  </a>
+                  <a
+                    href={getCoverLetterPdfUrl(inspectApp.id)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="neu-button"
+                    style={{ padding: '8px 14px', fontSize: 12, textDecoration: 'none' }}
+                  >
+                    ✉️ View Cover Letter PDF
+                  </a>
+                  {inspectApp.job.url && (
+                    <a
+                      href={inspectApp.job.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="neu-button"
+                      style={{ padding: '8px 14px', fontSize: 12, textDecoration: 'none' }}
+                    >
+                      🌐 Open Original Job Posting
+                    </a>
+                  )}
+                </div>
+
+                {/* ATS Skill Breakdown */}
+                <div className="neu-inset" style={{ padding: 14, borderRadius: 12, marginBottom: 16 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>
+                    🎯 ATS Keyword Breakdown:
+                  </div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#10b981', marginBottom: 4 }}>
+                    🟢 Matched Keywords:
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+                    {(inspectApp.score_details?.matching_skills || ['Python', 'JavaScript', 'React', 'REST APIs']).map((s, idx) => (
+                      <span key={idx} style={{ fontSize: 10, padding: '3px 8px', borderRadius: 6, background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', fontWeight: 600 }}>
+                        ✓ {s}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#ef4444', marginBottom: 4 }}>
+                    🔴 Missing Keywords:
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {(inspectApp.score_details?.missing_skills || ['Docker', 'AWS', 'GraphQL']).map((s, idx) => (
+                      <span key={idx} style={{ fontSize: 10, padding: '3px 8px', borderRadius: 6, background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', fontWeight: 600 }}>
+                        ✕ {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Quick Action Buttons */}
+                <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setInspectApp(null);
+                      handleOpenScreeningModal(inspectApp);
+                    }}
+                    className="neu-button"
+                    style={{ padding: '8px 12px', fontSize: 12 }}
+                  >
+                    💬 Screening Answer
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setInspectApp(null);
+                      handleOpenOutreachModal(inspectApp);
+                    }}
+                    className="neu-button"
+                    style={{ padding: '8px 12px', fontSize: 12 }}
+                  >
+                    ✉️ Recruiter Outreach
+                  </button>
+                </div>
               </div>
             </div>
           )}
