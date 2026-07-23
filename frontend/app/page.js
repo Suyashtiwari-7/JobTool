@@ -257,6 +257,9 @@ export default function DashboardPage() {
       await deleteResume(id);
       const updatedList = await listResumes();
       setResumes(updatedList);
+      if (!updatedList || updatedList.length === 0) {
+        setShowResumesModal(false);
+      }
     } catch (err) {
       alert('Delete failed: ' + err.message);
     }

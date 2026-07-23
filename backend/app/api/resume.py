@@ -199,6 +199,8 @@ async def delete_resume(
     if not resume:
         raise HTTPException(404, "Resume not found")
 
+    was_active = resume.is_active
+
     if resume.file_path and os.path.exists(resume.file_path):
         try:
             os.remove(resume.file_path)
@@ -206,7 +208,16 @@ async def delete_resume(
             pass
 
     await db.delete(resume)
-    await db.flush()
+    await db.commit()
+
+    # If deleted resume was active, set latest remaining resume as active
+    if was_active:
+        rem_res = await db.execute(select(Resume).order_by(Resume.uploaded_at.desc()).limit(1))
+        latest = rem_res.scalar_one_or_none()
+        if latest:
+            latest.is_active = True
+            await db.commit()
+
     return {"message": "Resume deleted"}
 
 
