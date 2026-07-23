@@ -52,6 +52,41 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)) 
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
 
+from fastapi import Query, Request
+
+
+def verify_token_or_query(
+    request: Request,
+    token: str | None = Query(None),
+) -> str:
+    """Validate JWT token from Authorization header OR ?token= query parameter."""
+    auth_header = request.headers.get("Authorization")
+    raw_token = None
+    if auth_header and auth_header.startswith("Bearer "):
+        raw_token = auth_header.split(" ")[1]
+    elif token:
+        raw_token = token
+
+    if not raw_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+        )
+
+    try:
+        payload = jwt.decode(
+            raw_token,
+            settings.secret_key,
+            algorithms=[ALGORITHM],
+        )
+        sub: str | None = payload.get("sub")
+        if sub is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        return sub
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+
 @router.post("/login", response_model=TokenResponse)
 async def login(body: LoginRequest):
     """Authenticate with the app password and receive a JWT."""

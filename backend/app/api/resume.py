@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.auth import verify_token
+from app.api.auth import verify_token, verify_token_or_query
 from app.config import settings
 from app.db.database import get_db
 from app.db.models import Resume
@@ -266,9 +266,9 @@ async def update_resume_details(
 async def get_resume_file(
     resume_id: int,
     db: AsyncSession = Depends(get_db),
-    _user: str = Depends(verify_token),
+    _user: str = Depends(verify_token_or_query),
 ):
-    """Serve a specific uploaded resume file by ID."""
+    """Serve a specific uploaded resume file by ID with query token support."""
     result = await db.execute(select(Resume).where(Resume.id == resume_id))
     resume = result.scalar_one_or_none()
     if not resume:
@@ -277,19 +277,26 @@ async def get_resume_file(
     if not os.path.exists(resume.file_path):
         raise HTTPException(404, "Resume file not found on server")
 
+    content_type = "application/pdf"
+    if resume.filename.lower().endswith(".docx"):
+        content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    elif resume.filename.lower().endswith(".doc"):
+        content_type = "application/msword"
+
     return FileResponse(
         resume.file_path,
         filename=resume.filename,
-        media_type="application/octet-stream",
+        media_type=content_type,
+        headers={"Content-Disposition": f'inline; filename="{resume.filename}"'},
     )
 
 
 @router.get("/download")
 async def download_resume(
     db: AsyncSession = Depends(get_db),
-    _user: str = Depends(verify_token),
+    _user: str = Depends(verify_token_or_query),
 ):
-    """Download the original active uploaded resume file."""
+    """Download or view the active uploaded resume file."""
     result = await db.execute(
         select(Resume).where(Resume.is_active.is_(True)).limit(1)
     )
@@ -300,8 +307,15 @@ async def download_resume(
     if not os.path.exists(resume.file_path):
         raise HTTPException(404, "Resume file not found on server")
 
+    content_type = "application/pdf"
+    if resume.filename.lower().endswith(".docx"):
+        content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    elif resume.filename.lower().endswith(".doc"):
+        content_type = "application/msword"
+
     return FileResponse(
         resume.file_path,
         filename=resume.filename,
-        media_type="application/octet-stream",
+        media_type=content_type,
+        headers={"Content-Disposition": f'inline; filename="{resume.filename}"'},
     )
