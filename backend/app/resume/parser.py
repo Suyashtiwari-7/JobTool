@@ -3,8 +3,18 @@
 import json
 import logging
 
-import fitz  # PyMuPDF
-from docx import Document
+try:
+    import fitz  # PyMuPDF
+except ImportError:
+    try:
+        import pymupdf as fitz
+    except ImportError:
+        fitz = None
+
+try:
+    from docx import Document
+except ImportError:
+    Document = None
 
 from app.llm.provider import llm_call
 from app.llm.prompts import RESUME_PARSE_PROMPT
@@ -82,32 +92,44 @@ async def parse_resume_file(file_path: str, extension: str) -> tuple[str, dict]:
 
 def _extract_pdf_text(file_path: str) -> str:
     """Extract text from a PDF using PyMuPDF."""
+    if fitz is not None:
+        try:
+            doc = fitz.open(file_path)
+            text_parts: list[str] = []
+            for page in doc:
+                text_parts.append(page.get_text())
+            doc.close()
+            text = "\n".join(text_parts).strip()
+            if text:
+                return text
+        except Exception as e:
+            logger.warning(f"PDF extraction error ({e}). Returning fallback text.")
+
     try:
-        doc = fitz.open(file_path)
-        text_parts: list[str] = []
-        for page in doc:
-            text_parts.append(page.get_text())
-        doc.close()
-        return "\n".join(text_parts)
-    except Exception as e:
-        logger.warning(f"PDF extraction error ({e}). Returning fallback text.")
+        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            return f.read()
+    except Exception:
         return "Uploaded Resume Document"
 
 
 def _extract_docx_text(file_path: str) -> str:
     """Extract text from a DOCX using python-docx."""
-    try:
-        doc = Document(file_path)
-        text_parts: list[str] = []
-        for paragraph in doc.paragraphs:
-            if paragraph.text.strip():
-                text_parts.append(paragraph.text)
-        for table in doc.tables:
-            for row in table.rows:
-                for cell in row.cells:
-                    if cell.text.strip():
-                        text_parts.append(cell.text)
-        return "\n".join(text_parts)
-    except Exception as e:
-        logger.warning(f"DOCX extraction error ({e}). Returning fallback text.")
-        return "Uploaded Resume Document"
+    if Document is not None:
+        try:
+            doc = Document(file_path)
+            text_parts: list[str] = []
+            for paragraph in doc.paragraphs:
+                if paragraph.text.strip():
+                    text_parts.append(paragraph.text)
+            for table in doc.tables:
+                for row in table.rows:
+                    for cell in row.cells:
+                        if cell.text.strip():
+                            text_parts.append(cell.text)
+            text = "\n".join(text_parts).strip()
+            if text:
+                return text
+        except Exception as e:
+            logger.warning(f"DOCX extraction error ({e}). Returning fallback text.")
+
+    return "Uploaded Resume Document"
