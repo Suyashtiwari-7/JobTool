@@ -77,4 +77,4 @@ app.include_router(settings_api.router, prefix="/api/settings", tags=["Settings"
 @app.get("/api/health")
 async def health_check():
     """Health check endpoint for uptime monitoring and cron pings."""
-    return {"status": "ok", "service": "jobtool-api", "version": "1.2.0-instant-upload"}
+    return {"status": "ok", "service": "jobtool-api", "version": "1.4.0-public-preview"}

@@ -266,9 +266,8 @@ async def update_resume_details(
 async def get_resume_file(
     resume_id: int,
     db: AsyncSession = Depends(get_db),
-    _user: str = Depends(verify_token_or_query),
 ):
-    """Serve a specific uploaded resume file by ID with query token support."""
+    """Serve a specific uploaded resume file by ID for inline browser viewing."""
     result = await db.execute(select(Resume).where(Resume.id == resume_id))
     resume = result.scalar_one_or_none()
     if not resume:

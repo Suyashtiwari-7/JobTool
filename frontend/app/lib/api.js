@@ -148,8 +148,7 @@ export async function deleteResume(id) {
 }
 
 export function getSpecificResumeUrl(id) {
-  const token = getToken();
-  return `${API_URL}/api/resume/${id}/file${token ? `?token=${token}` : ''}`;
+  return `${API_URL}/api/resume/${id}/file`;
 }
 
 // ── Applications ────────────────────────────────────────
