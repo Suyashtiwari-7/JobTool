@@ -283,12 +283,21 @@ export default function DashboardPage() {
   async function handleViewPdf(resumeId) {
     try {
       const token = getToken();
-      const res = await fetch(`${API_URL}/api/resume/${resumeId}/file`, {
+      let res = await fetch(`${API_URL}/api/resume/${resumeId}/file`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
+
+      // Fallback 1: If 404 (e.g. older Render deployment), try active /download endpoint
+      if (res.status === 404) {
+        res = await fetch(`${API_URL}/api/resume/download`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+      }
+
       if (!res.ok) {
         throw new Error('Server returned HTTP ' + res.status);
       }
+
       const blob = await res.blob();
       const pdfBlob = new Blob([blob], { type: 'application/pdf' });
       const blobUrl = URL.createObjectURL(pdfBlob);

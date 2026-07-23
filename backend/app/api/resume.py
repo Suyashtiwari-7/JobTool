@@ -285,7 +285,18 @@ async def get_resume_file(
         raise HTTPException(404, "Resume not found")
 
     if not os.path.exists(resume.file_path):
-        raise HTTPException(404, "Resume file not found on server")
+        try:
+            from fastapi.responses import Response
+            from app.pipeline.pdf_generator import generate_resume_pdf
+            parsed = resume.parsed_json or {}
+            synth_pdf = generate_resume_pdf(parsed, {"title": resume.role_label or "Resume"})
+            return Response(
+                content=synth_pdf,
+                media_type="application/pdf",
+                headers={"Content-Disposition": f'inline; filename="{resume.filename or "resume.pdf"}"'},
+            )
+        except Exception:
+            raise HTTPException(404, "Resume file not found on server")
 
     content_type = "application/pdf"
     if resume.filename.lower().endswith(".docx"):
@@ -315,7 +326,18 @@ async def download_resume(
         raise HTTPException(404, "No resume uploaded yet")
 
     if not os.path.exists(resume.file_path):
-        raise HTTPException(404, "Resume file not found on server")
+        try:
+            from fastapi.responses import Response
+            from app.pipeline.pdf_generator import generate_resume_pdf
+            parsed = resume.parsed_json or {}
+            synth_pdf = generate_resume_pdf(parsed, {"title": resume.role_label or "Resume"})
+            return Response(
+                content=synth_pdf,
+                media_type="application/pdf",
+                headers={"Content-Disposition": f'inline; filename="{resume.filename or "resume.pdf"}"'},
+            )
+        except Exception:
+            raise HTTPException(404, "Resume file not found on server")
 
     content_type = "application/pdf"
     if resume.filename.lower().endswith(".docx"):
