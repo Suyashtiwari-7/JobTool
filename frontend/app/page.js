@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import AuthLayout from './components/AuthLayout';
 import {
   getStats,
@@ -170,10 +170,23 @@ export default function DashboardPage() {
   const [continuousHours, setContinuousHours] = useState(12);
 
   // 3-Part Sourcing Search Bar states
+  const autocompleteRef = useRef(null);
   const [jobType, setJobType] = useState('all');
   const [targetLocation, setTargetLocation] = useState('');
   const [keywordInput, setKeywordInput] = useState('');
   const [showAutocomplete, setShowAutocomplete] = useState(false);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (autocompleteRef.current && !autocompleteRef.current.contains(event.target)) {
+        setShowAutocomplete(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   function handleAddKeywordTag(tag) {
     const trimmed = tag.trim();
@@ -771,93 +784,120 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    {/* ── 3-Part Job Sourcing Bar (Job Type, Role Autocomplete, Location) ── */}
-                    <div>
+                    {/* ── 3-Part Job Sourcing Filters (Job Type, Roles & Location) ── */}
+                    <div style={{ marginTop: 4 }}>
                       <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: 8 }}>
-                        Target Job Sourcing Filters (Job Type, Roles & Location)
+                        Target Job Sourcing Filters (Optional)
                       </label>
 
-                      {/* Unified Neumorphic Search Bar */}
+                      {/* Spacious Sourcing Container */}
                       <div
                         className="neu-inset"
                         style={{
-                          display: 'flex',
-                          flexWrap: 'wrap',
-                          gap: 8,
-                          padding: '8px 12px',
+                          padding: '14px',
                           borderRadius: 14,
-                          alignItems: 'center',
                           background: 'var(--bg-neu-inset)',
-                          position: 'relative',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 12,
                         }}
                       >
-                        {/* 1. Job Type Dropdown */}
-                        <div style={{ position: 'relative', minWidth: 140, flex: '1 1 140px' }}>
-                          <select
-                            value={jobType}
-                            onChange={(e) => setJobType(e.target.value)}
-                            style={{
-                              width: '100%',
-                              padding: '8px 10px',
-                              borderRadius: 8,
-                              border: 'none',
-                              background: 'transparent',
-                              color: 'var(--text-primary)',
-                              fontSize: 13,
-                              fontWeight: 600,
-                              outline: 'none',
-                              cursor: 'pointer',
-                            }}
-                          >
-                            <option value="all">💼 Select Job Type (All)</option>
-                            <option value="fulltime">💼 Full-Time Job</option>
-                            <option value="internship">🎓 Internship</option>
-                            <option value="contract">📄 Contract / Freelance</option>
-                            <option value="remote">🌐 Remote Only</option>
-                          </select>
+                        {/* Row 1: Job Type Dropdown & Sourcing Location Input */}
+                        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                          {/* 1. Job Type Dropdown */}
+                          <div style={{ flex: '1 1 160px', position: 'relative' }}>
+                            <select
+                              value={jobType}
+                              onChange={(e) => setJobType(e.target.value)}
+                              className="neu-input"
+                              style={{
+                                width: '100%',
+                                padding: '9px 12px',
+                                borderRadius: 10,
+                                background: 'var(--bg-card)',
+                                color: 'var(--text-primary)',
+                                fontSize: 13,
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              <option value="all" style={{ background: '#181b20', color: '#f3f4f6' }}>💼 All Job Types</option>
+                              <option value="fulltime" style={{ background: '#181b20', color: '#f3f4f6' }}>💼 Full-Time Job</option>
+                              <option value="internship" style={{ background: '#181b20', color: '#f3f4f6' }}>🎓 Internship</option>
+                              <option value="contract" style={{ background: '#181b20', color: '#f3f4f6' }}>📄 Contract / Freelance</option>
+                              <option value="remote" style={{ background: '#181b20', color: '#f3f4f6' }}>🌐 Remote Only</option>
+                            </select>
+                          </div>
+
+                          {/* 2. Sourcing Location Input */}
+                          <div style={{ flex: '1 1 160px' }}>
+                            <input
+                              type="text"
+                              value={targetLocation}
+                              onChange={(e) => setTargetLocation(e.target.value)}
+                              className="neu-input"
+                              placeholder="📍 Location (e.g. Remote, NYC, India)"
+                              style={{
+                                width: '100%',
+                                padding: '9px 12px',
+                                borderRadius: 10,
+                                fontSize: 13,
+                              }}
+                            />
+                          </div>
                         </div>
 
-                        <div style={{ width: 1, height: 24, background: 'var(--border-subtle)' }} />
-
-                        {/* 2. Role Keywords Autocomplete Field with Tag Chips */}
-                        <div style={{ flex: '2 1 200px', position: 'relative' }}>
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
+                        {/* Row 2: Role Keywords Autocomplete Field with Tag Chips */}
+                        <div ref={autocompleteRef} style={{ position: 'relative' }}>
+                          <div
+                            className="neu-input"
+                            style={{
+                              display: 'flex',
+                              flexWrap: 'wrap',
+                              gap: 6,
+                              alignItems: 'center',
+                              padding: '8px 12px',
+                              minHeight: 44,
+                              borderRadius: 10,
+                              background: 'var(--bg-card)',
+                            }}
+                          >
                             {/* Render Selected Tag Chips */}
                             {getKeywordsArray(keywords).map((tag, idx) => (
-                                <span
-                                  key={idx}
+                              <span
+                                key={idx}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: 6,
+                                  padding: '3px 9px',
+                                  borderRadius: 20,
+                                  background: 'rgba(249, 115, 22, 0.18)',
+                                  border: '1px solid rgba(249, 115, 22, 0.4)',
+                                  color: 'var(--text-accent)',
+                                  fontSize: 12,
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {tag}
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveKeywordTag(tag)}
                                   style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: 4,
-                                    padding: '3px 8px',
-                                    borderRadius: 20,
-                                    background: 'rgba(249, 115, 22, 0.15)',
-                                    border: '1px solid rgba(249, 115, 22, 0.3)',
+                                    border: 'none',
+                                    background: 'none',
                                     color: 'var(--text-accent)',
-                                    fontSize: 12,
-                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    fontSize: 13,
+                                    padding: 0,
+                                    fontWeight: 700,
+                                    lineHeight: 1,
                                   }}
                                 >
-                                  {tag}
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRemoveKeywordTag(tag)}
-                                    style={{
-                                      border: 'none',
-                                      background: 'none',
-                                      color: 'var(--text-accent)',
-                                      cursor: 'pointer',
-                                      fontSize: 12,
-                                      padding: 0,
-                                      marginLeft: 2,
-                                      fontWeight: 700,
-                                    }}
-                                  >
-                                    ✕
-                                  </button>
-                                </span>
-                              ))}
+                                  ✕
+                                </button>
+                              </span>
+                            ))}
 
                             <input
                               type="text"
@@ -874,7 +914,9 @@ export default function DashboardPage() {
                                 }
                               }}
                               placeholder={
-                                keywords ? 'Add role/skill...' : 'Type role (e.g. Artificial Intelligence, Data Scientist)'
+                                getKeywordsArray(keywords).length > 0
+                                  ? 'Add another role/skill...'
+                                  : 'Type role (e.g. Artificial Intelligence, Data Scientist)'
                               }
                               style={{
                                 border: 'none',
@@ -883,8 +925,8 @@ export default function DashboardPage() {
                                 fontSize: 13,
                                 outline: 'none',
                                 flex: 1,
-                                minWidth: 120,
-                                padding: '6px 0',
+                                minWidth: 150,
+                                padding: '4px 0',
                               }}
                             />
                           </div>
@@ -892,19 +934,18 @@ export default function DashboardPage() {
                           {/* Autocomplete Dropdown Popup */}
                           {showAutocomplete && (
                             <div
-                              className="neu-card"
                               style={{
                                 position: 'absolute',
-                                top: 'calc(100% + 8px)',
+                                top: 'calc(100% + 6px)',
                                 left: 0,
                                 right: 0,
-                                zIndex: 100,
-                                maxHeight: 220,
+                                zIndex: 9999,
+                                maxHeight: 200,
                                 overflowY: 'auto',
                                 padding: '6px 0',
                                 borderRadius: 12,
-                                boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
-                                background: 'var(--bg-card)',
+                                boxShadow: '0 12px 30px rgba(0,0,0,0.5)',
+                                background: '#1a1e24',
                                 border: '1px solid var(--border-subtle)',
                               }}
                             >
@@ -914,18 +955,18 @@ export default function DashboardPage() {
                                     key={i}
                                     onClick={() => handleAddKeywordTag(sug)}
                                     style={{
-                                      padding: '8px 14px',
+                                      padding: '9px 14px',
                                       fontSize: 13,
                                       cursor: 'pointer',
-                                      color: 'var(--text-primary)',
+                                      color: '#f3f4f6',
                                       fontWeight: 500,
                                       transition: 'background 0.15s ease',
                                       borderBottom:
                                         i < filteredSuggestions.length - 1
-                                          ? '1px solid rgba(255,255,255,0.05)'
+                                          ? '1px solid rgba(255,255,255,0.06)'
                                           : 'none',
                                     }}
-                                    onMouseEnter={(e) => (e.target.style.background = 'rgba(249, 115, 22, 0.15)')}
+                                    onMouseEnter={(e) => (e.target.style.background = 'rgba(249, 115, 22, 0.2)')}
                                     onMouseLeave={(e) => (e.target.style.background = 'transparent')}
                                   >
                                     {sug}
@@ -935,7 +976,7 @@ export default function DashboardPage() {
                                 <div
                                   onClick={() => handleAddKeywordTag(keywordInput)}
                                   style={{
-                                    padding: '8px 14px',
+                                    padding: '9px 14px',
                                     fontSize: 12,
                                     cursor: 'pointer',
                                     color: 'var(--accent-orange)',
@@ -947,31 +988,10 @@ export default function DashboardPage() {
                             </div>
                           )}
                         </div>
-
-                        <div style={{ width: 1, height: 24, background: 'var(--border-subtle)' }} />
-
-                        {/* 3. Location Input */}
-                        <div style={{ flex: '1 1 130px' }}>
-                          <input
-                            type="text"
-                            value={targetLocation}
-                            onChange={(e) => setTargetLocation(e.target.value)}
-                            placeholder="📍 Enter location"
-                            style={{
-                              width: '100%',
-                              padding: '8px 6px',
-                              border: 'none',
-                              background: 'transparent',
-                              color: 'var(--text-primary)',
-                              fontSize: 13,
-                              outline: 'none',
-                            }}
-                          />
-                        </div>
                       </div>
 
                       <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block', marginTop: 6 }}>
-                        💡 Select job type (Internship / Full-Time), pick suggested roles/skills, or set custom location (e.g. Remote, India, San Francisco).
+                        💡 By default, AI operates on your uploaded resume. Use these filters only if you wish to specify custom preferences.
                       </span>
                     </div>
 
