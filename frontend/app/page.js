@@ -123,6 +123,7 @@ export default function DashboardPage() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [showContactMap, setShowContactMap] = useState({});
+  const [showResumesDrawer, setShowResumesDrawer] = useState(false);
 
   function handleToggleContact(id) {
     setShowContactMap((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -472,116 +473,152 @@ export default function DashboardPage() {
             <div className="neu-card">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <h3 style={{ fontSize: 16, fontWeight: 700 }}>📄 Uploaded Resumes</h3>
-                <span className="neu-badge neu-badge-info">Resumes Uploaded: {resumes.length}</span>
+                {/* Interactive Clickable Badge Toggle */}
+                <button
+                  type="button"
+                  onClick={() => setShowResumesDrawer(!showResumesDrawer)}
+                  className="neu-button"
+                  style={{
+                    padding: '6px 12px',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: showResumesDrawer ? 'var(--text-accent)' : 'var(--text-primary)',
+                    background: showResumesDrawer ? 'rgba(249, 115, 22, 0.15)' : 'var(--bg-neu-base)',
+                    border: showResumesDrawer ? '1px solid var(--accent-orange)' : 'none',
+                    borderRadius: 20,
+                    cursor: 'pointer',
+                  }}
+                  title="Click to view/hide uploaded resumes list & preview"
+                >
+                  📁 Resumes Uploaded: {resumes.length} {showResumesDrawer ? '▲' : '▼'}
+                </button>
               </div>
 
-              {/* Resume List */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20, maxHeight: 220, overflowY: 'auto' }}>
-                {resumes.length === 0 ? (
-                  <div style={{ fontSize: 13, color: 'var(--text-muted)', padding: '12px 0', textAlign: 'center' }}>
-                    No resumes uploaded yet. Select your file below to upload!
-                  </div>
-                ) : (
-                  resumes.map((r) => {
-                    const parsed = r.parsed_json || {};
-                    const isContactVisible = !!showContactMap[r.id];
-                    const contactInfo = [parsed.email, parsed.phone].filter(Boolean).join(' • ');
+              {/* Collapsible Resume List Drawer */}
+              {showResumesDrawer && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20, maxHeight: 250, overflowY: 'auto' }}>
+                  {resumes.length === 0 ? (
+                    <div style={{ fontSize: 13, color: 'var(--text-muted)', padding: '12px 0', textAlign: 'center' }}>
+                      No resumes uploaded yet. Select your file below to upload!
+                    </div>
+                  ) : (
+                    resumes.map((r) => {
+                      const parsed = r.parsed_json || {};
+                      const isContactVisible = !!showContactMap[r.id];
+                      const contactInfo = [parsed.email, parsed.phone].filter(Boolean).join(' • ');
 
-                    return (
-                      <div
-                        key={r.id}
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          padding: '10px 14px',
-                          borderRadius: 12,
-                          background: r.is_active ? 'rgba(249, 115, 22, 0.12)' : 'var(--bg-neu-base)',
-                          border: r.is_active ? '1px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
-                        }}
-                      >
-                        <div style={{ flex: 1, minWidth: 0, marginRight: 8 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                            <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', wordBreak: 'break-all' }}>
-                              📁 {r.filename}
-                            </span>
-                            {r.is_active && (
-                              <span className="neu-badge neu-badge-success" style={{ fontSize: 10, padding: '2px 8px' }}>
-                                ⭐ Active
+                      return (
+                        <div
+                          key={r.id}
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            padding: '10px 14px',
+                            borderRadius: 12,
+                            background: r.is_active ? 'rgba(249, 115, 22, 0.12)' : 'var(--bg-neu-base)',
+                            border: r.is_active ? '1px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <div
+                            onClick={() => window.open(getSpecificResumeUrl(r.id), '_blank')}
+                            style={{ flex: 1, minWidth: 0, marginRight: 8 }}
+                            title="Click to preview PDF in browser"
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                              <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', wordBreak: 'break-all' }}>
+                                📄 {r.filename}
                               </span>
-                            )}
-                          </div>
-                          {contactInfo && (
-                            <div style={{ fontSize: 11, marginTop: 4, fontWeight: 600 }}>
-                              {isContactVisible ? (
-                                <span style={{ color: 'var(--text-accent)' }}>
-                                  📧 {parsed.email || 'N/A'} • 📞 {parsed.phone || 'N/A'}
-                                </span>
-                              ) : (
-                                <span style={{ color: 'var(--text-muted)' }}>
-                                  📧 {maskEmail(parsed.email)} • 📞 {maskPhone(parsed.phone)}
+                              {r.is_active && (
+                                <span className="neu-badge neu-badge-success" style={{ fontSize: 10, padding: '2px 8px' }}>
+                                  ⭐ Active
                                 </span>
                               )}
                             </div>
-                          )}
-                        </div>
+                            {contactInfo && (
+                              <div style={{ fontSize: 11, marginTop: 4, fontWeight: 600 }}>
+                                {isContactVisible ? (
+                                  <span style={{ color: 'var(--text-accent)' }}>
+                                    📧 {parsed.email || 'N/A'} • 📞 {parsed.phone || 'N/A'}
+                                  </span>
+                                ) : (
+                                  <span style={{ color: 'var(--text-muted)' }}>
+                                    📧 {maskEmail(parsed.email)} • 📞 {maskPhone(parsed.phone)}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
 
-                        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                          {/* ✏️ Pen Edit Button */}
-                          <button
-                            type="button"
-                            onClick={() => handleOpenEditModal(r)}
-                            className="neu-button"
-                            style={{ padding: '6px 10px', fontSize: 12 }}
-                            title="Edit details (Pen)"
-                          >
-                            ✏️ Edit
-                          </button>
-
-                          {/* 👁️ View Button */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              handleToggleContact(r.id);
-                              window.open(getSpecificResumeUrl(r.id), '_blank');
-                            }}
-                            className="neu-button"
-                            style={{
-                              padding: '6px 10px',
-                              fontSize: 12,
-                              color: isContactVisible ? 'var(--accent-blue)' : 'var(--text-primary)',
-                              border: isContactVisible ? '1px solid var(--accent-blue)' : 'none',
-                            }}
-                            title="View PDF & details"
-                          >
-                            👁️ View
-                          </button>
-
-                          {/* ⭐ Select Active Button */}
-                          {!r.is_active && (
+                          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                            {/* ✏️ Pen Edit Button */}
                             <button
-                              onClick={() => handleActivateResume(r.id)}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenEditModal(r);
+                              }}
                               className="neu-button"
-                              style={{ padding: '6px 10px', fontSize: 11 }}
+                              style={{ padding: '6px 10px', fontSize: 12 }}
+                              title="Edit candidate details"
                             >
-                              Select
+                              ✏️ Edit
                             </button>
-                          )}
 
-                          {/* 🗑️ Delete Button */}
-                          <button
-                            onClick={() => handleDeleteResume(r.id)}
-                            className="neu-button"
-                            style={{ padding: '6px 10px', fontSize: 11, color: '#ef4444' }}
-                            title="Delete resume"
-                          >
-                            🗑️ Delete
-                          </button>
+                            {/* 👁️ View PDF Button */}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleToggleContact(r.id);
+                                window.open(getSpecificResumeUrl(r.id), '_blank');
+                              }}
+                              className="neu-button"
+                              style={{
+                                padding: '6px 10px',
+                                fontSize: 12,
+                                color: isContactVisible ? 'var(--accent-blue)' : 'var(--text-primary)',
+                                border: isContactVisible ? '1px solid var(--accent-blue)' : 'none',
+                              }}
+                              title="Open PDF preview in new tab"
+                            >
+                              👁️ View
+                            </button>
+
+                            {/* ⭐ Select Active Button */}
+                            {!r.is_active && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleActivateResume(r.id);
+                                }}
+                                className="neu-button"
+                                style={{ padding: '6px 10px', fontSize: 11 }}
+                              >
+                                Select
+                              </button>
+                            )}
+
+                            {/* 🗑️ Delete Button */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteResume(r.id);
+                              }}
+                              className="neu-button"
+                              style={{ padding: '6px 10px', fontSize: 11, color: '#ef4444' }}
+                              title="Delete resume"
+                            >
+                              🗑️ Delete
+                            </button>
+                          </div>
                         </div>
-                    </div>
-                  );
-                }))}
-              </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
 
               {/* Upload Form */}
               <form onSubmit={handleResumeUpload} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
