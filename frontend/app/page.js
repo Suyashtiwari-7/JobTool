@@ -122,6 +122,7 @@ export default function DashboardPage() {
   const [showPhoneText, setShowPhoneText] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [showContactMap, setShowContactMap] = useState({});
   const [showResumesModal, setShowResumesModal] = useState(false);
 
   function handleToggleContact(id) {
