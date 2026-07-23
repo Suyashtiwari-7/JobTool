@@ -1583,7 +1583,7 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Tabular Popup Modal for Uploaded Resumes */}
+          {/* JetPopup Style Compact Neumorphic Modal for Uploaded Resumes */}
           {showResumesModal && (
             <div
               style={{
@@ -1592,191 +1592,190 @@ export default function DashboardPage() {
                 left: 0,
                 right: 0,
                 bottom: 0,
-                background: 'rgba(0,0,0,0.7)',
+                background: 'rgba(0, 0, 0, 0.65)',
                 backdropFilter: 'blur(6px)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 zIndex: 1000,
-                padding: 20,
+                padding: 16,
               }}
             >
               <div
                 className="neu-card"
                 style={{
                   width: '100%',
-                  maxWidth: 920,
+                  maxWidth: 540,
                   maxHeight: '85vh',
                   overflowY: 'auto',
-                  padding: '28px 32px',
-                  boxShadow: '0 24px 48px rgba(0,0,0,0.6)',
+                  padding: '24px 28px',
+                  boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
+                  borderRadius: 20,
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                  <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    📂 Uploaded Resumes & Profiles Manager
-                  </h3>
+                {/* Header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16, borderBottom: '1px solid var(--border-subtle)', paddingBottom: 12 }}>
+                  <div>
+                    <h3 style={{ fontSize: 17, fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                      📂 Uploaded Resumes
+                    </h3>
+                    <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
+                      Manage active profiles, preview PDFs & extracted skills
+                    </p>
+                  </div>
                   <button
                     onClick={() => setShowResumesModal(false)}
                     className="neu-button"
-                    style={{ padding: '6px 12px', fontSize: 14, fontWeight: 700 }}
+                    style={{ width: 32, height: 32, padding: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700 }}
                   >
                     ✕
                   </button>
                 </div>
 
-                {resumes.length === 0 ? (
-                  <div style={{ fontSize: 14, color: 'var(--text-muted)', padding: '24px 0', textAlign: 'center' }}>
-                    No resumes uploaded yet. Upload your first resume file on the dashboard!
+                {/* Content */}
+                {(!resumes || resumes.length === 0) ? (
+                  <div style={{ fontSize: 13, color: 'var(--text-muted)', padding: '24px 0', textAlign: 'center' }}>
+                    No resumes uploaded yet. Select a file on the main screen to upload!
                   </div>
                 ) : (
-                  <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px' }}>
-                      <thead>
-                        <tr style={{ textAlign: 'left', color: 'var(--text-muted)', fontSize: 12 }}>
-                          <th style={{ padding: '8px 12px' }}>Status</th>
-                          <th style={{ padding: '8px 12px' }}>Resume File</th>
-                          <th style={{ padding: '8px 12px' }}>Contact & Extracted Skills</th>
-                          <th style={{ padding: '8px 12px', textAlign: 'center' }}>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {resumes.map((r) => {
-                          const parsed = r.parsed_json || {};
-                          const skills = parsed.skills || [];
-                          const isContactVisible = !!showContactMap[r.id];
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    {resumes.map((r) => {
+                      const parsed = r.parsed_json || {};
+                      const rawSkills = parsed.skills;
+                      const skills = Array.isArray(rawSkills)
+                        ? rawSkills
+                        : (typeof rawSkills === 'string' ? rawSkills.split(',').map(s => s.trim()).filter(Boolean) : []);
+                      const isContactVisible = !!showContactMap[r.id];
 
-                          return (
-                            <tr
-                              key={r.id}
-                              style={{
-                                background: r.is_active ? 'rgba(249, 115, 22, 0.08)' : 'var(--bg-neu-base)',
-                                border: r.is_active ? '1px solid var(--accent-orange)' : '1px solid var(--border-subtle)',
-                                borderRadius: 10,
-                              }}
-                            >
-                              {/* Status Column */}
-                              <td style={{ padding: '12px', whiteSpace: 'nowrap' }}>
-                                {r.is_active ? (
-                                  <span className="neu-badge neu-badge-success" style={{ fontSize: 11, padding: '4px 10px', fontWeight: 700 }}>
-                                    ⭐ Active
-                                  </span>
-                                ) : (
-                                  <button
-                                    onClick={() => handleActivateResume(r.id)}
-                                    className="neu-button"
-                                    style={{ padding: '4px 10px', fontSize: 11, fontWeight: 600 }}
-                                    title="Set as active resume"
-                                  >
-                                    ⭐ Select
-                                  </button>
-                                )}
-                              </td>
+                      return (
+                        <div
+                          key={r.id}
+                          style={{
+                            padding: '14px 16px',
+                            borderRadius: 14,
+                            background: r.is_active ? 'rgba(249, 115, 22, 0.08)' : 'var(--bg-neu-base)',
+                            border: r.is_active ? '1px solid var(--accent-orange)' : '1px solid var(--border-subtle)',
+                            boxShadow: 'var(--neu-shadow-sm)',
+                          }}
+                        >
+                          {/* Header Row */}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                              <a
+                                href={getSpecificResumeUrl(r.id)}
+                                target="_blank"
+                                rel="noreferrer"
+                                style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', textDecoration: 'none', wordBreak: 'break-all' }}
+                                title="Click to preview PDF in new tab"
+                              >
+                                📄 {r.filename || 'Resume'}
+                              </a>
+                              {r.is_active && (
+                                <span className="neu-badge neu-badge-success" style={{ fontSize: 10, padding: '2px 8px', fontWeight: 700 }}>
+                                  ⭐ Active
+                                </span>
+                              )}
+                            </div>
 
-                              {/* Resume File Column */}
-                              <td style={{ padding: '12px', fontWeight: 700, fontSize: 13 }}>
-                                <a
-                                  href={getSpecificResumeUrl(r.id)}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  style={{ color: 'var(--text-primary)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}
-                                  title="Click to preview PDF in browser"
+                            {!r.is_active && (
+                              <button
+                                onClick={() => handleActivateResume(r.id)}
+                                className="neu-button"
+                                style={{ padding: '3px 8px', fontSize: 11, fontWeight: 600 }}
+                                title="Select as active resume"
+                              >
+                                ⭐ Select
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Contact Info */}
+                          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
+                            {isContactVisible ? (
+                              <span style={{ color: 'var(--text-accent)' }}>
+                                📧 {parsed.email || 'N/A'} • 📞 {parsed.phone || 'N/A'}
+                              </span>
+                            ) : (
+                              <span style={{ color: 'var(--text-muted)' }}>
+                                📧 {maskEmail(parsed.email)} • 📞 {maskPhone(parsed.phone)}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Skills Tags */}
+                          {skills.length > 0 && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 10 }}>
+                              {skills.map((skill, idx) => (
+                                <span
+                                  key={idx}
+                                  style={{
+                                    fontSize: 10,
+                                    padding: '2px 8px',
+                                    borderRadius: 8,
+                                    background: 'var(--bg-neu-inset)',
+                                    border: '1px solid var(--border-subtle)',
+                                    color: 'var(--text-secondary)',
+                                    fontWeight: 600,
+                                  }}
                                 >
-                                  📄 {r.filename}
-                                </a>
-                              </td>
+                                  {skill}
+                                </span>
+                              ))}
+                            </div>
+                          )}
 
-                              {/* Contact & Skills Column */}
-                              <td style={{ padding: '12px' }}>
-                                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>
-                                  {isContactVisible ? (
-                                    <span style={{ color: 'var(--text-accent)' }}>
-                                      📧 {parsed.email || 'N/A'} • 📞 {parsed.phone || 'N/A'}
-                                    </span>
-                                  ) : (
-                                    <span style={{ color: 'var(--text-muted)' }}>
-                                      📧 {maskEmail(parsed.email)} • 📞 {maskPhone(parsed.phone)}
-                                    </span>
-                                  )}
-                                </div>
-                                {skills.length > 0 && (
-                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
-                                    {skills.map((skill, idx) => (
-                                      <span
-                                        key={idx}
-                                        style={{
-                                          fontSize: 10,
-                                          padding: '2px 8px',
-                                          borderRadius: 10,
-                                          background: 'var(--bg-neu-inset)',
-                                          border: '1px solid var(--border-subtle)',
-                                          color: 'var(--text-secondary)',
-                                          fontWeight: 600,
-                                        }}
-                                      >
-                                        {skill}
-                                      </span>
-                                    ))}
-                                  </div>
-                                )}
-                              </td>
+                          {/* Action Buttons (Icon-only) */}
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8, paddingTop: 8, borderTop: '1px dashed var(--border-subtle)' }}>
+                            {/* ✏️ Edit Icon Button */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setShowResumesModal(false);
+                                handleOpenEditModal(r);
+                              }}
+                              className="neu-button"
+                              style={{ width: 32, height: 32, padding: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}
+                              title="Edit Candidate Info"
+                            >
+                              ✏️
+                            </button>
 
-                              {/* Icon-Only Action Buttons Column */}
-                              <td style={{ padding: '12px', textAlign: 'center', whiteSpace: 'nowrap' }}>
-                                <div style={{ display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center' }}>
-                                  {/* ✏️ Icon-only Pen Edit Button */}
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setShowResumesModal(false);
-                                      handleOpenEditModal(r);
-                                    }}
-                                    className="neu-button"
-                                    style={{ width: 34, height: 34, padding: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}
-                                    title="Edit Details"
-                                  >
-                                    ✏️
-                                  </button>
+                            {/* 👁️ View PDF Icon Button */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleToggleContact(r.id);
+                                window.open(getSpecificResumeUrl(r.id), '_blank');
+                              }}
+                              className="neu-button"
+                              style={{
+                                width: 32,
+                                height: 32,
+                                padding: 0,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: 13,
+                                color: isContactVisible ? 'var(--accent-blue)' : 'var(--text-primary)',
+                              }}
+                              title="Preview PDF & toggle contact details"
+                            >
+                              👁️
+                            </button>
 
-                                  {/* 👁️ Icon-only Eye View PDF Button */}
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      handleToggleContact(r.id);
-                                      window.open(getSpecificResumeUrl(r.id), '_blank');
-                                    }}
-                                    className="neu-button"
-                                    style={{
-                                      width: 34,
-                                      height: 34,
-                                      padding: 0,
-                                      display: 'inline-flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      fontSize: 14,
-                                      color: isContactVisible ? 'var(--accent-blue)' : 'var(--text-primary)',
-                                    }}
-                                    title="Preview PDF & toggle contact details"
-                                  >
-                                    👁️
-                                  </button>
-
-                                  {/* 🗑️ Icon-only Trash Delete Button */}
-                                  <button
-                                    onClick={() => handleDeleteResume(r.id)}
-                                    className="neu-button"
-                                    style={{ width: 34, height: 34, padding: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, color: '#ef4444' }}
-                                    title="Delete Resume"
-                                  >
-                                    🗑️
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+                            {/* 🗑️ Delete Icon Button */}
+                            <button
+                              onClick={() => handleDeleteResume(r.id)}
+                              className="neu-button"
+                              style={{ width: 32, height: 32, padding: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, color: '#ef4444' }}
+                              title="Delete Resume"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
