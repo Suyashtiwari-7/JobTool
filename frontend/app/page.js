@@ -1682,19 +1682,6 @@ export default function DashboardPage() {
                               )}
                             </div>
 
-                            {/* Contact Info */}
-                            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)' }}>
-                              {isContactVisible ? (
-                                <span style={{ color: 'var(--text-accent)' }}>
-                                  📧 {parsed.email || 'N/A'} • 📞 {parsed.phone || 'N/A'}
-                                </span>
-                              ) : (
-                                <span style={{ color: 'var(--text-muted)' }}>
-                                  📧 {maskEmail(parsed.email)} • 📞 {maskPhone(parsed.phone)}
-                                </span>
-                              )}
-                            </div>
-
                             {/* Skills Tags */}
                             {skills.length > 0 && (
                               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
