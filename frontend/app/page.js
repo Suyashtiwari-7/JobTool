@@ -716,17 +716,17 @@ export default function DashboardPage() {
 
                     <div>
                       <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
-                        🎯 Target Role / Domain Override (Optional)
+                        Role Keywords (Optional)
                       </label>
                       <input
                         type="text"
                         value={keywords}
                         onChange={(e) => setKeywords(e.target.value)}
                         className="neu-input"
-                        placeholder="Leave blank for AI resume auto-detect, or e.g. Product Manager, Data Analyst"
+                        placeholder="Leave blank for AI resume auto-detect, or e.g. software engineer, product manager"
                       />
                       <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block', marginTop: 4 }}>
-                        💡 Leave blank to use AI auto-detection, or type a custom role if applying outside your resume domain.
+                        💡 Leave blank for AI auto-detection from active resume, or enter custom keywords/roles.
                       </span>
                     </div>
 
