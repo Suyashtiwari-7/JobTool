@@ -73,11 +73,12 @@ async def run_pipeline(db: AsyncSession, background_tasks: BackgroundTasks) -> s
         raise ValueError("No active search filter configured. Create one first.")
 
     resume_result = await db.execute(
-        select(Resume).where(Resume.is_active.is_(True)).limit(1)
+        select(Resume).order_by(Resume.uploaded_at.desc())
     )
-    active_resume = resume_result.scalar_one_or_none()
-    if not active_resume:
+    all_resumes = resume_result.scalars().all()
+    if not all_resumes:
         raise ValueError("No resume uploaded. Upload one first.")
+    active_resume = all_resumes[0]
 
     # Create pipeline run record
     run = PipelineRun(
@@ -134,8 +135,25 @@ async def _execute_pipeline(
             run.jobs_after_dedup = len(unique_jobs)
             logger.info(f"[{batch_id}] After dedup: {len(unique_jobs)} jobs")
 
-            # ── Step 3: Score & rank ──
-            resume_json_str = json.dumps(resume.parsed_json, indent=2)
+            # ── Step 3: Score & rank using combined multi-resume profile ──
+            all_resumes_res = await db.execute(select(Resume).order_by(Resume.uploaded_at.desc()))
+            all_resumes = all_resumes_res.scalars().all()
+
+            combined_profile = {}
+            all_skills = set()
+            for r in all_resumes:
+                parsed = r.parsed_json or {}
+                r_skills = parsed.get("skills", [])
+                if isinstance(r_skills, list):
+                    all_skills.update(r_skills)
+                elif isinstance(r_skills, str):
+                    all_skills.update([s.strip() for s in r_skills.split(",") if s.strip()])
+                for k, v in parsed.items():
+                    if k not in combined_profile or not combined_profile[k]:
+                        combined_profile[k] = v
+
+            combined_profile["skills"] = list(all_skills)
+            resume_json_str = json.dumps(combined_profile, indent=2)
             scored_jobs = await _score_jobs(unique_jobs, resume_json_str, batch_id)
 
             # Filter by threshold and take top N by Real-Odds Callback Probability

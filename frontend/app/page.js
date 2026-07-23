@@ -2015,15 +2015,15 @@ export default function DashboardPage() {
                             alignItems: 'center',
                             padding: '12px 16px',
                             borderRadius: 14,
-                            background: r.is_active ? 'rgba(249, 115, 22, 0.08)' : 'var(--bg-neu-base)',
-                            border: r.is_active ? '1px solid var(--accent-orange)' : '1px solid var(--border-subtle)',
+                            background: 'var(--bg-neu-base)',
+                            border: '1px solid var(--border-subtle)',
                             boxShadow: 'var(--neu-shadow-sm)',
                             gap: 12,
                           }}
                         >
                           {/* Left Details Column */}
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                               <a
                                 href="#"
                                 onClick={(e) => {
@@ -2035,29 +2035,11 @@ export default function DashboardPage() {
                               >
                                 📄 {r.filename || 'Resume'}
                               </a>
-                              {r.is_active && (
-                                <span className="neu-badge neu-badge-success" style={{ fontSize: 10, padding: '2px 8px', fontWeight: 700 }}>
-                                  ⭐ Active
-                                </span>
-                              )}
                             </div>
-
-
                           </div>
 
-                          {/* Right Action Buttons: ALL ON THE SAME LINE */}
+                          {/* Right Action Buttons */}
                           <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
-                            {/* ⭐ Select Active Button (if inactive) */}
-                            {!r.is_active && (
-                              <button
-                                onClick={() => handleActivateResume(r.id)}
-                                className="neu-button"
-                                style={{ width: 32, height: 32, padding: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}
-                                title="Select as active resume"
-                              >
-                                ⭐
-                              </button>
-                            )}
 
                             {/* ✏️ Edit Icon Button */}
                             <button
