@@ -650,17 +650,17 @@ export default function DashboardPage() {
               </form>
             </div>
 
-            {/* Card 2: Filter Mode Switcher (Domain Limits OR Schedule Timers) */}
+            {/* Card 2: Execution Mode & Limits Switcher */}
             <div className="neu-card">
               {/* Tab Mode Selector */}
-              <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+              <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
                 <button
                   type="button"
                   onClick={() => setFilterMode('limits')}
                   className={`neu-button ${filterMode === 'limits' ? 'neu-button-primary' : ''}`}
                   style={{ flex: 1, padding: '10px', fontSize: 13, fontWeight: 700, justifyContent: 'center' }}
                 >
-                  🎯 Domain & Limits
+                  🎯 Target Mode
                 </button>
                 <button
                   type="button"
@@ -672,25 +672,32 @@ export default function DashboardPage() {
                 </button>
               </div>
 
+              {/* AI Auto-Targeting Banner */}
+              <div
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: 10,
+                  background: 'rgba(249, 115, 22, 0.1)',
+                  border: '1px solid var(--accent-orange)',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: 'var(--text-accent)',
+                  marginBottom: 16,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                <span>🤖</span>
+                <span><strong>AI Smart Sourcing:</strong> Target roles & keywords automatically extracted from your active resume.</span>
+              </div>
+
               <form onSubmit={handleSaveFilter} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {filterMode === 'limits' ? (
                   <>
                     <div>
                       <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
-                        Role Keywords (comma separated)
-                      </label>
-                      <input
-                        type="text"
-                        value={keywords}
-                        onChange={(e) => setKeywords(e.target.value)}
-                        className="neu-input"
-                        placeholder="e.g. software engineer, react, python"
-                      />
-                    </div>
-
-                    <div>
-                      <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
-                        Max Target Applications
+                        Max Target Applications Limit
                       </label>
                       <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                         <input
@@ -706,9 +713,46 @@ export default function DashboardPage() {
                         <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>openings</span>
                       </div>
                     </div>
+
+                    {/* Dimmed Timer Indicator */}
+                    <div
+                      style={{
+                        padding: '12px',
+                        borderRadius: 10,
+                        background: 'var(--bg-neu-inset)',
+                        border: '1px dashed var(--border-subtle)',
+                        opacity: 0.55,
+                        fontSize: 11,
+                        color: 'var(--text-muted)',
+                      }}
+                    >
+                      <div style={{ fontWeight: 700, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <span>⏸️</span> <span>Schedule Timers Dimmed</span>
+                      </div>
+                      <div>Timers are currently dimmed because <strong>Target Mode ({targetCount || 50} Applications)</strong> is active.</div>
+                    </div>
                   </>
                 ) : (
                   <>
+                    <div>
+                      <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
+                        Max Target Applications Limit (per scheduled run)
+                      </label>
+                      <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                        <input
+                          type="number"
+                          min="1"
+                          max="1000"
+                          value={targetCount}
+                          onChange={(e) => setTargetCount(e.target.value === '' ? '' : parseInt(e.target.value))}
+                          className="neu-input"
+                          placeholder="e.g. 50"
+                          style={{ flex: 1 }}
+                        />
+                        <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>openings</span>
+                      </div>
+                    </div>
+
                     <div>
                       <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
                         Daily Automated Schedule Window
@@ -751,8 +795,8 @@ export default function DashboardPage() {
                   </>
                 )}
 
-                <button type="submit" disabled={savingFilter} className="neu-button" style={{ marginTop: 10, justifyContent: 'center' }}>
-                  {savingFilter ? 'Saving Filters...' : '💾 Save Target Filters'}
+                <button type="submit" disabled={savingFilter} className="neu-button neu-button-primary" style={{ marginTop: 6, justifyContent: 'center' }}>
+                  {savingFilter ? 'Saving Settings...' : '💾 Save Execution Settings'}
                 </button>
               </form>
             </div>
