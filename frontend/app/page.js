@@ -40,6 +40,20 @@ const ROLE_SUGGESTIONS = [
   'Product Owner',
 ];
 
+function formatKeywordsAsString(kw) {
+  if (!kw) return '';
+  if (Array.isArray(kw)) return kw.join(', ');
+  if (typeof kw === 'string') return kw;
+  return String(kw);
+}
+
+function getKeywordsArray(kw) {
+  if (!kw) return [];
+  if (Array.isArray(kw)) return kw.filter(Boolean);
+  if (typeof kw === 'string') return kw.split(',').map((s) => s.trim()).filter(Boolean);
+  return [];
+}
+
 export default function DashboardPage() {
   const [stats, setStats] = useState(null);
   const [pipelineStatus, setPipelineStatus] = useState(null);
@@ -181,7 +195,7 @@ export default function DashboardPage() {
 
       if (f) {
         setFilter(f);
-        setKeywords(f.keywords?.join(', ') || '');
+        setKeywords(formatKeywordsAsString(f.keywords));
         setDomain(f.domain || '');
         setTargetCount(f.target_count || 50);
         setExperienceLevel(f.experience_level || 'Mid');
@@ -783,11 +797,7 @@ export default function DashboardPage() {
                         <div style={{ flex: '2 1 200px', position: 'relative' }}>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
                             {/* Render Selected Tag Chips */}
-                            {keywords
-                              .split(',')
-                              .map((s) => s.trim())
-                              .filter(Boolean)
-                              .map((tag, idx) => (
+                            {getKeywordsArray(keywords).map((tag, idx) => (
                                 <span
                                   key={idx}
                                   style={{
