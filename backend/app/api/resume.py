@@ -282,9 +282,12 @@ async def get_resume_file(
     result = await db.execute(select(Resume).where(Resume.id == resume_id))
     resume = result.scalar_one_or_none()
     if not resume:
+        res_latest = await db.execute(select(Resume).order_by(Resume.uploaded_at.desc()).limit(1))
+        resume = res_latest.scalar_one_or_none()
+    if not resume:
         raise HTTPException(404, "Resume not found")
 
-    if not os.path.exists(resume.file_path):
+    if not resume.file_path or not os.path.exists(resume.file_path):
         try:
             from fastapi.responses import Response
             from app.pipeline.pdf_generator import generate_resume_pdf
@@ -317,9 +320,9 @@ async def download_resume(
     db: AsyncSession = Depends(get_db),
     _user: str = Depends(verify_token_or_query),
 ):
-    """Download or view the active uploaded resume file."""
+    """Download or view the latest uploaded resume file."""
     result = await db.execute(
-        select(Resume).where(Resume.is_active.is_(True)).limit(1)
+        select(Resume).order_by(Resume.uploaded_at.desc()).limit(1)
     )
     resume = result.scalar_one_or_none()
     if not resume:
