@@ -30,7 +30,25 @@ class ResumeResponse(BaseModel):
     uploaded_at: str
     is_active: bool
 
-    model_config = {"from_attributes": True}
+from datetime import datetime, timezone
+
+
+def _format_resume_response(r: Resume) -> ResumeResponse:
+    if hasattr(r.uploaded_at, "isoformat"):
+        up_str = r.uploaded_at.isoformat()
+    elif r.uploaded_at:
+        up_str = str(r.uploaded_at)
+    else:
+        up_str = datetime.now(timezone.utc).isoformat()
+
+    return ResumeResponse(
+        id=r.id,
+        filename=r.filename,
+        role_label=r.role_label or "General",
+        parsed_json=r.parsed_json,
+        uploaded_at=up_str,
+        is_active=r.is_active,
+    )
 
 
 @router.post("/upload", response_model=ResumeResponse)
@@ -98,6 +116,7 @@ async def upload_resume(
         old.is_active = False
 
     effective_label = role_label or name or "Main Resume"
+    now_dt = datetime.now(timezone.utc)
 
     # Create new resume record
     resume = Resume(
@@ -106,20 +125,14 @@ async def upload_resume(
         file_path=file_path,
         raw_text=raw_text,
         parsed_json=parsed_json,
+        uploaded_at=now_dt,
         is_active=True,
     )
     db.add(resume)
-    await db.flush()
+    await db.commit()
     await db.refresh(resume)
 
-    return ResumeResponse(
-        id=resume.id,
-        filename=resume.filename,
-        role_label=resume.role_label or "General",
-        parsed_json=resume.parsed_json,
-        uploaded_at=resume.uploaded_at.isoformat(),
-        is_active=resume.is_active,
-    )
+    return _format_resume_response(resume)
 
 
 @router.get("/list", response_model=list[ResumeResponse])
@@ -130,17 +143,7 @@ async def list_resumes(
     """List all uploaded resumes with their role labels and active status."""
     result = await db.execute(select(Resume).order_by(Resume.uploaded_at.desc()))
     resumes = result.scalars().all()
-    return [
-        ResumeResponse(
-            id=r.id,
-            filename=r.filename,
-            role_label=r.role_label or "General",
-            parsed_json=r.parsed_json,
-            uploaded_at=r.uploaded_at.isoformat(),
-            is_active=r.is_active,
-        )
-        for r in resumes
-    ]
+    return [_format_resume_response(r) for r in resumes]
 
 
 @router.get("", response_model=ResumeResponse | None)
@@ -155,14 +158,7 @@ async def get_active_resume(
     resume = result.scalar_one_or_none()
     if not resume:
         return None
-    return ResumeResponse(
-        id=resume.id,
-        filename=resume.filename,
-        role_label=resume.role_label or "General",
-        parsed_json=resume.parsed_json,
-        uploaded_at=resume.uploaded_at.isoformat(),
-        is_active=resume.is_active,
-    )
+    return _format_resume_response(resume)
 
 
 @router.put("/{resume_id}/activate", response_model=ResumeResponse)
@@ -185,17 +181,10 @@ async def activate_resume(
     if not target:
         raise HTTPException(404, "Resume not found")
 
-    await db.flush()
+    await db.commit()
     await db.refresh(target)
 
-    return ResumeResponse(
-        id=target.id,
-        filename=target.filename,
-        role_label=target.role_label or "General",
-        parsed_json=target.parsed_json,
-        uploaded_at=target.uploaded_at.isoformat(),
-        is_active=target.is_active,
-    )
+    return _format_resume_response(target)
 
 
 @router.delete("/{resume_id}")
