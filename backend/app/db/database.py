@@ -53,6 +53,13 @@ async def get_db() -> AsyncSession:
 
 
 async def init_db():
-    """Create all tables (used for initial setup / dev mode)."""
+    """Create all tables and perform safe schema migrations."""
+    from sqlalchemy import text
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        try:
+            await conn.execute(
+                text("ALTER TABLE resumes ADD COLUMN IF NOT EXISTS role_label VARCHAR(100) DEFAULT 'General';")
+            )
+        except Exception as e:
+            pass
