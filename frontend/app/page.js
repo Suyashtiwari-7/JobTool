@@ -169,6 +169,32 @@ export default function DashboardPage() {
   const [scheduleEnd, setScheduleEnd] = useState('12:00');
   const [continuousHours, setContinuousHours] = useState(12);
 
+  // 3-Part Sourcing Search Bar states
+  const [jobType, setJobType] = useState('all');
+  const [targetLocation, setTargetLocation] = useState('');
+  const [keywordInput, setKeywordInput] = useState('');
+  const [showAutocomplete, setShowAutocomplete] = useState(false);
+
+  function handleAddKeywordTag(tag) {
+    const trimmed = tag.trim();
+    if (!trimmed) return;
+    const currentList = getKeywordsArray(keywords);
+    if (!currentList.includes(trimmed)) {
+      setKeywords([...currentList, trimmed].join(', '));
+    }
+    setKeywordInput('');
+    setShowAutocomplete(false);
+  }
+
+  function handleRemoveKeywordTag(tagToRemove) {
+    const currentList = getKeywordsArray(keywords);
+    setKeywords(currentList.filter((t) => t !== tagToRemove).join(', '));
+  }
+
+  const filteredSuggestions = ROLE_SUGGESTIONS.filter((s) =>
+    s.toLowerCase().includes((keywordInput || '').toLowerCase())
+  );
+
   useEffect(() => {
     loadAllData();
   }, []);
