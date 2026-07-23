@@ -58,7 +58,7 @@ def _fast_parse_text(raw_text: str) -> dict:
 async def parse_resume_file(file_path: str, extension: str) -> tuple[str, dict]:
     """
     Parse a resume file into structured JSON.
-    Instant regex extraction with optional LLM enhancement.
+    Instant local extraction. LLM tailoring & scoring happens later during job application pipeline.
     """
     # Step 1: Extract raw text
     if extension == ".pdf":
@@ -76,19 +76,7 @@ async def parse_resume_file(file_path: str, extension: str) -> tuple[str, dict]:
     # Step 2: Instant deterministic extraction
     parsed = _fast_parse_text(raw_text)
 
-    # Step 3: Optional LLM enhancement (if providers available and working)
-    try:
-        prompt = RESUME_PARSE_PROMPT.format(resume_text=raw_text)
-        llm_response = await llm_call(prompt, json_mode=True)
-        llm_parsed = json.loads(llm_response)
-        if isinstance(llm_parsed, dict) and llm_parsed.get("name"):
-            for k, v in llm_parsed.items():
-                if v:
-                    parsed[k] = v
-    except Exception as e:
-        logger.info(f"LLM enhancement skipped/failed ({e}). Using deterministic extraction.")
-
-    logger.info(f"Parsed resume for: {parsed.get('name', 'Unknown')}")
+    logger.info(f"Parsed resume locally for: {parsed.get('name', 'Unknown')}")
     return raw_text, parsed
 
 
