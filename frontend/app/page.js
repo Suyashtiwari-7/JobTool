@@ -261,6 +261,38 @@ export default function DashboardPage() {
     }
   }
 
+  // Edit Resume Modal
+  function handleOpenEditModal(r) {
+    const parsed = r.parsed_json || {};
+    setEditingResume(r);
+    setEditForm({
+      role_label: r.role_label || '',
+      name: parsed.name || '',
+      email: parsed.email || '',
+      phone: parsed.phone || '',
+      location: parsed.location || '',
+    });
+  }
+
+  async function handleSaveEditResume(e) {
+    e.preventDefault();
+    if (!editingResume) return;
+    try {
+      await updateResume(editingResume.id, {
+        role_label: editForm.role_label,
+        name: editForm.name,
+        email: editForm.email,
+        phone: editForm.phone,
+        location: editForm.location,
+      });
+      setEditingResume(null);
+      const updatedList = await listResumes();
+      setResumes(updatedList);
+    } catch (err) {
+      alert('Failed to update resume details: ' + err.message);
+    }
+  }
+
   // Open Screening Assistant Modal
   function handleOpenScreeningModal(app) {
     setScreeningApp(app);
@@ -469,11 +501,15 @@ export default function DashboardPage() {
                         }}
                       >
                         <div style={{ flex: 1, minWidth: 0, marginRight: 8 }}>
-                          <div style={{ fontWeight: 700, fontSize: 13, color: r.is_active ? 'var(--text-accent)' : 'var(--text-primary)' }}>
-                            {r.role_label} {r.is_active && '⭐ (Active)'}
-                          </div>
-                          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            📁 {r.filename}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                            <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', wordBreak: 'break-all' }}>
+                              📁 {r.filename}
+                            </span>
+                            {r.is_active && (
+                              <span className="neu-badge neu-badge-success" style={{ fontSize: 10, padding: '2px 8px' }}>
+                                ⭐ Active
+                              </span>
+                            )}
                           </div>
                           {contactInfo && (
                             <div style={{ fontSize: 11, marginTop: 4, fontWeight: 600 }}>
@@ -502,7 +538,7 @@ export default function DashboardPage() {
                             ✏️ Edit
                           </button>
 
-                          {/* 👁️ Eye Button: Toggle Contact Info & View PDF */}
+                          {/* 👁️ View Button */}
                           <button
                             type="button"
                             onClick={() => {
@@ -516,31 +552,32 @@ export default function DashboardPage() {
                               color: isContactVisible ? 'var(--accent-blue)' : 'var(--text-primary)',
                               border: isContactVisible ? '1px solid var(--accent-blue)' : 'none',
                             }}
-                            title="Click to reveal email/phone & view PDF"
+                            title="View PDF & details"
                           >
-                            👁️ View {isContactVisible ? '▲' : '▼'}
+                            👁️ View
                           </button>
 
-                        {/* ⭐ Select Active Button */}
-                        {!r.is_active && (
+                          {/* ⭐ Select Active Button */}
+                          {!r.is_active && (
+                            <button
+                              onClick={() => handleActivateResume(r.id)}
+                              className="neu-button"
+                              style={{ padding: '6px 10px', fontSize: 11 }}
+                            >
+                              Select
+                            </button>
+                          )}
+
+                          {/* 🗑️ Delete Button */}
                           <button
-                            onClick={() => handleActivateResume(r.id)}
+                            onClick={() => handleDeleteResume(r.id)}
                             className="neu-button"
-                            style={{ padding: '6px 10px', fontSize: 11 }}
+                            style={{ padding: '6px 10px', fontSize: 11, color: '#ef4444' }}
+                            title="Delete resume"
                           >
-                            Select
+                            🗑️ Delete
                           </button>
-                        )}
-
-                        {/* ✕ Delete Button */}
-                        <button
-                          onClick={() => handleDeleteResume(r.id)}
-                          className="neu-button"
-                          style={{ padding: '6px 10px', fontSize: 11, color: '#ef4444' }}
-                        >
-                          ✕
-                        </button>
-                      </div>
+                        </div>
                     </div>
                   );
                 }))}
