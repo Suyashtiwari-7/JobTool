@@ -163,7 +163,7 @@ export default function DashboardPage() {
   }
 
   // Filter form states
-  const [keywords, setKeywords] = useState('software engineer, fullstack');
+  const [keywords, setKeywords] = useState('');
   const [domain, setDomain] = useState('Tech / SaaS');
   const [targetCount, setTargetCount] = useState(50);
   const [experienceLevel, setExperienceLevel] = useState('Mid');
