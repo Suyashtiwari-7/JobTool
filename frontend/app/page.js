@@ -1949,7 +1949,7 @@ export default function DashboardPage() {
                       📂 Uploaded Resumes
                     </h3>
                     <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
-                      Manage active profiles, preview PDFs & extracted skills
+                      Manage active profiles, edit candidate info & preview PDFs
                     </p>
                   </div>
                   <button
@@ -2010,27 +2010,7 @@ export default function DashboardPage() {
                               )}
                             </div>
 
-                            {/* Skills Tags */}
-                            {skills.length > 0 && (
-                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
-                                {skills.map((skill, idx) => (
-                                  <span
-                                    key={idx}
-                                    style={{
-                                      fontSize: 10,
-                                      padding: '2px 6px',
-                                      borderRadius: 6,
-                                      background: 'var(--bg-neu-inset)',
-                                      border: '1px solid var(--border-subtle)',
-                                      color: 'var(--text-secondary)',
-                                      fontWeight: 600,
-                                    }}
-                                  >
-                                    {skill}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
+
                           </div>
 
                           {/* Right Action Buttons: ALL ON THE SAME LINE */}
