@@ -1652,16 +1652,20 @@ export default function DashboardPage() {
                         <div
                           key={r.id}
                           style={{
-                            padding: '14px 16px',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            padding: '12px 16px',
                             borderRadius: 14,
                             background: r.is_active ? 'rgba(249, 115, 22, 0.08)' : 'var(--bg-neu-base)',
                             border: r.is_active ? '1px solid var(--accent-orange)' : '1px solid var(--border-subtle)',
                             boxShadow: 'var(--neu-shadow-sm)',
+                            gap: 12,
                           }}
                         >
-                          {/* Header Row */}
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                          {/* Left Details Column */}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
                               <a
                                 href={getSpecificResumeUrl(r.id)}
                                 target="_blank"
@@ -1678,55 +1682,56 @@ export default function DashboardPage() {
                               )}
                             </div>
 
+                            {/* Contact Info */}
+                            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)' }}>
+                              {isContactVisible ? (
+                                <span style={{ color: 'var(--text-accent)' }}>
+                                  📧 {parsed.email || 'N/A'} • 📞 {parsed.phone || 'N/A'}
+                                </span>
+                              ) : (
+                                <span style={{ color: 'var(--text-muted)' }}>
+                                  📧 {maskEmail(parsed.email)} • 📞 {maskPhone(parsed.phone)}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Skills Tags */}
+                            {skills.length > 0 && (
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
+                                {skills.map((skill, idx) => (
+                                  <span
+                                    key={idx}
+                                    style={{
+                                      fontSize: 10,
+                                      padding: '2px 6px',
+                                      borderRadius: 6,
+                                      background: 'var(--bg-neu-inset)',
+                                      border: '1px solid var(--border-subtle)',
+                                      color: 'var(--text-secondary)',
+                                      fontWeight: 600,
+                                    }}
+                                  >
+                                    {skill}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Right Action Buttons: ALL ON THE SAME LINE */}
+                          <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
+                            {/* ⭐ Select Active Button (if inactive) */}
                             {!r.is_active && (
                               <button
                                 onClick={() => handleActivateResume(r.id)}
                                 className="neu-button"
-                                style={{ padding: '3px 8px', fontSize: 11, fontWeight: 600 }}
+                                style={{ width: 32, height: 32, padding: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}
                                 title="Select as active resume"
                               >
-                                ⭐ Select
+                                ⭐
                               </button>
                             )}
-                          </div>
 
-                          {/* Contact Info */}
-                          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
-                            {isContactVisible ? (
-                              <span style={{ color: 'var(--text-accent)' }}>
-                                📧 {parsed.email || 'N/A'} • 📞 {parsed.phone || 'N/A'}
-                              </span>
-                            ) : (
-                              <span style={{ color: 'var(--text-muted)' }}>
-                                📧 {maskEmail(parsed.email)} • 📞 {maskPhone(parsed.phone)}
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Skills Tags */}
-                          {skills.length > 0 && (
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 10 }}>
-                              {skills.map((skill, idx) => (
-                                <span
-                                  key={idx}
-                                  style={{
-                                    fontSize: 10,
-                                    padding: '2px 8px',
-                                    borderRadius: 8,
-                                    background: 'var(--bg-neu-inset)',
-                                    border: '1px solid var(--border-subtle)',
-                                    color: 'var(--text-secondary)',
-                                    fontWeight: 600,
-                                  }}
-                                >
-                                  {skill}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-
-                          {/* Action Buttons (Icon-only) */}
-                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8, paddingTop: 8, borderTop: '1px dashed var(--border-subtle)' }}>
                             {/* ✏️ Edit Icon Button */}
                             <button
                               type="button"
