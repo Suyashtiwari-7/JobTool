@@ -3,6 +3,8 @@
 import { useEffect, useState, useRef } from 'react';
 import AuthLayout from './components/AuthLayout';
 import {
+  API_URL,
+  getToken,
   getStats,
   getPipelineStatus,
   getActiveFilter,
@@ -277,6 +279,25 @@ export default function DashboardPage() {
     }
   }
 
+  // Preview Resume PDF in Browser via Auth Blob URL
+  async function handleViewPdf(resumeId) {
+    try {
+      const token = getToken();
+      const res = await fetch(`${API_URL}/api/resume/${resumeId}/file`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) {
+        throw new Error('Server returned HTTP ' + res.status);
+      }
+      const blob = await res.blob();
+      const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+      const blobUrl = URL.createObjectURL(pdfBlob);
+      window.open(blobUrl, '_blank');
+    } catch (err) {
+      alert('Could not preview PDF: ' + err.message);
+    }
+  }
+
   // Handle Resume Upload with Personal Info
   async function handleResumeUpload(e) {
     e.preventDefault();
@@ -299,7 +320,7 @@ export default function DashboardPage() {
       setPersonalPhone('');
       setPhoneDigits('');
       setPersonalLocation('');
-      alert('✅ Uploaded resume and personal info successfully!');
+      alert('✅ Uploaded resume successfully!');
       const updatedList = await listResumes();
       setResumes(updatedList);
     } catch (err) {
@@ -309,28 +330,37 @@ export default function DashboardPage() {
     }
   }
 
-  // Switch Active Resume
+  // Switch Active Resume (⚡ Optimistic Instant Update < 50ms)
   async function handleActivateResume(id) {
+    const previousList = [...resumes];
+    setResumes((prev) =>
+      prev.map((r) => ({
+        ...r,
+        is_active: r.id === id,
+      }))
+    );
     try {
       await activateResume(id);
-      const updatedList = await listResumes();
-      setResumes(updatedList);
     } catch (err) {
+      setResumes(previousList);
       alert('Failed to activate resume: ' + err.message);
     }
   }
 
-  // Delete Resume
+  // Delete Resume (⚡ Optimistic Instant Delete < 50ms)
   async function handleDeleteResume(id) {
     if (!confirm('Delete this resume?')) return;
+    const previousList = [...resumes];
+    const updatedList = previousList.filter((r) => r.id !== id);
+    setResumes(updatedList);
+    if (!updatedList || updatedList.length === 0) {
+      setShowResumesModal(false);
+    }
+
     try {
       await deleteResume(id);
-      const updatedList = await listResumes();
-      setResumes(updatedList);
-      if (!updatedList || updatedList.length === 0) {
-        setShowResumesModal(false);
-      }
     } catch (err) {
+      setResumes(previousList);
       alert('Delete failed: ' + err.message);
     }
   }
@@ -1995,10 +2025,12 @@ export default function DashboardPage() {
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
                               <a
-                                href={getSpecificResumeUrl(r.id)}
-                                target="_blank"
-                                rel="noreferrer"
-                                style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', textDecoration: 'none', wordBreak: 'break-all' }}
+                                href="#"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleViewPdf(r.id);
+                                }}
+                                style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', textDecoration: 'none', wordBreak: 'break-all', cursor: 'pointer' }}
                                 title="Click to preview PDF in new tab"
                               >
                                 📄 {r.filename || 'Resume'}
@@ -2046,7 +2078,7 @@ export default function DashboardPage() {
                               type="button"
                               onClick={() => {
                                 handleToggleContact(r.id);
-                                window.open(getSpecificResumeUrl(r.id), '_blank');
+                                handleViewPdf(r.id);
                               }}
                               className="neu-button"
                               style={{
