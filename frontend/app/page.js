@@ -23,6 +23,23 @@ import {
   generateOutreachEmail,
 } from './lib/api';
 
+const ROLE_SUGGESTIONS = [
+  'Artificial Intelligence Developer',
+  'Artificial Intelligence Engineer',
+  'Artificial Intelligence Architect',
+  'Data Scientist',
+  'Full Stack Developer',
+  'Frontend Developer',
+  'Backend Developer',
+  'Python Developer',
+  'DevOps Engineer',
+  'Product Manager',
+  'Machine Learning Engineer',
+  'Software Engineer',
+  'Solution Architect',
+  'Product Owner',
+];
+
 export default function DashboardPage() {
   const [stats, setStats] = useState(null);
   const [pipelineStatus, setPipelineStatus] = useState(null);
@@ -714,19 +731,211 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
+                    {/* ── 3-Part Job Sourcing Bar (Job Type, Role Autocomplete, Location) ── */}
                     <div>
-                      <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
-                        Role Keywords (Optional)
+                      <label style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: 8 }}>
+                        Target Job Sourcing Filters (Job Type, Roles & Location)
                       </label>
-                      <input
-                        type="text"
-                        value={keywords}
-                        onChange={(e) => setKeywords(e.target.value)}
-                        className="neu-input"
-                        placeholder="Leave blank for AI resume auto-detect, or e.g. software engineer, product manager"
-                      />
-                      <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block', marginTop: 4 }}>
-                        💡 Leave blank for AI auto-detection from active resume, or enter custom keywords/roles.
+
+                      {/* Unified Neumorphic Search Bar */}
+                      <div
+                        className="neu-inset"
+                        style={{
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          gap: 8,
+                          padding: '8px 12px',
+                          borderRadius: 14,
+                          alignItems: 'center',
+                          background: 'var(--bg-neu-inset)',
+                          position: 'relative',
+                        }}
+                      >
+                        {/* 1. Job Type Dropdown */}
+                        <div style={{ position: 'relative', minWidth: 140, flex: '1 1 140px' }}>
+                          <select
+                            value={jobType}
+                            onChange={(e) => setJobType(e.target.value)}
+                            style={{
+                              width: '100%',
+                              padding: '8px 10px',
+                              borderRadius: 8,
+                              border: 'none',
+                              background: 'transparent',
+                              color: 'var(--text-primary)',
+                              fontSize: 13,
+                              fontWeight: 600,
+                              outline: 'none',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <option value="all">💼 Select Job Type (All)</option>
+                            <option value="fulltime">💼 Full-Time Job</option>
+                            <option value="internship">🎓 Internship</option>
+                            <option value="contract">📄 Contract / Freelance</option>
+                            <option value="remote">🌐 Remote Only</option>
+                          </select>
+                        </div>
+
+                        <div style={{ width: 1, height: 24, background: 'var(--border-subtle)' }} />
+
+                        {/* 2. Role Keywords Autocomplete Field with Tag Chips */}
+                        <div style={{ flex: '2 1 200px', position: 'relative' }}>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
+                            {/* Render Selected Tag Chips */}
+                            {keywords
+                              .split(',')
+                              .map((s) => s.trim())
+                              .filter(Boolean)
+                              .map((tag, idx) => (
+                                <span
+                                  key={idx}
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 4,
+                                    padding: '3px 8px',
+                                    borderRadius: 20,
+                                    background: 'rgba(249, 115, 22, 0.15)',
+                                    border: '1px solid rgba(249, 115, 22, 0.3)',
+                                    color: 'var(--text-accent)',
+                                    fontSize: 12,
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  {tag}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveKeywordTag(tag)}
+                                    style={{
+                                      border: 'none',
+                                      background: 'none',
+                                      color: 'var(--text-accent)',
+                                      cursor: 'pointer',
+                                      fontSize: 12,
+                                      padding: 0,
+                                      marginLeft: 2,
+                                      fontWeight: 700,
+                                    }}
+                                  >
+                                    ✕
+                                  </button>
+                                </span>
+                              ))}
+
+                            <input
+                              type="text"
+                              value={keywordInput}
+                              onChange={(e) => {
+                                setKeywordInput(e.target.value);
+                                setShowAutocomplete(true);
+                              }}
+                              onFocus={() => setShowAutocomplete(true)}
+                              onKeyDown={(e) => {
+                                if ((e.key === 'Enter' || e.key === ',') && keywordInput.trim()) {
+                                  e.preventDefault();
+                                  handleAddKeywordTag(keywordInput);
+                                }
+                              }}
+                              placeholder={
+                                keywords ? 'Add role/skill...' : 'Type role (e.g. Artificial Intelligence, Data Scientist)'
+                              }
+                              style={{
+                                border: 'none',
+                                background: 'transparent',
+                                color: 'var(--text-primary)',
+                                fontSize: 13,
+                                outline: 'none',
+                                flex: 1,
+                                minWidth: 120,
+                                padding: '6px 0',
+                              }}
+                            />
+                          </div>
+
+                          {/* Autocomplete Dropdown Popup */}
+                          {showAutocomplete && (
+                            <div
+                              className="neu-card"
+                              style={{
+                                position: 'absolute',
+                                top: 'calc(100% + 8px)',
+                                left: 0,
+                                right: 0,
+                                zIndex: 100,
+                                maxHeight: 220,
+                                overflowY: 'auto',
+                                padding: '6px 0',
+                                borderRadius: 12,
+                                boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
+                                background: 'var(--bg-card)',
+                                border: '1px solid var(--border-subtle)',
+                              }}
+                            >
+                              {filteredSuggestions.length > 0 ? (
+                                filteredSuggestions.map((sug, i) => (
+                                  <div
+                                    key={i}
+                                    onClick={() => handleAddKeywordTag(sug)}
+                                    style={{
+                                      padding: '8px 14px',
+                                      fontSize: 13,
+                                      cursor: 'pointer',
+                                      color: 'var(--text-primary)',
+                                      fontWeight: 500,
+                                      transition: 'background 0.15s ease',
+                                      borderBottom:
+                                        i < filteredSuggestions.length - 1
+                                          ? '1px solid rgba(255,255,255,0.05)'
+                                          : 'none',
+                                    }}
+                                    onMouseEnter={(e) => (e.target.style.background = 'rgba(249, 115, 22, 0.15)')}
+                                    onMouseLeave={(e) => (e.target.style.background = 'transparent')}
+                                  >
+                                    {sug}
+                                  </div>
+                                ))
+                              ) : (
+                                <div
+                                  onClick={() => handleAddKeywordTag(keywordInput)}
+                                  style={{
+                                    padding: '8px 14px',
+                                    fontSize: 12,
+                                    cursor: 'pointer',
+                                    color: 'var(--accent-orange)',
+                                  }}
+                                >
+                                  ➕ Add custom keyword: <strong>"{keywordInput}"</strong>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        <div style={{ width: 1, height: 24, background: 'var(--border-subtle)' }} />
+
+                        {/* 3. Location Input */}
+                        <div style={{ flex: '1 1 130px' }}>
+                          <input
+                            type="text"
+                            value={targetLocation}
+                            onChange={(e) => setTargetLocation(e.target.value)}
+                            placeholder="📍 Enter location"
+                            style={{
+                              width: '100%',
+                              padding: '8px 6px',
+                              border: 'none',
+                              background: 'transparent',
+                              color: 'var(--text-primary)',
+                              fontSize: 13,
+                              outline: 'none',
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)', display: 'block', marginTop: 6 }}>
+                        💡 Select job type (Internship / Full-Time), pick suggested roles/skills, or set custom location (e.g. Remote, India, San Francisco).
                       </span>
                     </div>
 
