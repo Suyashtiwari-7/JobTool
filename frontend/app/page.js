@@ -2203,12 +2203,28 @@ export default function DashboardPage() {
                       title="Resume PDF Document"
                     />
                   ) : pdfBlobUrl === 'error' ? (
-                    <div style={{ display: 'flex', height: '100%', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 14, gap: 12, padding: 30, textAlign: 'center' }}>
-                      <span style={{ fontSize: 32 }}>⚠️</span>
-                      <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: 16 }}>Original File Not Found</div>
-                      <div style={{ maxWidth: 460, lineHeight: 1.5, fontSize: 13 }}>
-                        Because the server restarted previously, older temp files were cleared. Please re-upload your resume once — it will now be stored permanently in PostgreSQL database storage.
+                    <div style={{ display: 'flex', height: '100%', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 14, gap: 14, padding: 30, textAlign: 'center' }}>
+                      <span style={{ fontSize: 36 }}>⚠️</span>
+                      <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: 16 }}>Original File Not Found in Storage</div>
+                      <div style={{ maxWidth: 480, lineHeight: 1.5, fontSize: 13, color: 'var(--text-secondary)' }}>
+                        This resume was uploaded before our permanent database storage update. Please re-upload your PDF file once below — it will be saved permanently in PostgreSQL storage so you can view and download it anytime!
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setViewingResume(null);
+                          setPdfBlobUrl(null);
+                          setShowResumesModal(false);
+                          const uploadEl = document.getElementById('resume-file-input');
+                          if (uploadEl) {
+                            uploadEl.click();
+                          }
+                        }}
+                        className="neu-button"
+                        style={{ marginTop: 8, padding: '10px 20px', fontSize: 13, fontWeight: 700, background: 'var(--accent-orange)', color: '#ffffff' }}
+                      >
+                        📤 Re-upload PDF Resume Now
+                      </button>
                     </div>
                   ) : (
                     <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 14, gap: 10 }}>
