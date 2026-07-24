@@ -312,23 +312,21 @@ async def get_resume_file(
 
     content_type = _get_content_type(resume.filename)
 
-    # Case 1: File exists on disk — serve directly
+    # Case 1: File exists on disk — serve directly for inline viewing
     if resume.file_path and os.path.exists(resume.file_path):
         return FileResponse(
             resume.file_path,
-            filename=resume.filename,
             media_type=content_type,
-            headers={"Content-Disposition": f'inline; filename="{resume.filename}"'},
+            content_disposition_type="inline",
         )
 
-    # Case 2: File missing from disk but stored in DB — restore and serve
+    # Case 2: File missing from disk but stored in DB — restore and serve inline
     restored_path = _restore_file_from_db(resume)
     if restored_path:
         return FileResponse(
             restored_path,
-            filename=resume.filename,
             media_type=content_type,
-            headers={"Content-Disposition": f'inline; filename="{resume.filename}"'},
+            content_disposition_type="inline",
         )
 
     # Case 3: No file data anywhere
@@ -340,7 +338,7 @@ async def download_resume(
     db: AsyncSession = Depends(get_db),
     _user: str = Depends(verify_token_or_query),
 ):
-    """Download or view the latest uploaded resume file."""
+    """Download the latest uploaded resume file with original filename."""
     result = await db.execute(
         select(Resume).order_by(Resume.uploaded_at.desc()).limit(1)
     )
@@ -356,7 +354,7 @@ async def download_resume(
             resume.file_path,
             filename=resume.filename,
             media_type=content_type,
-            headers={"Content-Disposition": f'inline; filename="{resume.filename}"'},
+            content_disposition_type="attachment",
         )
 
     # Case 2: Restore from DB
@@ -366,7 +364,7 @@ async def download_resume(
             restored_path,
             filename=resume.filename,
             media_type=content_type,
-            headers={"Content-Disposition": f'inline; filename="{resume.filename}"'},
+            content_disposition_type="attachment",
         )
 
     raise HTTPException(404, "Original file not available. Please re-upload your resume.")
