@@ -2153,15 +2153,33 @@ export default function DashboardPage() {
 
                   <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                     {pdfBlobUrl && pdfBlobUrl !== 'error' && (
-                      <a
-                        href={pdfBlobUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="neu-button"
-                        style={{ padding: '6px 14px', fontSize: 12, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}
-                      >
-                        ↗️ Open in New Tab
-                      </a>
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const a = document.createElement('a');
+                            a.href = pdfBlobUrl;
+                            a.download = viewingResume.filename || 'Resume.pdf';
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                          }}
+                          className="neu-button"
+                          style={{ padding: '6px 14px', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                        >
+                          📥 Download
+                        </button>
+
+                        <a
+                          href={pdfBlobUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="neu-button"
+                          style={{ padding: '6px 14px', fontSize: 12, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                        >
+                          ↗️ Open in New Tab
+                        </a>
+                      </>
                     )}
                     <button
                       onClick={() => {

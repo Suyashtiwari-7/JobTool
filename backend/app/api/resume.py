@@ -289,11 +289,8 @@ def _restore_file_from_db(resume: Resume) -> str | None:
     if not resume.file_data:
         return None
     os.makedirs(settings.upload_dir, exist_ok=True)
-    # Reconstruct path from original file_path or generate new one
-    path = resume.file_path
-    if not path:
-        ext = os.path.splitext(resume.filename or ".pdf")[1]
-        path = os.path.join(settings.upload_dir, f"{resume.id}_restored{ext}")
+    filename = resume.filename or "resume.pdf"
+    path = os.path.join(settings.upload_dir, f"{resume.id}_{filename}")
     with open(path, "wb") as f:
         f.write(resume.file_data)
     return path
