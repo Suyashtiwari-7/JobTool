@@ -2,7 +2,7 @@ import logging
 import os
 import uuid
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, Response
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -297,11 +297,13 @@ def _restore_file_from_db(resume: Resume) -> str | None:
 
 
 @router.get("/{resume_id}/file")
+@router.get("/{resume_id}/file/{filename}")
 async def get_resume_file(
     resume_id: int,
+    filename: str | None = None,
     db: AsyncSession = Depends(get_db),
 ):
-    """Serve the original uploaded resume file by ID."""
+    """Serve the original uploaded resume file by ID with NO content-disposition so browser views inline."""
     result = await db.execute(select(Resume).where(Resume.id == resume_id))
     resume = result.scalar_one_or_none()
     if not resume:
@@ -311,27 +313,18 @@ async def get_resume_file(
         raise HTTPException(404, "Resume not found")
 
     content_type = _get_content_type(resume.filename)
+    path_to_read = None
 
-    # Case 1: File exists on disk — serve directly for inline viewing
     if resume.file_path and os.path.exists(resume.file_path):
-        return FileResponse(
-            resume.file_path,
-            filename=resume.filename,
-            media_type=content_type,
-            content_disposition_type="inline",
-        )
+        path_to_read = resume.file_path
+    else:
+        path_to_read = _restore_file_from_db(resume)
 
-    # Case 2: File missing from disk but stored in DB — restore and serve inline
-    restored_path = _restore_file_from_db(resume)
-    if restored_path:
-        return FileResponse(
-            restored_path,
-            filename=resume.filename,
-            media_type=content_type,
-            content_disposition_type="inline",
-        )
+    if path_to_read:
+        with open(path_to_read, "rb") as f:
+            content = f.read()
+        return Response(content=content, media_type=content_type)
 
-    # Case 3: No file data anywhere
     raise HTTPException(404, "Original file not available. Please re-upload your resume.")
 
 

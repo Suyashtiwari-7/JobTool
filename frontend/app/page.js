@@ -289,7 +289,8 @@ export default function DashboardPage() {
     setPdfBlobUrl(null);
 
     try {
-      const url = `${API_URL}/api/resume/${target.id}/file`;
+      const encodedFilename = encodeURIComponent(target.filename || 'resume.pdf');
+      const url = `${API_URL}/api/resume/${target.id}/file/${encodedFilename}`;
       const res = await fetch(url, { method: 'HEAD' });
       
       if (res.ok) {
