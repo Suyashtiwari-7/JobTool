@@ -333,6 +333,41 @@ async def get_resume_file(
     raise HTTPException(404, "Original file not available. Please re-upload your resume.")
 
 
+@router.get("/{resume_id}/download")
+async def download_specific_resume(
+    resume_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """Download a specific uploaded resume file by ID with original filename."""
+    result = await db.execute(select(Resume).where(Resume.id == resume_id))
+    resume = result.scalar_one_or_none()
+    if not resume:
+        raise HTTPException(404, "Resume not found")
+
+    content_type = _get_content_type(resume.filename)
+
+    # Case 1: File exists on disk
+    if resume.file_path and os.path.exists(resume.file_path):
+        return FileResponse(
+            resume.file_path,
+            filename=resume.filename,
+            media_type=content_type,
+            content_disposition_type="attachment",
+        )
+
+    # Case 2: Restore from DB
+    restored_path = _restore_file_from_db(resume)
+    if restored_path:
+        return FileResponse(
+            restored_path,
+            filename=resume.filename,
+            media_type=content_type,
+            content_disposition_type="attachment",
+        )
+
+    raise HTTPException(404, "Original file not available. Please re-upload your resume.")
+
+
 @router.get("/download")
 async def download_resume(
     db: AsyncSession = Depends(get_db),

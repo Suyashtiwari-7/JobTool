@@ -281,7 +281,7 @@ export default function DashboardPage() {
     }
   }
 
-  // Open Full-Screen PDF Viewer Modal with Authenticated Blob Stream
+  // Open Full-Screen PDF Viewer Modal with Direct Backend URL
   async function handleViewPdf(resumeId) {
     const target = resumes.find((r) => r.id === resumeId) || resumes[0];
     if (!target) return;
@@ -289,22 +289,10 @@ export default function DashboardPage() {
     setPdfBlobUrl(null);
 
     try {
-      const token = getToken();
-      let res = await fetch(`${API_URL}/api/resume/${target.id}/file`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-
-      if (res.status === 404) {
-        res = await fetch(`${API_URL}/api/resume/download`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-      }
-
+      const url = `${API_URL}/api/resume/${target.id}/file`;
+      const res = await fetch(url, { method: 'HEAD' });
+      
       if (res.ok) {
-        const contentType = res.headers.get('content-type') || 'application/pdf';
-        const blob = await res.blob();
-        const pdfBlob = new Blob([blob], { type: contentType });
-        const url = URL.createObjectURL(pdfBlob);
         setPdfBlobUrl(url);
       } else {
         setPdfBlobUrl('error');
@@ -2167,12 +2155,7 @@ export default function DashboardPage() {
                       type="button"
                       onClick={() => {
                         if (pdfBlobUrl && pdfBlobUrl !== 'error') {
-                          const a = document.createElement('a');
-                          a.href = pdfBlobUrl;
-                          a.download = viewingResume.filename || 'Resume.pdf';
-                          document.body.appendChild(a);
-                          a.click();
-                          document.body.removeChild(a);
+                          window.location.href = `${API_URL}/api/resume/${viewingResume.id}/download`;
                         } else {
                           const uploadEl = document.getElementById('resume-file-input');
                           if (uploadEl) uploadEl.click();
