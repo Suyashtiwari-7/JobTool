@@ -316,6 +316,7 @@ async def get_resume_file(
     if resume.file_path and os.path.exists(resume.file_path):
         return FileResponse(
             resume.file_path,
+            filename=resume.filename,
             media_type=content_type,
             content_disposition_type="inline",
         )
@@ -325,6 +326,7 @@ async def get_resume_file(
     if restored_path:
         return FileResponse(
             restored_path,
+            filename=resume.filename,
             media_type=content_type,
             content_disposition_type="inline",
         )
