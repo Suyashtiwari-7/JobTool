@@ -279,7 +279,7 @@ export default function DashboardPage() {
     }
   }
 
-  // Preview Resume PDF in Browser via Auth Blob URL (with zero-fail HTML profile viewer fallback)
+  // Preview Resume File directly in new browser tab
   async function handleViewPdf(resumeId) {
     try {
       const token = getToken();
@@ -287,71 +287,24 @@ export default function DashboardPage() {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
 
-      // Fallback 1: Try active /download endpoint
+      // Fallback: Try /download endpoint if ID route is still deploying
       if (res.status === 404) {
         res = await fetch(`${API_URL}/api/resume/download`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
       }
 
-      if (res.ok) {
-        const blob = await res.blob();
-        const pdfBlob = new Blob([blob], { type: 'application/pdf' });
-        const blobUrl = URL.createObjectURL(pdfBlob);
-        window.open(blobUrl, '_blank');
-        return;
+      if (!res.ok) {
+        throw new Error('Server returned HTTP ' + res.status);
       }
 
-      // Fallback 2: Zero-fail client-side profile tab viewer if backend is still deploying
-      const targetResume = resumes.find((r) => r.id === resumeId) || resumes[0];
-      if (targetResume) {
-        const parsed = targetResume.parsed_json || {};
-        const rawSkills = parsed.skills;
-        const skillsList = Array.isArray(rawSkills)
-          ? rawSkills
-          : (typeof rawSkills === 'string' ? rawSkills.split(',').map(s => s.trim()).filter(Boolean) : []);
-
-        const htmlContent = `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="utf-8">
-            <title>📄 ${targetResume.filename || 'Candidate Profile'}</title>
-            <style>
-              body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f1216; color: #f3f4f6; padding: 40px 20px; line-height: 1.6; }
-              .card { max-width: 680px; margin: 0 auto; background: #1a1e24; border: 1px solid rgba(255,255,255,0.1); padding: 32px; border-radius: 16px; box-shadow: 0 12px 35px rgba(0,0,0,0.6); }
-              h1 { color: #f97316; margin-top: 0; font-size: 22px; display: flex; align-items: center; gap: 8px; }
-              h2 { color: #38bdf8; font-size: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px; margin-top: 24px; }
-              .tag { display: inline-block; background: rgba(249,115,22,0.18); border: 1px solid rgba(249,115,22,0.4); color: #f97316; padding: 4px 10px; border-radius: 20px; font-size: 12px; margin: 3px; font-weight: 600; }
-              p { margin: 6px 0; color: #9ca3af; font-size: 14px; }
-              strong { color: #ffffff; }
-            </style>
-          </head>
-          <body>
-            <div class="card">
-              <h1>📄 ${targetResume.filename || 'Candidate Resume Profile'}</h1>
-              <p><strong>Candidate Name:</strong> ${parsed.name || 'Main Candidate'}</p>
-              <p><strong>Email:</strong> ${parsed.email || 'Not specified'}</p>
-              <p><strong>Phone:</strong> ${parsed.phone || 'Not specified'}</p>
-              <p><strong>Location:</strong> ${parsed.location || 'Not specified'}</p>
-              
-              <h2>⚡ Parsed Skills & Qualifications</h2>
-              <div>
-                ${skillsList.length > 0 ? skillsList.map(s => `<span class="tag">${s}</span>`).join('') : '<p>No specific skills extracted.</p>'}
-              </div>
-            </div>
-          </body>
-          </html>
-        `;
-        const blob = new Blob([htmlContent], { type: 'text/html' });
-        const blobUrl = URL.createObjectURL(blob);
-        window.open(blobUrl, '_blank');
-        return;
-      }
-
-      throw new Error('Server returned HTTP ' + res.status);
+      const contentType = res.headers.get('content-type') || 'application/pdf';
+      const blob = await res.blob();
+      const fileBlob = new Blob([blob], { type: contentType });
+      const blobUrl = URL.createObjectURL(fileBlob);
+      window.open(blobUrl, '_blank');
     } catch (err) {
-      alert('Could not preview PDF: ' + err.message);
+      alert('Could not preview file: ' + err.message);
     }
   }
 

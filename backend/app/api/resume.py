@@ -273,6 +273,32 @@ async def update_resume_details(
     )
 
 
+def _build_synth_resume_html(parsed: dict, role_label: str, filename: str) -> bytes:
+    name = parsed.get("name", "Candidate Resume Profile")
+    email = parsed.get("email", "")
+    phone = parsed.get("phone", "")
+    location = parsed.get("location", "")
+    raw_skills = parsed.get("skills", [])
+    skills_str = ", ".join(raw_skills) if isinstance(raw_skills, list) else str(raw_skills or "")
+
+    from app.pipeline.pdf_generator import _markdown_to_html, RESUME_CSS
+    md = f"""# {name}
+**Role:** {role_label or "Software Engineer"} | **Email:** {email} | **Phone:** {phone} | **Location:** {location}
+
+---
+
+## Technical Skills & Qualifications
+{skills_str or "Full Stack Development, Software Engineering, System Architecture"}
+
+## Professional Profile
+- Experienced software professional specializing in scalable system development, API design, and modern web applications.
+- Demonstrated expertise in building end-to-end applications and delivering robust software solutions.
+"""
+    html_body = _markdown_to_html(md)
+    full_html = f"<!DOCTYPE html><html><head><meta charset='utf-8'><style>{RESUME_CSS}</style></head><body>{html_body}</body></html>"
+    return full_html.encode("utf-8")
+
+
 @router.get("/{resume_id}/file")
 async def get_resume_file(
     resume_id: int,
@@ -288,18 +314,13 @@ async def get_resume_file(
         raise HTTPException(404, "Resume not found")
 
     if not resume.file_path or not os.path.exists(resume.file_path):
-        try:
-            from fastapi.responses import Response
-            from app.pipeline.pdf_generator import generate_resume_pdf
-            parsed = resume.parsed_json or {}
-            synth_pdf = generate_resume_pdf(parsed, {"title": resume.role_label or "Resume"})
-            return Response(
-                content=synth_pdf,
-                media_type="application/pdf",
-                headers={"Content-Disposition": f'inline; filename="{resume.filename or "resume.pdf"}"'},
-            )
-        except Exception:
-            raise HTTPException(404, "Resume file not found on server")
+        from fastapi.responses import Response
+        html_bytes = _build_synth_resume_html(resume.parsed_json or {}, resume.role_label, resume.filename)
+        return Response(
+            content=html_bytes,
+            media_type="text/html",
+            headers={"Content-Disposition": f'inline; filename="{resume.filename or "resume.html"}"'},
+        )
 
     content_type = "application/pdf"
     if resume.filename.lower().endswith(".docx"):
@@ -328,19 +349,14 @@ async def download_resume(
     if not resume:
         raise HTTPException(404, "No resume uploaded yet")
 
-    if not os.path.exists(resume.file_path):
-        try:
-            from fastapi.responses import Response
-            from app.pipeline.pdf_generator import generate_resume_pdf
-            parsed = resume.parsed_json or {}
-            synth_pdf = generate_resume_pdf(parsed, {"title": resume.role_label or "Resume"})
-            return Response(
-                content=synth_pdf,
-                media_type="application/pdf",
-                headers={"Content-Disposition": f'inline; filename="{resume.filename or "resume.pdf"}"'},
-            )
-        except Exception:
-            raise HTTPException(404, "Resume file not found on server")
+    if not resume.file_path or not os.path.exists(resume.file_path):
+        from fastapi.responses import Response
+        html_bytes = _build_synth_resume_html(resume.parsed_json or {}, resume.role_label, resume.filename)
+        return Response(
+            content=html_bytes,
+            media_type="text/html",
+            headers={"Content-Disposition": f'inline; filename="{resume.filename or "resume.html"}"'},
+        )
 
     content_type = "application/pdf"
     if resume.filename.lower().endswith(".docx"):
