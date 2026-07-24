@@ -157,6 +157,7 @@ export default function DashboardPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [showContactMap, setShowContactMap] = useState({});
   const [showResumesModal, setShowResumesModal] = useState(false);
+  const [viewingResume, setViewingResume] = useState(null);
 
   function handleToggleContact(id) {
     setShowContactMap((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -279,32 +280,11 @@ export default function DashboardPage() {
     }
   }
 
-  // Preview Resume File directly in new browser tab
-  async function handleViewPdf(resumeId) {
-    try {
-      const token = getToken();
-      let res = await fetch(`${API_URL}/api/resume/${resumeId}/file`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-
-      // Fallback: Try /download endpoint if ID route is still deploying
-      if (res.status === 404) {
-        res = await fetch(`${API_URL}/api/resume/download`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-      }
-
-      if (!res.ok) {
-        throw new Error('Server returned HTTP ' + res.status);
-      }
-
-      const contentType = res.headers.get('content-type') || 'application/pdf';
-      const blob = await res.blob();
-      const fileBlob = new Blob([blob], { type: contentType });
-      const blobUrl = URL.createObjectURL(fileBlob);
-      window.open(blobUrl, '_blank');
-    } catch (err) {
-      alert('Could not preview file: ' + err.message);
+  // Open Split-Screen PDF + AI Profile Insights Viewer Modal
+  function handleViewPdf(resumeId) {
+    const target = resumes.find((r) => r.id === resumeId) || resumes[0];
+    if (target) {
+      setViewingResume(target);
     }
   }
 
@@ -2103,6 +2083,167 @@ export default function DashboardPage() {
                     })}
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* ── PDF Preview + AI Insights Split Modal ── */}
+          {viewingResume && (
+            <div
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(0, 0, 0, 0.75)',
+                backdropFilter: 'blur(6px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 10000,
+                padding: 24,
+              }}
+            >
+              <div
+                className="neu-card"
+                style={{
+                  width: '100%',
+                  maxWidth: 1100,
+                  height: '88vh',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  padding: '24px',
+                  boxShadow: '0 25px 50px rgba(0,0,0,0.6)',
+                  borderRadius: 20,
+                  overflow: 'hidden',
+                }}
+              >
+                {/* Modal Header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid var(--border-subtle)', paddingBottom: 14 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+                      📄 {viewingResume.filename || 'Resume Preview'}
+                    </h3>
+                    <span className="neu-badge neu-badge-info" style={{ fontSize: 11 }}>
+                      AI Profile Integrated
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    <a
+                      href={getSpecificResumeUrl(viewingResume.id)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="neu-button"
+                      style={{ padding: '6px 12px', fontSize: 12, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                    >
+                      ↗️ Open in New Tab
+                    </a>
+                    <button
+                      onClick={() => setViewingResume(null)}
+                      className="neu-button"
+                      style={{ width: 32, height: 32, padding: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700 }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+
+                {/* Main Split Grid (PDF Viewer on Left, AI Insights Sidebar on Right) */}
+                <div style={{ flex: 1, display: 'flex', gap: 20, minHeight: 0 }}>
+                  {/* Left: Embedded PDF Viewer Frame */}
+                  <div style={{ flex: '1 1 65%', borderRadius: 14, overflow: 'hidden', border: '1px solid var(--border-subtle)', background: '#111318' }}>
+                    <iframe
+                      src={`${API_URL}/api/resume/${viewingResume.id}/file`}
+                      style={{ width: '100%', height: '100%', border: 'none' }}
+                      title="Resume PDF Preview"
+                    />
+                  </div>
+
+                  {/* Right: AI Insights Sidebar */}
+                  <div
+                    className="neu-inset"
+                    style={{
+                      flex: '1 1 35%',
+                      padding: 20,
+                      borderRadius: 14,
+                      background: 'var(--bg-neu-inset)',
+                      overflowY: 'auto',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 16,
+                    }}
+                  >
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-accent)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                      ⚡ AI Extracted Profile Insights
+                    </div>
+
+                    {/* Candidate Personal Info */}
+                    <div style={{ background: 'var(--bg-card)', padding: 14, borderRadius: 12, border: '1px solid var(--border-subtle)' }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 8 }}>
+                        👤 Candidate Information
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13 }}>
+                        <div><strong>Name:</strong> {viewingResume.parsed_json?.name || 'Main Candidate'}</div>
+                        <div><strong>Email:</strong> {viewingResume.parsed_json?.email || 'Not specified'}</div>
+                        <div><strong>Phone:</strong> {viewingResume.parsed_json?.phone || 'Not specified'}</div>
+                        <div><strong>Location:</strong> {viewingResume.parsed_json?.location || 'Not specified'}</div>
+                      </div>
+                    </div>
+
+                    {/* Extracted Core Skills */}
+                    <div style={{ background: 'var(--bg-card)', padding: 14, borderRadius: 12, border: '1px solid var(--border-subtle)' }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 8 }}>
+                        💡 Parsed Skills & Competencies
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                        {(() => {
+                          const rawSkills = viewingResume.parsed_json?.skills;
+                          const skillsList = Array.isArray(rawSkills)
+                            ? rawSkills
+                            : (typeof rawSkills === 'string' ? rawSkills.split(',').map(s => s.trim()).filter(Boolean) : []);
+                          
+                          if (skillsList.length === 0) return <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>No skills extracted</span>;
+
+                          return skillsList.map((skill, idx) => (
+                            <span
+                              key={idx}
+                              style={{
+                                fontSize: 11,
+                                padding: '4px 10px',
+                                borderRadius: 20,
+                                background: 'rgba(249, 115, 22, 0.15)',
+                                border: '1px solid rgba(249, 115, 22, 0.3)',
+                                color: 'var(--text-accent)',
+                                fontWeight: 600,
+                              }}
+                            >
+                              {skill}
+                            </span>
+                          ));
+                        })()}
+                      </div>
+                    </div>
+
+                    {/* Quick Actions */}
+                    <div style={{ marginTop: 'auto', display: 'flex', gap: 10 }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const target = viewingResume;
+                          setViewingResume(null);
+                          setShowResumesModal(false);
+                          handleOpenEditModal(target);
+                        }}
+                        className="neu-button"
+                        style={{ flex: 1, padding: '10px', fontSize: 12, fontWeight: 600 }}
+                      >
+                        ✏️ Edit Info
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
