@@ -281,7 +281,7 @@ export default function DashboardPage() {
     }
   }
 
-  // Open Full-Screen PDF Viewer Modal with Zero-Fail Blob Stream
+  // Open Full-Screen PDF Viewer Modal with Authenticated Blob Stream
   async function handleViewPdf(resumeId) {
     const target = resumes.find((r) => r.id === resumeId) || resumes[0];
     if (!target) return;
@@ -306,61 +306,12 @@ export default function DashboardPage() {
         const pdfBlob = new Blob([blob], { type: contentType });
         const url = URL.createObjectURL(pdfBlob);
         setPdfBlobUrl(url);
-        return;
+      } else {
+        setPdfBlobUrl('error');
       }
     } catch (e) {
-      // Network failover
+      setPdfBlobUrl('error');
     }
-
-    // ⚡ Guaranteed Zero-Fail Document Renderer (Fallback if Render backend is delayed)
-    const parsed = target.parsed_json || {};
-    const name = parsed.name || target.filename || 'Candidate Resume Profile';
-    const email = parsed.email || '';
-    const phone = parsed.phone || '';
-    const location = parsed.location || '';
-    const rawSkills = parsed.skills;
-    const skillsList = Array.isArray(rawSkills)
-      ? rawSkills
-      : (typeof rawSkills === 'string' ? rawSkills.split(',').map(s => s.trim()).filter(Boolean) : []);
-
-    const htmlDocument = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <title>${target.filename || 'Resume Document'}</title>
-        <style>
-          @page { size: A4; margin: 1.5cm; }
-          body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 11pt; line-height: 1.6; color: #1a1a1a; padding: 40px; background: #ffffff; }
-          h1 { font-size: 20pt; color: #0f172a; margin-bottom: 4px; border-bottom: 2px solid #ea580c; padding-bottom: 6px; }
-          .meta { font-size: 10pt; color: #475569; margin-bottom: 20px; }
-          h2 { font-size: 13pt; color: #c2410c; margin-top: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-          .skill-tag { display: inline-block; background: #fff7ed; border: 1px solid #ffedd5; color: #c2410c; padding: 3px 10px; border-radius: 16px; font-size: 9.5pt; margin: 3px; font-weight: 600; }
-          p { margin: 6px 0; }
-        </style>
-      </head>
-      <body>
-        <h1>${name}</h1>
-        <div class="meta">
-          ${email ? `<strong>Email:</strong> ${email} &nbsp;|&nbsp; ` : ''}
-          ${phone ? `<strong>Phone:</strong> ${phone} &nbsp;|&nbsp; ` : ''}
-          ${location ? `<strong>Location:</strong> ${location}` : ''}
-        </div>
-
-        <h2>Technical Skills & Qualifications</h2>
-        <div>
-          ${skillsList.length > 0 ? skillsList.map(s => `<span class="skill-tag">${s}</span>`).join('') : '<p>Full Stack Development, Software Engineering, System Integration</p>'}
-        </div>
-
-        <h2>Professional Profile</h2>
-        <p>Demonstrated technical experience in designing, building, and deploying scalable applications and software solutions. Highly proficient across fullstack architectures, data pipelines, and candidate requirements fulfillment.</p>
-      </body>
-      </html>
-    `;
-
-    const blob = new Blob([htmlDocument], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    setPdfBlobUrl(url);
   }
 
   // Handle Resume Upload with Personal Info
@@ -2201,7 +2152,7 @@ export default function DashboardPage() {
                   </h3>
 
                   <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                    {pdfBlobUrl && (
+                    {pdfBlobUrl && pdfBlobUrl !== 'error' && (
                       <a
                         href={pdfBlobUrl}
                         target="_blank"
@@ -2227,12 +2178,20 @@ export default function DashboardPage() {
 
                 {/* Main Full-Width PDF Frame */}
                 <div style={{ flex: 1, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--border-subtle)', background: '#111318', position: 'relative' }}>
-                  {pdfBlobUrl ? (
+                  {pdfBlobUrl && pdfBlobUrl !== 'error' ? (
                     <iframe
                       src={pdfBlobUrl}
                       style={{ width: '100%', height: '100%', border: 'none' }}
                       title="Resume PDF Document"
                     />
+                  ) : pdfBlobUrl === 'error' ? (
+                    <div style={{ display: 'flex', height: '100%', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 14, gap: 12, padding: 30, textAlign: 'center' }}>
+                      <span style={{ fontSize: 32 }}>⚠️</span>
+                      <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: 16 }}>Original File Not Found</div>
+                      <div style={{ maxWidth: 460, lineHeight: 1.5, fontSize: 13 }}>
+                        Because the server restarted previously, older temp files were cleared. Please re-upload your resume once — it will now be stored permanently in PostgreSQL database storage.
+                      </div>
+                    </div>
                   ) : (
                     <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 14, gap: 10 }}>
                       <span style={{ fontSize: 20 }}>⏳</span> Loading PDF document...

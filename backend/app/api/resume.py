@@ -118,11 +118,12 @@ async def upload_resume(
     effective_label = role_label or name or "Main Resume"
     now_dt = datetime.now(timezone.utc)
 
-    # Create new resume record
+    # Create new resume record (store file bytes in DB for persistence)
     resume = Resume(
         filename=file.filename or safe_filename,
         role_label=effective_label,
         file_path=file_path,
+        file_data=content,
         raw_text=raw_text,
         parsed_json=parsed_json,
         uploaded_at=now_dt,
@@ -273,30 +274,29 @@ async def update_resume_details(
     )
 
 
-def _build_synth_resume_html(parsed: dict, role_label: str, filename: str) -> bytes:
-    name = parsed.get("name", "Candidate Resume Profile")
-    email = parsed.get("email", "")
-    phone = parsed.get("phone", "")
-    location = parsed.get("location", "")
-    raw_skills = parsed.get("skills", [])
-    skills_str = ", ".join(raw_skills) if isinstance(raw_skills, list) else str(raw_skills or "")
+def _get_content_type(filename: str) -> str:
+    """Determine MIME type from filename extension."""
+    lower = (filename or "").lower()
+    if lower.endswith(".docx"):
+        return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    elif lower.endswith(".doc"):
+        return "application/msword"
+    return "application/pdf"
 
-    from app.pipeline.pdf_generator import _markdown_to_html, RESUME_CSS
-    md = f"""# {name}
-**Role:** {role_label or "Software Engineer"} | **Email:** {email} | **Phone:** {phone} | **Location:** {location}
 
----
-
-## Technical Skills & Qualifications
-{skills_str or "Full Stack Development, Software Engineering, System Architecture"}
-
-## Professional Profile
-- Experienced software professional specializing in scalable system development, API design, and modern web applications.
-- Demonstrated expertise in building end-to-end applications and delivering robust software solutions.
-"""
-    html_body = _markdown_to_html(md)
-    full_html = f"<!DOCTYPE html><html><head><meta charset='utf-8'><style>{RESUME_CSS}</style></head><body>{html_body}</body></html>"
-    return full_html.encode("utf-8")
+def _restore_file_from_db(resume: Resume) -> str | None:
+    """If file_data exists in DB but disk file is gone, restore it. Returns file_path or None."""
+    if not resume.file_data:
+        return None
+    os.makedirs(settings.upload_dir, exist_ok=True)
+    # Reconstruct path from original file_path or generate new one
+    path = resume.file_path
+    if not path:
+        ext = os.path.splitext(resume.filename or ".pdf")[1]
+        path = os.path.join(settings.upload_dir, f"{resume.id}_restored{ext}")
+    with open(path, "wb") as f:
+        f.write(resume.file_data)
+    return path
 
 
 @router.get("/{resume_id}/file")
@@ -304,7 +304,7 @@ async def get_resume_file(
     resume_id: int,
     db: AsyncSession = Depends(get_db),
 ):
-    """Serve a specific uploaded resume file by ID for inline browser viewing."""
+    """Serve the original uploaded resume file by ID."""
     result = await db.execute(select(Resume).where(Resume.id == resume_id))
     resume = result.scalar_one_or_none()
     if not resume:
@@ -313,27 +313,29 @@ async def get_resume_file(
     if not resume:
         raise HTTPException(404, "Resume not found")
 
-    if not resume.file_path or not os.path.exists(resume.file_path):
-        from fastapi.responses import Response
-        html_bytes = _build_synth_resume_html(resume.parsed_json or {}, resume.role_label, resume.filename)
-        return Response(
-            content=html_bytes,
-            media_type="text/html",
-            headers={"Content-Disposition": f'inline; filename="{resume.filename or "resume.html"}"'},
+    content_type = _get_content_type(resume.filename)
+
+    # Case 1: File exists on disk — serve directly
+    if resume.file_path and os.path.exists(resume.file_path):
+        return FileResponse(
+            resume.file_path,
+            filename=resume.filename,
+            media_type=content_type,
+            headers={"Content-Disposition": f'inline; filename="{resume.filename}"'},
         )
 
-    content_type = "application/pdf"
-    if resume.filename.lower().endswith(".docx"):
-        content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    elif resume.filename.lower().endswith(".doc"):
-        content_type = "application/msword"
+    # Case 2: File missing from disk but stored in DB — restore and serve
+    restored_path = _restore_file_from_db(resume)
+    if restored_path:
+        return FileResponse(
+            restored_path,
+            filename=resume.filename,
+            media_type=content_type,
+            headers={"Content-Disposition": f'inline; filename="{resume.filename}"'},
+        )
 
-    return FileResponse(
-        resume.file_path,
-        filename=resume.filename,
-        media_type=content_type,
-        headers={"Content-Disposition": f'inline; filename="{resume.filename}"'},
-    )
+    # Case 3: No file data anywhere
+    raise HTTPException(404, "Original file not available. Please re-upload your resume.")
 
 
 @router.get("/download")
@@ -349,24 +351,25 @@ async def download_resume(
     if not resume:
         raise HTTPException(404, "No resume uploaded yet")
 
-    if not resume.file_path or not os.path.exists(resume.file_path):
-        from fastapi.responses import Response
-        html_bytes = _build_synth_resume_html(resume.parsed_json or {}, resume.role_label, resume.filename)
-        return Response(
-            content=html_bytes,
-            media_type="text/html",
-            headers={"Content-Disposition": f'inline; filename="{resume.filename or "resume.html"}"'},
+    content_type = _get_content_type(resume.filename)
+
+    # Case 1: File exists on disk
+    if resume.file_path and os.path.exists(resume.file_path):
+        return FileResponse(
+            resume.file_path,
+            filename=resume.filename,
+            media_type=content_type,
+            headers={"Content-Disposition": f'inline; filename="{resume.filename}"'},
         )
 
-    content_type = "application/pdf"
-    if resume.filename.lower().endswith(".docx"):
-        content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    elif resume.filename.lower().endswith(".doc"):
-        content_type = "application/msword"
+    # Case 2: Restore from DB
+    restored_path = _restore_file_from_db(resume)
+    if restored_path:
+        return FileResponse(
+            restored_path,
+            filename=resume.filename,
+            media_type=content_type,
+            headers={"Content-Disposition": f'inline; filename="{resume.filename}"'},
+        )
 
-    return FileResponse(
-        resume.file_path,
-        filename=resume.filename,
-        media_type=content_type,
-        headers={"Content-Disposition": f'inline; filename="{resume.filename}"'},
-    )
+    raise HTTPException(404, "Original file not available. Please re-upload your resume.")

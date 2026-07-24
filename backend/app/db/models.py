@@ -10,6 +10,7 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Integer,
+    LargeBinary,
     String,
     Text,
     Boolean,
@@ -64,6 +65,7 @@ class Resume(Base):
     filename = Column(String(255), nullable=False)
     role_label = Column(String(100), nullable=True, default="General", doc="Target role/label for this resume")
     file_path = Column(String(500), nullable=False)
+    file_data = Column(LargeBinary, nullable=True, doc="Original file bytes stored in DB for persistence across deploys")
     raw_text = Column(Text, nullable=True, doc="Extracted plain text from PDF/DOCX")
     parsed_json = Column(JSONB, nullable=True, doc="LLM-structured resume data")
     uploaded_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)

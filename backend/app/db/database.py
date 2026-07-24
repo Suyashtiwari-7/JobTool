@@ -57,9 +57,16 @@ async def init_db():
     from sqlalchemy import text
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # Safe migrations for columns added after initial deployment
         try:
             await conn.execute(
                 text("ALTER TABLE resumes ADD COLUMN IF NOT EXISTS role_label VARCHAR(100) DEFAULT 'General';")
             )
-        except Exception as e:
+        except Exception:
+            pass
+        try:
+            await conn.execute(
+                text("ALTER TABLE resumes ADD COLUMN IF NOT EXISTS file_data BYTEA;")
+            )
+        except Exception:
             pass
