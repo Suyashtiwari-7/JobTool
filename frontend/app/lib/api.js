@@ -178,6 +178,12 @@ export async function updateApplicationStatus(id, status, notes) {
   });
 }
 
+export async function togglePinApplication(id) {
+  return apiFetch(`/api/applications/${id}/pin`, {
+    method: 'PATCH',
+  });
+}
+
 export async function deleteApplication(id) {
   return apiFetch(`/api/applications/${id}`, { method: 'DELETE' });
 }

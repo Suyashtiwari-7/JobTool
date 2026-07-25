@@ -17,6 +17,7 @@ import {
   getSpecificResumeUrl,
   getApplications,
   updateApplicationStatus,
+  togglePinApplication,
   deleteApplication,
   clearApplications,
   triggerPipeline,
@@ -178,6 +179,18 @@ export default function DashboardPage() {
     } catch (err) {
       setApplications(prev);
       alert('Failed to delete application: ' + err.message);
+    }
+  }
+
+  async function handleTogglePin(id) {
+    setApplications((prev) => {
+      const updated = prev.map((a) => (a.id === id ? { ...a, is_pinned: !a.is_pinned } : a));
+      return [...updated].sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0) || b.match_score - a.match_score);
+    });
+    try {
+      await togglePinApplication(id);
+    } catch (err) {
+      console.error('Failed to pin application:', err);
     }
   }
 
@@ -1271,8 +1284,25 @@ export default function DashboardPage() {
                     return (
                       <tr key={app.id} className="neu-inset" style={{ borderRadius: 12 }}>
                         <td style={{ padding: '12px 14px', borderRadius: '12px 0 0 12px', minWidth: 220 }}>
-                          <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: 14 }}>
-                            🏢 {app.job.company}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <button
+                              type="button"
+                              onClick={() => handleTogglePin(app.id)}
+                              className="neu-button"
+                              style={{
+                                padding: '2px 8px',
+                                fontSize: 11,
+                                background: app.is_pinned ? 'rgba(249, 115, 22, 0.2)' : 'transparent',
+                                border: app.is_pinned ? '1px solid var(--accent-orange)' : '1px solid var(--border-subtle)',
+                                color: app.is_pinned ? 'var(--text-accent)' : 'var(--text-muted)',
+                              }}
+                              title={app.is_pinned ? "Unpin priority" : "Pin to top of review queue"}
+                            >
+                              {app.is_pinned ? '📌 Pinned' : '📌 Pin'}
+                            </button>
+                            <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: 14 }}>
+                              🏢 {app.job.company}
+                            </div>
                           </div>
                           <div style={{ color: 'var(--text-secondary)', fontSize: 12, marginTop: 2, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                             <span>{app.job.title}</span>
@@ -2333,6 +2363,7 @@ export default function DashboardPage() {
                       <tr style={{ borderBottom: '1px solid var(--border-subtle)', textAlign: 'left', color: 'var(--text-muted)', fontSize: 11, textTransform: 'uppercase' }}>
                         <th style={{ padding: '10px 12px' }}>Company / Organization</th>
                         <th style={{ padding: '10px 12px' }}>Job Role & Source</th>
+                        <th style={{ padding: '10px 12px' }}>🎯 AI Match</th>
                         <th style={{ padding: '10px 12px' }}>Applied Date</th>
                         <th style={{ padding: '10px 12px' }}>Retention Lifecycle</th>
                         <th style={{ padding: '10px 12px' }}>Status</th>
@@ -2354,6 +2385,20 @@ export default function DashboardPage() {
                               <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{app.job?.title || 'Position'}</div>
                               <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'capitalize' }}>
                                 {app.job?.source || 'API'} • {app.job?.location || 'Remote'}
+                              </span>
+                            </td>
+                            <td style={{ padding: '12px' }}>
+                              <span
+                                style={{
+                                  fontSize: 12,
+                                  fontWeight: 800,
+                                  color: (app.match_score || 0) >= 80 ? 'var(--accent-green)' : 'var(--text-accent)',
+                                  background: (app.match_score || 0) >= 80 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(249, 115, 22, 0.12)',
+                                  padding: '4px 10px',
+                                  borderRadius: 12,
+                                }}
+                              >
+                                {Math.round(app.match_score || 0)}%
                               </span>
                             </td>
                             <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>

@@ -70,3 +70,9 @@ async def init_db():
             )
         except Exception:
             pass
+        try:
+            await conn.execute(
+                text("ALTER TABLE applications ADD COLUMN IF NOT EXISTS is_pinned BOOLEAN DEFAULT FALSE;")
+            )
+        except Exception:
+            pass

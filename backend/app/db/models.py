@@ -148,6 +148,7 @@ class Application(Base):
         default=ApplicationStatus.QUEUED,
     )
     notes = Column(Text, nullable=True, doc="User notes on this application")
+    is_pinned = Column(Boolean, default=False, nullable=True, doc="User priority pin status for ordering")
 
     created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
     updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)

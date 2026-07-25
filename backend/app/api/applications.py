@@ -54,6 +54,7 @@ class ApplicationSummary(BaseModel):
     match_score: float
     status: str
     batch_id: str
+    is_pinned: bool = False
     created_at: str
     job: JobSummary
 
@@ -66,6 +67,7 @@ class ApplicationDetail(BaseModel):
     score_reasoning: str | None
     status: str
     batch_id: str
+    is_pinned: bool = False
     tailored_resume_text: str | None
     cover_letter_text: str | None
     notes: str | None
@@ -129,7 +131,7 @@ async def list_applications(
     query = (
         select(Application)
         .options(joinedload(Application.job))
-        .order_by(Application.match_score.desc())
+        .order_by(Application.is_pinned.desc().nullslast(), Application.match_score.desc())
     )
 
     if status:
@@ -147,6 +149,7 @@ async def list_applications(
             match_score=app.match_score,
             status=app.status.value,
             batch_id=app.batch_id,
+            is_pinned=bool(app.is_pinned),
             created_at=app.created_at.isoformat(),
             job=JobSummary(
                 id=app.job.id,
@@ -183,6 +186,7 @@ async def get_application(
         score_reasoning=app.score_reasoning,
         status=app.status.value,
         batch_id=app.batch_id,
+        is_pinned=bool(app.is_pinned),
         tailored_resume_text=app.tailored_resume_text,
         cover_letter_text=app.cover_letter_text,
         notes=app.notes,
@@ -197,6 +201,24 @@ async def get_application(
             source=app.job.source.value,
         ),
     )
+
+
+@router.patch("/{app_id}/pin")
+async def toggle_pin_application(
+    app_id: int,
+    db: AsyncSession = Depends(get_db),
+    _user: str = Depends(verify_token),
+):
+    """Toggle priority pin status for an application."""
+    result = await db.execute(select(Application).where(Application.id == app_id))
+    app = result.scalar_one_or_none()
+    if not app:
+        raise HTTPException(404, "Application not found")
+
+    app.is_pinned = not bool(app.is_pinned)
+    await db.flush()
+    await db.refresh(app)
+    return {"id": app.id, "is_pinned": app.is_pinned}
 
 
 @router.patch("/{app_id}/status", response_model=ApplicationDetail)
