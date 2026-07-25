@@ -31,7 +31,7 @@ SUPPORTED_COUNTRIES = {
     "ru": "Russia",
 }
 
-EXPERIENCE_LEVELS = ["Entry", "Mid", "Senior", "Lead", "Executive"]
+EXPERIENCE_LEVELS = ["Apprenticeship", "Internship", "Entry", "Mid", "Senior", "Lead", "Executive"]
 
 
 class FilterCreate(BaseModel):

@@ -28,6 +28,12 @@ import {
 } from './lib/api';
 
 const ROLE_SUGGESTIONS = [
+  'Software Engineering Apprentice',
+  'Artificial Intelligence Apprentice',
+  'Full Stack Apprentice',
+  'Cybersecurity Apprentice',
+  'Cloud Engineer Apprentice',
+  'Data Science Apprentice',
   'Artificial Intelligence Developer',
   'Artificial Intelligence Engineer',
   'Artificial Intelligence Architect',
