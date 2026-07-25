@@ -17,6 +17,7 @@ import {
   getSpecificResumeUrl,
   getApplications,
   updateApplicationStatus,
+  deleteApplication,
   clearApplications,
   triggerPipeline,
   getResumePdfUrl,
@@ -157,11 +158,27 @@ export default function DashboardPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [showContactMap, setShowContactMap] = useState({});
   const [showResumesModal, setShowResumesModal] = useState(false);
+  const [showAppliedModal, setShowAppliedModal] = useState(false);
+  const [appliedSearchQuery, setAppliedSearchQuery] = useState('');
   const [viewingResume, setViewingResume] = useState(null);
   const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
 
   function handleToggleContact(id) {
     setShowContactMap((prev) => ({ ...prev, [id]: !prev[id] }));
+  }
+
+  async function handleDeleteApplicationItem(id) {
+    if (!confirm('Delete this application record?')) return;
+    const prev = [...applications];
+    setApplications((old) => old.filter((a) => a.id !== id));
+    try {
+      await deleteApplication(id);
+      const s = await getStats().catch(() => null);
+      if (s) setStats(s);
+    } catch (err) {
+      setApplications(prev);
+      alert('Failed to delete application: ' + err.message);
+    }
   }
 
   // Filter form states
@@ -568,7 +585,7 @@ export default function DashboardPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 20, marginBottom: 24 }}>
             <StatBox label="Total Processed" value={stats?.total || 0} icon="📁" />
             <StatBox label="Queued Review" value={stats?.queued || 0} icon="⏳" highlight="#3b82f6" />
-            <StatBox label="Applied" value={stats?.applied || 0} icon="✅" highlight="#10b981" />
+            <StatBox label="Applied" value={stats?.applied || 0} icon="✅" highlight="#10b981" onClick={() => setShowAppliedModal(true)} badge="View List ↗" />
             <StatBox label="Interviews/Responses" value={(stats?.response_received || 0) + (stats?.interview || 0)} icon="🎉" highlight="#8b5cf6" />
             <StatBox label="Avg Match Score" value={stats?.avg_match_score ? `${Math.round(stats.avg_match_score)}%` : '—'} icon="🎯" />
           </div>
@@ -2225,19 +2242,222 @@ export default function DashboardPage() {
           )}
         </>
       )}
+      {/* ── Applied Organizations & Applications Modal ── */}
+      {showAppliedModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            background: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(6px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+          }}
+          onClick={() => setShowAppliedModal(false)}
+        >
+          <div
+            className="neu-card"
+            style={{
+              width: '100%',
+              maxWidth: 920,
+              maxHeight: '90vh',
+              display: 'flex',
+              flexDirection: 'column',
+              padding: 24,
+              overflow: 'hidden',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
+              <div>
+                <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  🏢 Applied Organizations & Companies
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent-green)', background: 'rgba(16, 185, 129, 0.12)', padding: '4px 10px', borderRadius: 12 }}>
+                    {applications.filter((a) => a.status === 'applied' || a.status === 'response_received' || a.status === 'interview').length} Total
+                  </span>
+                </h2>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+                  Auto-retained for 60 days (2 months) in PostgreSQL storage before automatic cleanup.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAppliedModal(false)}
+                className="neu-button"
+                style={{ width: 34, height: 34, padding: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700 }}
+                title="Close Modal"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Search Filter Inside Modal */}
+            <div style={{ marginBottom: 16 }}>
+              <input
+                type="text"
+                placeholder="🔍 Search company name, position, or status..."
+                value={appliedSearchQuery}
+                onChange={(e) => setAppliedSearchQuery(e.target.value)}
+                className="neu-input"
+                style={{ width: '100%' }}
+              />
+            </div>
+
+            {/* Content List / Table Container */}
+            <div className="mobile-table-wrap" style={{ flex: 1, overflowY: 'auto' }}>
+              {(() => {
+                const appliedList = applications.filter((app) => {
+                  const q = appliedSearchQuery.toLowerCase();
+                  const comp = (app.job?.company || '').toLowerCase();
+                  const title = (app.job?.title || '').toLowerCase();
+                  const status = (app.status || '').toLowerCase();
+                  return comp.includes(q) || title.includes(q) || status.includes(q);
+                });
+
+                if (appliedList.length === 0) {
+                  return (
+                    <div style={{ textAlign: 'center', padding: '50px 20px', color: 'var(--text-muted)' }}>
+                      <span style={{ fontSize: 32, display: 'block', marginBottom: 10 }}>🏢</span>
+                      {appliedSearchQuery ? 'No matching applied organizations found.' : 'No applied companies recorded yet.'}
+                    </div>
+                  );
+                }
+
+                return (
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 600 }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid var(--border-subtle)', textAlign: 'left', color: 'var(--text-muted)', fontSize: 11, textTransform: 'uppercase' }}>
+                        <th style={{ padding: '10px 12px' }}>Company / Organization</th>
+                        <th style={{ padding: '10px 12px' }}>Job Role & Source</th>
+                        <th style={{ padding: '10px 12px' }}>Applied Date</th>
+                        <th style={{ padding: '10px 12px' }}>Retention Lifecycle</th>
+                        <th style={{ padding: '10px 12px' }}>Status</th>
+                        <th style={{ padding: '10px 12px', textAlign: 'right' }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {appliedList.map((app) => {
+                        const appDate = new Date(app.created_at);
+                        const daysAgo = Math.floor((new Date() - appDate) / (1000 * 60 * 60 * 24));
+                        const daysRemaining = Math.max(0, 60 - daysAgo);
+
+                        return (
+                          <tr key={app.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                            <td style={{ padding: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                              {app.job?.company || 'Organization'}
+                            </td>
+                            <td style={{ padding: '12px' }}>
+                              <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{app.job?.title || 'Position'}</div>
+                              <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'capitalize' }}>
+                                {app.job?.source || 'API'} • {app.job?.location || 'Remote'}
+                              </span>
+                            </td>
+                            <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>
+                              {isNaN(appDate) ? 'Recently' : appDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </td>
+                            <td style={{ padding: '12px' }}>
+                              <span
+                                style={{
+                                  fontSize: 11,
+                                  fontWeight: 600,
+                                  color: daysRemaining <= 7 ? 'var(--accent-red)' : 'var(--text-muted)',
+                                  background: daysRemaining <= 7 ? 'rgba(239, 68, 68, 0.1)' : 'var(--bg-neu-inset)',
+                                  padding: '4px 8px',
+                                  borderRadius: 8,
+                                }}
+                              >
+                                ⏳ {daysRemaining} days remaining
+                              </span>
+                            </td>
+                            <td style={{ padding: '12px' }}>
+                              <span
+                                style={{
+                                  padding: '4px 10px',
+                                  borderRadius: 12,
+                                  fontSize: 11,
+                                  fontWeight: 700,
+                                  textTransform: 'capitalize',
+                                  background:
+                                    app.status === 'applied'
+                                      ? 'rgba(16, 185, 129, 0.15)'
+                                      : app.status === 'interview'
+                                      ? 'rgba(139, 92, 246, 0.15)'
+                                      : 'rgba(59, 130, 246, 0.15)',
+                                  color:
+                                    app.status === 'applied'
+                                      ? 'var(--accent-green)'
+                                      : app.status === 'interview'
+                                      ? 'var(--accent-purple)'
+                                      : 'var(--text-accent)',
+                                }}
+                              >
+                                {app.status || 'applied'}
+                              </span>
+                            </td>
+                            <td style={{ padding: '12px', textAlign: 'right' }}>
+                              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'center' }}>
+                                {app.job?.url && (
+                                  <a
+                                    href={app.job.url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="neu-button"
+                                    style={{ padding: '4px 10px', fontSize: 11 }}
+                                    title="Open Job Posting"
+                                  >
+                                    🌐 View
+                                  </a>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteApplicationItem(app.id)}
+                                  className="neu-button"
+                                  style={{ padding: '4px 8px', fontSize: 11, color: 'var(--accent-red)' }}
+                                  title="Delete application record"
+                                >
+                                  🗑️
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
     </AuthLayout>
   );
 }
 
-function StatBox({ label, value, icon, highlight }) {
+function StatBox({ label, value, icon, highlight, onClick, badge }) {
   return (
-    <div className="neu-card" style={{ padding: '18px 20px' }}>
+    <div
+      className={`neu-card ${onClick ? 'neu-card-hover' : ''}`}
+      style={{ padding: '18px 20px', cursor: onClick ? 'pointer' : 'default', position: 'relative' }}
+      onClick={onClick}
+    >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
         <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>{label}</span>
         <span style={{ fontSize: 18 }}>{icon}</span>
       </div>
-      <div style={{ fontSize: 24, fontWeight: 800, color: highlight || 'var(--text-primary)' }}>
-        {value}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+        <div style={{ fontSize: 24, fontWeight: 800, color: highlight || 'var(--text-primary)' }}>
+          {value}
+        </div>
+        {badge && (
+          <span style={{ fontSize: 10, fontWeight: 700, color: highlight || 'var(--text-accent)', background: 'rgba(16, 185, 129, 0.12)', padding: '2px 8px', borderRadius: 10 }}>
+            {badge}
+          </span>
+        )}
       </div>
     </div>
   );

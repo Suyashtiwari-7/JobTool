@@ -19,8 +19,8 @@ router = APIRouter()
 
 
 async def cleanup_old_applications(db: AsyncSession):
-    """Auto-delete applications and generated PDF files older than 15 days."""
-    cutoff = datetime.now(timezone.utc) - timedelta(days=15)
+    """Auto-delete applications and generated PDF files older than 60 days (2 months)."""
+    cutoff = datetime.now(timezone.utc) - timedelta(days=60)
     result = await db.execute(select(Application).where(Application.created_at < cutoff))
     old_apps = result.scalars().all()
     for app in old_apps:
@@ -312,6 +312,34 @@ async def clear_applications(
     await db.execute(delete(PipelineRun))
     await db.flush()
     return {"message": "Application history and queue cleared successfully"}
+
+
+@router.delete("/{app_id}")
+async def delete_single_application(
+    app_id: int,
+    db: AsyncSession = Depends(get_db),
+    _user: str = Depends(verify_token),
+):
+    """Delete a single application and its generated PDF files."""
+    result = await db.execute(select(Application).where(Application.id == app_id))
+    app = result.scalar_one_or_none()
+    if not app:
+        raise HTTPException(404, "Application not found")
+
+    if app.tailored_resume_pdf and os.path.exists(app.tailored_resume_pdf):
+        try:
+            os.remove(app.tailored_resume_pdf)
+        except Exception:
+            pass
+    if app.cover_letter_pdf and os.path.exists(app.cover_letter_pdf):
+        try:
+            os.remove(app.cover_letter_pdf)
+        except Exception:
+            pass
+
+    await db.delete(app)
+    await db.flush()
+    return {"message": "Application deleted successfully"}
 
 
 class ScreeningRequest(BaseModel):

@@ -300,3 +300,49 @@ select:-webkit-autofill:focus {
 .pulse-active {
   animation: pulseGlow 2s infinite;
 }
+
+/* ── Mobile & Responsive Tweaks ── */
+@media (max-width: 768px) {
+  .main-content {
+    padding: 16px 16px 40px 16px !important;
+  }
+
+  .neu-card {
+    padding: 18px 16px !important;
+    border-radius: var(--radius-md) !important;
+  }
+
+  .neu-input, .neu-select {
+    font-size: 16px !important; /* Prevents auto-zoom on mobile iOS Safari */
+    padding: 10px 14px !important;
+  }
+
+  .neu-button {
+    padding: 10px 16px !important;
+    font-size: 13px !important;
+  }
+
+  .mobile-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+
+  .mobile-hide {
+    display: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 13px;
+  }
+
+  .main-content {
+    padding: 12px 12px 30px 12px !important;
+  }
+
+  .neu-card {
+    padding: 14px 12px !important;
+  }
+}

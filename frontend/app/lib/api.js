@@ -178,6 +178,10 @@ export async function updateApplicationStatus(id, status, notes) {
   });
 }
 
+export async function deleteApplication(id) {
+  return apiFetch(`/api/applications/${id}`, { method: 'DELETE' });
+}
+
 export async function clearApplications() {
   return apiFetch('/api/applications/clear', { method: 'DELETE' });
 }
