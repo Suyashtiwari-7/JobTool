@@ -30,8 +30,26 @@ export default function SidebarNav({ activePage, setActivePage }) {
         flexShrink: 0,
       }}
     >
-
-
+      {/* User Profile Avatar */}
+      <div
+        style={{
+          width: 42,
+          height: 42,
+          borderRadius: 21,
+          background: 'var(--bg-card)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'var(--text-primary)',
+          fontSize: 20,
+          boxShadow: 'var(--neu-flat)',
+          marginBottom: 4,
+          cursor: 'pointer',
+        }}
+        title="Your Profile & Resume Info"
+      >
+        👤
+      </div>
       {/* Nav Icons */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', alignItems: 'center' }}>
         {navItems.map((item) => {
