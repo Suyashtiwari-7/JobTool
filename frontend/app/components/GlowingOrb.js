@@ -4,9 +4,9 @@ import { useEffect, useRef } from 'react';
 
 /**
  * GlowingOrb — 3D Matrix Particle Sphere Orb component rendered via HTML5 Canvas.
- * Creates an animated rotating particle sphere with neon aura glows.
+ * Supports theme awareness: Black particles in Light theme, White particles in Dark theme.
  */
-export default function GlowingOrb({ onClick, isListening }) {
+export default function GlowingOrb({ onClick, isListening, theme = 'dark' }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export default function GlowingOrb({ onClick, isListening }) {
     const radius = 105;
 
     // Generate 3D sphere particles
-    const particleCount = 300;
+    const particleCount = 320;
     const particles = [];
 
     for (let i = 0; i < particleCount; i++) {
@@ -47,11 +47,20 @@ export default function GlowingOrb({ onClick, isListening }) {
     function render() {
       ctx.clearRect(0, 0, width, height);
 
-      // Draw subtle core glow behind particle sphere
+      // Check current theme dynamically from prop or DOM
+      const isLightTheme =
+        theme === 'light' ||
+        (typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'light');
+
+      // Draw core glow behind particle sphere
       const coreGlow = ctx.createRadialGradient(cx, cy, 10, cx, cy, radius * 1.15);
       if (isListening) {
-        coreGlow.addColorStop(0, 'rgba(240, 94, 45, 0.5)');
-        coreGlow.addColorStop(0.5, 'rgba(139, 92, 246, 0.3)');
+        coreGlow.addColorStop(0, 'rgba(240, 94, 45, 0.55)');
+        coreGlow.addColorStop(0.5, 'rgba(139, 92, 246, 0.35)');
+        coreGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      } else if (isLightTheme) {
+        coreGlow.addColorStop(0, 'rgba(15, 23, 42, 0.25)');
+        coreGlow.addColorStop(0.6, 'rgba(240, 94, 45, 0.15)');
         coreGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
       } else {
         coreGlow.addColorStop(0, 'rgba(255, 255, 255, 0.28)');
@@ -92,9 +101,15 @@ export default function GlowingOrb({ onClick, isListening }) {
         // Particle alpha based on Z depth
         const alpha = Math.min(1, Math.max(0.15, (z2 + radius) / (radius * 2)));
 
-        ctx.fillStyle = isListening
-          ? `rgba(240, 94, 45, ${alpha})`
-          : `rgba(255, 255, 255, ${alpha * 0.95})`;
+        if (isListening) {
+          ctx.fillStyle = `rgba(240, 94, 45, ${alpha})`;
+        } else if (isLightTheme) {
+          // BLACK / DARK SLATE particles for WHITE theme
+          ctx.fillStyle = `rgba(15, 23, 42, ${alpha * 0.95})`;
+        } else {
+          // WHITE particles for BLACK theme
+          ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.95})`;
+        }
 
         ctx.beginPath();
         ctx.arc(px, py, size, 0, Math.PI * 2);
@@ -109,7 +124,11 @@ export default function GlowingOrb({ onClick, isListening }) {
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [isListening]);
+  }, [isListening, theme]);
+
+  const isLightTheme =
+    theme === 'light' ||
+    (typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'light');
 
   return (
     <div
@@ -132,6 +151,8 @@ export default function GlowingOrb({ onClick, isListening }) {
           borderRadius: '50%',
           filter: isListening
             ? 'drop-shadow(0 0 30px rgba(240, 94, 45, 0.85))'
+            : isLightTheme
+            ? 'drop-shadow(0 0 20px rgba(15, 23, 42, 0.3))'
             : 'drop-shadow(0 0 20px rgba(255, 255, 255, 0.2))',
         }}
       />

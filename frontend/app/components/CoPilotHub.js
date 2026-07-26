@@ -5,8 +5,8 @@ import GlowingOrb from './GlowingOrb';
 
 /**
  * CoPilotHub — Page 1: Particle Orb + Dual Neon Input Bar workspace.
- * Initial View: Particle Orb at upper-center, Chat Bar in center area right below it.
- * Active View: Smoothly transitions into full ChatGPT conversation stream on first command.
+ * Theme aware (Black particles in light mode, White particles in dark mode).
+ * Repositioned significantly higher up on screen for max visibility.
  */
 export default function CoPilotHub({
   assistantChatHistory,
@@ -18,6 +18,7 @@ export default function CoPilotHub({
   onDeleteMemory,
   isChatOpen,
   setIsChatOpen,
+  theme = 'dark',
 }) {
   const chatEndRef = useRef(null);
   const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'memories'
@@ -186,22 +187,23 @@ export default function CoPilotHub({
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 140px)', maxWidth: 920, margin: '0 auto', width: '100%', position: 'relative' }}>
       
       {/* ════════════════════════════════════════════════════════════════ */}
-      {/* STATE 1: INITIAL CLEAN HERO VIEW (ORB UP + CHAT BAR AT CENTER)   */}
+      {/* STATE 1: INITIAL HERO VIEW (MOVED SIGNIFICANTLY HIGHER UP)       */}
       {/* ════════════════════════════════════════════════════════════════ */}
       {!chatStarted ? (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 32, animation: 'fadeIn 0.4s ease', paddingBottom: 60 }}>
-          {/* Particle Orb (Positioned Upper-Center) */}
-          <div style={{ transform: 'scale(0.95)', marginTop: -20 }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: 20, gap: 20, animation: 'fadeIn 0.4s ease' }}>
+          {/* Particle Orb (High Upper Position with Theme Awareness) */}
+          <div style={{ transform: 'scale(0.95)' }}>
             <GlowingOrb
               onClick={() => {
                 setUserHasSubmitted(true);
                 setIsChatOpen(!isChatOpen);
               }}
               isListening={sendingChat || isVoiceActive}
+              theme={theme}
             />
           </div>
 
-          {/* Dual Neon Chat Input Bar (Positioned Center Screen directly below Orb) */}
+          {/* Dual Neon Chat Input Bar (Lifted Up directly below Orb) */}
           <div style={{ width: '100%', maxWidth: 840 }}>
             {renderInputBar()}
           </div>
@@ -218,6 +220,7 @@ export default function CoPilotHub({
                 <GlowingOrb
                   onClick={() => setIsChatOpen(!isChatOpen)}
                   isListening={sendingChat || isVoiceActive}
+                  theme={theme}
                 />
               </div>
               <div>

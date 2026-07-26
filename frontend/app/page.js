@@ -723,6 +723,7 @@ export default function DashboardPage() {
               onDeleteMemory={handleDeleteMemoryItem}
               isChatOpen={isChatOpen}
               setIsChatOpen={setIsChatOpen}
+              theme={theme}
             />
           )}
 
