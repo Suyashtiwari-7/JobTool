@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import GlowingOrb from './GlowingOrb';
 
 /**
- * CoPilotHub — Page 1: Hero-to-Chat animated AI Co-Pilot workspace.
- * Initial View: Shows ONLY Particle Orb + Input Bar.
+ * CoPilotHub — Page 1: Ultra-clean Particle Orb + Dual Neon Input Bar workspace.
+ * Initial View: Purely the 3D Particle Orb centered + Input Bar at bottom.
  * Active View: Smoothly transitions into full ChatGPT conversation stream on first command.
  */
 export default function CoPilotHub({
@@ -58,50 +58,18 @@ export default function CoPilotHub({
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 120px)', maxWidth: 920, margin: '0 auto', width: '100%', position: 'relative', justifyContent: 'space-between' }}>
       
       {/* ════════════════════════════════════════════════════════════════ */}
-      {/* STATE 1: INITIAL HERO VIEW (BEFORE COMMAND SUBMISSION)           */}
+      {/* STATE 1: INITIAL CLEAN HERO VIEW (PURE ORB + INPUT BAR ONLY)     */}
       {/* ════════════════════════════════════════════════════════════════ */}
       {!chatStarted ? (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24, textAlign: 'center', animation: 'fadeIn 0.4s ease' }}>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'fadeIn 0.4s ease' }}>
           {/* Centered 3D Particle Orb */}
-          <div style={{ transform: 'scale(1.1)', transition: 'transform 0.5s ease' }}>
-            <GlowingOrb
-              onClick={() => {
-                setUserHasSubmitted(true);
-                setIsChatOpen(!isChatOpen);
-              }}
-              isListening={sendingChat || isVoiceActive}
-              activePrompt=""
-            />
-          </div>
-
-          <div style={{ maxWidth: 520 }}>
-            <h2 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.3px' }}>
-              ✨ JobTool AI Career Co-Pilot
-            </h2>
-            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 6, lineHeight: 1.5 }}>
-              Click the Particle Sphere or type a command below to automate job sourcing, tailoring, and schedules.
-            </p>
-          </div>
-
-          {/* Quick Prompt Chips */}
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap', maxWidth: 680, marginTop: 4 }}>
-            {[
-              '🎓 Target Big Tech Apprenticeships',
-              '⏰ Apply everyday 8am-10am',
-              '🚀 Target AI & Machine Learning roles',
-              '🧠 My internship ends June 30',
-            ].map((chip, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => handleSend(chip)}
-                className="neu-pill"
-                style={{ fontSize: 12, padding: '8px 16px', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', boxShadow: 'var(--neu-flat)' }}
-              >
-                {chip}
-              </button>
-            ))}
-          </div>
+          <GlowingOrb
+            onClick={() => {
+              setUserHasSubmitted(true);
+              setIsChatOpen(!isChatOpen);
+            }}
+            isListening={sendingChat || isVoiceActive}
+          />
         </div>
       ) : (
         /* ════════════════════════════════════════════════════════════════ */
@@ -111,11 +79,10 @@ export default function CoPilotHub({
           {/* Top Header Bar */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, padding: '0 8px', flexShrink: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ transform: 'scale(0.42)', transformOrigin: 'left center', width: 110, height: 50, display: 'flex', alignItems: 'center' }}>
+              <div style={{ transform: 'scale(0.38)', transformOrigin: 'left center', width: 100, height: 45, display: 'flex', alignItems: 'center' }}>
                 <GlowingOrb
                   onClick={() => setIsChatOpen(!isChatOpen)}
                   isListening={sendingChat || isVoiceActive}
-                  activePrompt=""
                 />
               </div>
               <div>
@@ -283,7 +250,7 @@ export default function CoPilotHub({
       )}
 
       {/* ════════════════════════════════════════════════════════════════ */}
-      {/* BOTTOM-PINNED DUAL NEON AURA INPUT BAR (ALWAYS VISIBLE AT BOTTOM)*/}
+      {/* BOTTOM-PINNED DUAL NEON AURA INPUT BAR                            */}
       {/* ════════════════════════════════════════════════════════════════ */}
       <div
         style={{

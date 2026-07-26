@@ -4,9 +4,9 @@ import { useEffect, useRef } from 'react';
 
 /**
  * GlowingOrb — 3D Matrix Particle Sphere Orb component rendered via HTML5 Canvas.
- * Creates an animated rotating particle sphere with neon aura glows and interactive state.
+ * Creates an animated rotating particle sphere with neon aura glows.
  */
-export default function GlowingOrb({ onClick, isListening, activePrompt }) {
+export default function GlowingOrb({ onClick, isListening }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -16,17 +16,17 @@ export default function GlowingOrb({ onClick, isListening, activePrompt }) {
     let animationFrameId;
 
     // Canvas size
-    const width = 260;
-    const height = 260;
+    const width = 280;
+    const height = 280;
     canvas.width = width;
     canvas.height = height;
 
     const cx = width / 2;
     const cy = height / 2;
-    const radius = 95;
+    const radius = 105;
 
     // Generate 3D sphere particles
-    const particleCount = 280;
+    const particleCount = 300;
     const particles = [];
 
     for (let i = 0; i < particleCount; i++) {
@@ -48,20 +48,20 @@ export default function GlowingOrb({ onClick, isListening, activePrompt }) {
       ctx.clearRect(0, 0, width, height);
 
       // Draw subtle core glow behind particle sphere
-      const coreGlow = ctx.createRadialGradient(cx, cy, 10, cx, cy, radius * 1.1);
+      const coreGlow = ctx.createRadialGradient(cx, cy, 10, cx, cy, radius * 1.15);
       if (isListening) {
-        coreGlow.addColorStop(0, 'rgba(240, 94, 45, 0.45)');
-        coreGlow.addColorStop(0.5, 'rgba(139, 92, 246, 0.25)');
+        coreGlow.addColorStop(0, 'rgba(240, 94, 45, 0.5)');
+        coreGlow.addColorStop(0.5, 'rgba(139, 92, 246, 0.3)');
         coreGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
       } else {
-        coreGlow.addColorStop(0, 'rgba(255, 255, 255, 0.25)');
-        coreGlow.addColorStop(0.6, 'rgba(240, 94, 45, 0.12)');
+        coreGlow.addColorStop(0, 'rgba(255, 255, 255, 0.28)');
+        coreGlow.addColorStop(0.6, 'rgba(240, 94, 45, 0.15)');
         coreGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
       }
 
       ctx.fillStyle = coreGlow;
       ctx.beginPath();
-      ctx.arc(cx, cy, radius * 1.1, 0, Math.PI * 2);
+      ctx.arc(cx, cy, radius * 1.15, 0, Math.PI * 2);
       ctx.fill();
 
       // Rotation angles
@@ -84,7 +84,7 @@ export default function GlowingOrb({ onClick, isListening, activePrompt }) {
         let z2 = z1 * cosX + p.y * sinX;
 
         // 3D Perspective projection
-        const scale = 260 / (260 + z2);
+        const scale = 280 / (280 + z2);
         const px = cx + x1 * scale;
         const py = cy + y1 * scale;
         const size = Math.max(0.6, p.baseR * scale);
@@ -112,39 +112,29 @@ export default function GlowingOrb({ onClick, isListening, activePrompt }) {
   }, [isListening]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-      <div
-        onClick={onClick}
+    <div
+      onClick={onClick}
+      style={{
+        position: 'relative',
+        cursor: 'pointer',
+        borderRadius: '50%',
+        padding: 4,
+        display: 'inline-block',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+      }}
+      className={isListening ? 'pulse-active' : ''}
+      title="AI Career Co-Pilot Particle Orb"
+    >
+      <canvas
+        ref={canvasRef}
         style={{
-          position: 'relative',
-          cursor: 'pointer',
+          display: 'block',
           borderRadius: '50%',
-          padding: 8,
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          filter: isListening
+            ? 'drop-shadow(0 0 30px rgba(240, 94, 45, 0.85))'
+            : 'drop-shadow(0 0 20px rgba(255, 255, 255, 0.2))',
         }}
-        className={isListening ? 'pulse-active' : ''}
-        title="Click Glowing Particle Orb to talk or command AI Co-Pilot"
-      >
-        <canvas
-          ref={canvasRef}
-          style={{
-            display: 'block',
-            borderRadius: '50%',
-            filter: isListening
-              ? 'drop-shadow(0 0 25px rgba(240, 94, 45, 0.8))'
-              : 'drop-shadow(0 0 15px rgba(255, 255, 255, 0.15))',
-          }}
-        />
-      </div>
-
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '0.3px' }}>
-          {isListening ? '🎙️ AI Voice Active — Listening to Commands...' : '✨ Click Particle Sphere to Command AI Co-Pilot'}
-        </div>
-        <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
-          {activePrompt || 'Try: "Target Big Tech Apprenticeships everyday from 8am to 10am"'}
-        </p>
-      </div>
+      />
     </div>
   );
 }
