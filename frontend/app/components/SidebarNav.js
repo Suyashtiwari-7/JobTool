@@ -7,8 +7,7 @@
 export default function SidebarNav({ activePage, setActivePage }) {
   const navItems = [
     { id: 'hub', label: 'Co-Pilot Hub', icon: '🔮' },
-    { id: 'schedules', label: 'Automation & Queue', icon: '🎛️' },
-    { id: 'calendar', label: 'Applied & Calendar', icon: '📅' },
+    { id: 'schedules', label: 'Automation Workspace', icon: '🎛️' },
   ];
 
   return (

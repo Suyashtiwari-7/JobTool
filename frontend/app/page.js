@@ -737,19 +737,7 @@ export default function DashboardPage() {
             />
           )}
 
-          {/* ════════ PAGE 3: APPLIED & CALENDAR ════════ */}
-          {activePage === 'calendar' && (
-            <AppliedCalendar
-              applications={applications}
-              stats={stats}
-              onDeleteApplication={handleDeleteApplicationItem}
-              onTogglePin={handleTogglePin}
-              onStatusChange={handleStatusChange}
-              initialView="calendar"
-            />
-          )}
-
-          {/* ════════ PAGE 2: QUEUE & AUTOMATION WORKSPACE ════════ */}
+          {/* ════════ PAGE 2: AUTOMATION WORKSPACE ════════ */}
           {activePage === 'schedules' && (
             <AppliedCalendar
               applications={applications}
