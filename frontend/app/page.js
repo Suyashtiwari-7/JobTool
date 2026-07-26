@@ -6,7 +6,7 @@ import SidebarNav from './components/SidebarNav';
 import CoPilotHub from './components/CoPilotHub';
 import AppliedCalendar from './components/AppliedCalendar';
 import StatBox from './components/StatBox';
-import ProfileModal from './components/ProfileModal';
+import ProfileWorkspace from './components/ProfileWorkspace';
 import {
   API_URL,
   getToken,
@@ -88,7 +88,6 @@ export default function DashboardPage() {
   const [clearing, setClearing] = useState(false);
   const [savingFilter, setSavingFilter] = useState(false);
   const [theme, setTheme] = useState('light');
-  const [showProfileModal, setShowProfileModal] = useState(false);
 
   // Applications View Mode Switcher: 'table' | 'kanban'
   const [viewMode, setViewMode] = useState('table');
@@ -644,7 +643,7 @@ export default function DashboardPage() {
     <AuthLayout>
       <div style={{ display: 'flex', minHeight: '100vh', width: '100%' }}>
         {/* VS Code Style Left Vertical Navigation Sidebar */}
-        <SidebarNav activePage={activePage} setActivePage={setActivePage} onOpenProfile={() => setShowProfileModal(true)} />
+        <SidebarNav activePage={activePage} setActivePage={setActivePage} />
 
         <div style={{ flex: 1, padding: '24px 32px', maxWidth: 1400, margin: '0 auto', width: '100%' }}>
           {/* ── Top Header Bar (Canva Split Floating Cards) ── */}
@@ -749,12 +748,12 @@ export default function DashboardPage() {
               onStatusChange={handleStatusChange}
             />
           )}
+
+          {/* ════════ PAGE 3: CAREER PROFILE ════════ */}
+          {activePage === 'profile' && (
+            <ProfileWorkspace />
+          )}
         </>
-      )}
-      
-      {/* ── User Profile Modal ── */}
-      {showProfileModal && (
-        <ProfileModal onClose={() => setShowProfileModal(false)} />
       )}
       
       {/* ── Applied Organizations & Applications Modal ── */}

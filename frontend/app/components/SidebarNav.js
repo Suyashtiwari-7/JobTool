@@ -4,10 +4,11 @@
  * SidebarNav — Floating Capsule Vertical Navigation Bar.
  * Strictly limited to the last button with zero extra tail or stretching.
  */
-export default function SidebarNav({ activePage, setActivePage, onOpenProfile }) {
+export default function SidebarNav({ activePage, setActivePage }) {
   const navItems = [
     { id: 'hub', label: 'Co-Pilot Hub', icon: '🔮' },
     { id: 'schedules', label: 'Automation Workspace', icon: '🎛️' },
+    { id: 'profile', label: 'Career Profile', icon: '👤' },
   ];
 
   return (
@@ -30,27 +31,7 @@ export default function SidebarNav({ activePage, setActivePage, onOpenProfile })
         flexShrink: 0,
       }}
     >
-      {/* User Profile Avatar */}
-      <div
-        onClick={onOpenProfile}
-        style={{
-          width: 42,
-          height: 42,
-          borderRadius: 21,
-          background: 'var(--bg-card)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'var(--text-primary)',
-          fontSize: 20,
-          boxShadow: 'var(--neu-flat)',
-          marginBottom: 4,
-          cursor: 'pointer',
-        }}
-        title="Your Profile & Resume Info"
-      >
-        👤
-      </div>
+
       {/* Nav Icons */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', alignItems: 'center' }}>
         {navItems.map((item) => {
