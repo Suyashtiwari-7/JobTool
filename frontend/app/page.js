@@ -648,8 +648,8 @@ export default function DashboardPage() {
           {/* ── Top Header Bar (Canva Split Floating Cards) ── */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
             {/* Left Header Card / Branding */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '4px 8px' }}>
-              <img src="/logo.png" alt="JobTool Logo" style={{ width: 42, height: 42, borderRadius: 12, objectFit: 'cover' }} />
+            <div className="neu-card" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '10px 18px', borderRadius: 16 }}>
+              <img src="/logo.png" alt="JobTool Logo" style={{ width: 44, height: 44, borderRadius: 12, objectFit: 'cover', boxShadow: 'var(--neu-flat)' }} />
               <div>
                 <h1 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.2px' }}>
                   JobTool
@@ -674,28 +674,39 @@ export default function DashboardPage() {
 
               <div 
                 onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-                className="neu-inset" 
-                style={{ width: 84, height: 38, borderRadius: 20, position: 'relative', cursor: 'pointer', display: 'flex', alignItems: 'center', background: 'var(--bg-neu-inset)', boxShadow: 'var(--neu-pressed)', border: '1px solid var(--border-subtle)' }}
+                style={{ 
+                  width: 90, 
+                  height: 40, 
+                  borderRadius: 20, 
+                  position: 'relative', 
+                  cursor: 'pointer', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  background: 'var(--bg-base)', 
+                  boxShadow: 'var(--neu-pressed)',
+                  border: 'none',
+                  outline: 'none'
+                }}
               >
                 <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', padding: '0 12px', fontSize: 13, fontWeight: 900, alignItems: 'center' }}>
-                  <span style={{ color: 'var(--accent-blue)', opacity: theme === 'dark' ? 1 : 0.5 }}>ON</span>
-                  <span style={{ fontSize: 12, opacity: theme === 'light' ? 1 : 0.5 }}>🌙</span>
+                  <span style={{ color: '#5c8cf5', opacity: theme === 'dark' ? 1 : 0.4 }}>ON</span>
+                  <span style={{ fontSize: 13, opacity: theme === 'light' ? 1 : 0.4 }}>🌙</span>
                 </div>
                 <div 
                   style={{ 
                     position: 'absolute', 
                     top: 3, 
                     left: theme === 'light' ? 3 : 43, 
-                    width: 38, 
-                    height: 32, 
-                    borderRadius: 16, 
+                    width: 44, 
+                    height: 34, 
+                    borderRadius: 17, 
                     background: 'var(--bg-card)', 
                     boxShadow: 'var(--neu-flat)', 
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'center',
                     transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    fontSize: 14,
+                    fontSize: 15,
                   }}
                 >
                   {theme === 'light' ? '☀️' : '🌙'}
