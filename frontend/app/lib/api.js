@@ -251,6 +251,31 @@ export async function seedCompanies() {
   return apiFetch('/api/settings/companies/seed', { method: 'POST' });
 }
 
+// ── AI Assistant Co-Pilot ───────────────────────────────
+
+export async function sendAssistantChat(message) {
+  return apiFetch('/api/assistant/chat', {
+    method: 'POST',
+    body: JSON.stringify({ message }),
+  });
+}
+
+export async function getAssistantMemories() {
+  return apiFetch('/api/assistant/memories');
+}
+
+export async function deleteAssistantMemory(id) {
+  return apiFetch(`/api/assistant/memories/${id}`, { method: 'DELETE' });
+}
+
+export async function getAssistantSchedules() {
+  return apiFetch('/api/assistant/schedules');
+}
+
+export async function toggleAssistantSchedule(id) {
+  return apiFetch(`/api/assistant/schedules/${id}/toggle`, { method: 'PATCH' });
+}
+
 export async function getLLMStatus() {
   return apiFetch('/api/settings/llm-status');
 }

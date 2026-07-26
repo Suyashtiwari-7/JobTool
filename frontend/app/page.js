@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useRef } from 'react';
 import AuthLayout from './components/AuthLayout';
+import SidebarNav from './components/SidebarNav';
+import GlowingOrb from './components/GlowingOrb';
 import {
   API_URL,
   getToken,
@@ -25,6 +27,11 @@ import {
   getCoverLetterPdfUrl,
   generateScreeningAnswer,
   generateOutreachEmail,
+  sendAssistantChat,
+  getAssistantMemories,
+  deleteAssistantMemory,
+  getAssistantSchedules,
+  toggleAssistantSchedule,
 } from './lib/api';
 
 const ROLE_SUGGESTIONS = [
@@ -170,6 +177,21 @@ export default function DashboardPage() {
   const [viewingResume, setViewingResume] = useState(null);
   const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
 
+  // Multipage Navigation & AI Co-Pilot Assistant States
+  const [activePage, setActivePage] = useState('hub'); // 'hub' | 'schedules' | 'calendar'
+  const [isChatOpen, setIsChatOpen] = useState(true);
+  const [assistantInput, setAssistantInput] = useState('');
+  const [assistantChatHistory, setAssistantChatHistory] = useState([
+    {
+      sender: 'assistant',
+      text: 'Hello! I am your AI Career Co-Pilot. Click the Glowing Orb or type a command like "Apply for Big Tech Apprenticeships everyday 8am-10am" or "My internship ends June 30".',
+      actions: [],
+    },
+  ]);
+  const [assistantMemories, setAssistantMemories] = useState([]);
+  const [assistantSchedules, setAssistantSchedules] = useState([]);
+  const [sendingChat, setSendingChat] = useState(false);
+
   function handleToggleContact(id) {
     setShowContactMap((prev) => ({ ...prev, [id]: !prev[id] }));
   }
@@ -197,6 +219,54 @@ export default function DashboardPage() {
       await togglePinApplication(id);
     } catch (err) {
       console.error('Failed to pin application:', err);
+    }
+  }
+
+  async function handleSendAssistantMessage(customMsg) {
+    const textToSend = customMsg || assistantInput;
+    if (!textToSend || !textToSend.trim()) return;
+
+    const userMessageObj = { sender: 'user', text: textToSend };
+    setAssistantChatHistory((prev) => [...prev, userMessageObj]);
+    setAssistantInput('');
+    setSendingChat(true);
+
+    try {
+      const res = await sendAssistantChat(textToSend);
+      const botMessageObj = {
+        sender: 'assistant',
+        text: res.response_text || "I've updated your configuration.",
+        actions: res.actions_taken || [],
+      };
+      setAssistantChatHistory((prev) => [...prev, botMessageObj]);
+      await loadAllData();
+    } catch (err) {
+      setAssistantChatHistory((prev) => [
+        ...prev,
+        { sender: 'assistant', text: 'Sorry, I ran into an issue updating parameters: ' + err.message },
+      ]);
+    } finally {
+      setSendingChat(false);
+    }
+  }
+
+  async function handleDeleteMemoryItem(id) {
+    setAssistantMemories((prev) => prev.filter((m) => m.id !== id));
+    try {
+      await deleteAssistantMemory(id);
+    } catch (err) {
+      console.error('Failed to delete memory:', err);
+    }
+  }
+
+  async function handleToggleScheduleItem(id) {
+    setAssistantSchedules((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, is_running: !s.is_running, status: s.is_running ? 'paused' : 'active' } : s))
+    );
+    try {
+      await toggleAssistantSchedule(id);
+    } catch (err) {
+      console.error('Failed to toggle schedule:', err);
     }
   }
 
@@ -258,12 +328,14 @@ export default function DashboardPage() {
 
   async function loadAllData() {
     try {
-      const [s, p, f, rList, apps] = await Promise.all([
+      const [s, p, f, rList, apps, mems, scheds] = await Promise.all([
         getStats().catch(() => null),
         getPipelineStatus().catch(() => null),
         getActiveFilter().catch(() => null),
         listResumes().catch(() => []),
         getApplications({ limit: 50 }).catch(() => []),
+        getAssistantMemories().catch(() => []),
+        getAssistantSchedules().catch(() => []),
       ]);
 
       setStats(s);
@@ -271,6 +343,8 @@ export default function DashboardPage() {
       if (p?.status === 'running') setRunning(true);
       setResumes(rList);
       setApplications(apps);
+      if (mems) setAssistantMemories(mems);
+      if (scheds) setAssistantSchedules(scheds);
 
       if (f) {
         setFilter(f);
@@ -544,55 +618,67 @@ export default function DashboardPage() {
 
   return (
     <AuthLayout>
-      {/* ── Top Header Bar ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          <img src="/logo.png" alt="JobTool Logo" style={{ width: 72, height: 72, borderRadius: 16, objectFit: 'cover', boxShadow: 'var(--neu-flat)' }} />
-          <div>
-            <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-              🤖 Status: Autonomous AI Career Broker Active
-            </h1>
-            <p style={{ color: 'var(--text-secondary)', fontSize: 14, fontWeight: 600, marginTop: 4 }}>
-              Auto-Sourcing: {running ? <span style={{ color: 'var(--accent-green)' }}>Active</span> : 'Standby'}
-            </p>
-          </div>
-        </div>
+      <div style={{ display: 'flex', minHeight: '100vh', width: '100%' }}>
+        {/* VS Code Style Left Vertical Navigation Sidebar */}
+        <SidebarNav activePage={activePage} setActivePage={setActivePage} />
 
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          <button
-            onClick={handleClearHistory}
-            disabled={clearing}
-            className="neu-button neu-button-danger"
-            title="Clear old history and queue"
-          >
-            🧹 {clearing ? 'Clearing...' : 'Clear History'}
-          </button>
-
-          <div 
-            onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-            className="neu-inset" 
-            style={{ width: 120, height: 46, borderRadius: 30, position: 'relative', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0 4px', border: '1px solid var(--border-subtle)' }}
-          >
-            <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', padding: '0 14px', fontSize: 12, fontWeight: 800, color: 'var(--text-muted)' }}>
-              <span>ON</span>
-              <span>OFF</span>
+        <div style={{ flex: 1, padding: '24px 32px', maxWidth: 1400, margin: '0 auto', width: '100%' }}>
+          {/* ── Top Header Bar ── */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <img src="/logo.png" alt="JobTool Logo" style={{ width: 56, height: 56, borderRadius: 14, objectFit: 'cover', boxShadow: 'var(--neu-flat)' }} />
+              <div>
+                <h1 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+                  🤖 JobTool AI — Conversational Career Co-Pilot
+                </h1>
+                <p style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600, marginTop: 2 }}>
+                  Engine Status: {running ? <span style={{ color: 'var(--accent-green)' }}>🟢 Active Sourcing</span> : '🟡 Standby'}
+                </p>
+              </div>
             </div>
-            <div style={{
-              width: 56, height: 38, borderRadius: 24, background: 'var(--bg-card)', 
-              boxShadow: 'var(--neu-flat)', 
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontWeight: 800, fontSize: 12,
-              position: 'absolute',
-              transition: 'transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)',
-              transform: theme === 'light' ? 'translateX(0px)' : 'translateX(56px)',
-              color: 'var(--text-primary)',
-              border: '1px solid var(--border-subtle)'
-            }}>
-              {theme === 'light' ? '☀️' : '🌙'}
+
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <button
+                onClick={handleClearHistory}
+                disabled={clearing}
+                className="neu-button neu-button-danger"
+                style={{ padding: '8px 14px', fontSize: 12 }}
+                title="Clear old history and queue"
+              >
+                🧹 {clearing ? 'Clearing...' : 'Clear History'}
+              </button>
+
+              <div 
+                onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+                className="neu-inset" 
+                style={{ width: 100, height: 40, borderRadius: 20, position: 'relative', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0 4px', border: '1px solid var(--border-subtle)' }}
+              >
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', padding: '0 10px', fontSize: 11, fontWeight: 800, color: 'var(--text-muted)' }}>
+                  <span>🌙</span>
+                  <span>☀️</span>
+                </div>
+                <div 
+                  style={{ 
+                    position: 'absolute', 
+                    top: 3, 
+                    left: theme === 'light' ? 56 : 4, 
+                    width: 32, 
+                    height: 32, 
+                    borderRadius: 16, 
+                    background: 'var(--bg-card)', 
+                    boxShadow: 'var(--neu-flat)', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    transition: 'left 0.25s ease',
+                    fontSize: 13
+                  }}
+                >
+                  {theme === 'light' ? '☀️' : '🌙'}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-secondary)' }}>
@@ -2485,6 +2571,8 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+        </div>
+      </div>
     </AuthLayout>
   );
 }
