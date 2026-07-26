@@ -276,6 +276,21 @@ export async function toggleAssistantSchedule(id) {
   return apiFetch(`/api/assistant/schedules/${id}/toggle`, { method: 'PATCH' });
 }
 
-export async function getLLMStatus() {
+export async function createAssistantSchedule(data) {
+  return apiFetch('/api/assistant/schedules', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteAssistantSchedule(id) {
+  return apiFetch(`/api/assistant/schedules/${id}`, { method: 'DELETE' });
+}
+
+export async function getCalendarApplications() {
+  return apiFetch('/api/applications/calendar');
+}
+
+export function getLLMStatus() {
   return apiFetch('/api/settings/llm-status');
 }

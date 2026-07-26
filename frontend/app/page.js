@@ -3,7 +3,9 @@
 import { useEffect, useState, useRef } from 'react';
 import AuthLayout from './components/AuthLayout';
 import SidebarNav from './components/SidebarNav';
-import GlowingOrb from './components/GlowingOrb';
+import CoPilotHub from './components/CoPilotHub';
+import AppliedCalendar from './components/AppliedCalendar';
+import StatBox from './components/StatBox';
 import {
   API_URL,
   getToken,
@@ -32,6 +34,8 @@ import {
   deleteAssistantMemory,
   getAssistantSchedules,
   toggleAssistantSchedule,
+  createAssistantSchedule,
+  deleteAssistantSchedule,
 } from './lib/api';
 
 const ROLE_SUGGESTIONS = [
@@ -267,6 +271,24 @@ export default function DashboardPage() {
       await toggleAssistantSchedule(id);
     } catch (err) {
       console.error('Failed to toggle schedule:', err);
+    }
+  }
+
+  async function handleCreateSchedule(data) {
+    try {
+      const newSched = await createAssistantSchedule(data);
+      setAssistantSchedules((prev) => [newSched, ...prev]);
+    } catch (err) {
+      alert('Failed to create schedule: ' + err.message);
+    }
+  }
+
+  async function handleDeleteSchedule(id) {
+    setAssistantSchedules((prev) => prev.filter((s) => s.id !== id));
+    try {
+      await deleteAssistantSchedule(id);
+    } catch (err) {
+      console.error('Failed to delete schedule:', err);
     }
   }
 
@@ -686,13 +708,101 @@ export default function DashboardPage() {
         </div>
       ) : (
         <>
+          {/* ════════ PAGE 1: AI CO-PILOT HUB ════════ */}
+          {activePage === 'hub' && (
+            <CoPilotHub
+              assistantChatHistory={assistantChatHistory}
+              assistantInput={assistantInput}
+              setAssistantInput={setAssistantInput}
+              assistantMemories={assistantMemories}
+              sendingChat={sendingChat}
+              onSendMessage={handleSendAssistantMessage}
+              onDeleteMemory={handleDeleteMemoryItem}
+              isChatOpen={isChatOpen}
+              setIsChatOpen={setIsChatOpen}
+            />
+          )}
+
+          {/* ════════ PAGE 3: APPLIED & CALENDAR ════════ */}
+          {activePage === 'calendar' && (
+            <AppliedCalendar
+              applications={applications}
+              stats={stats}
+              onDeleteApplication={handleDeleteApplicationItem}
+              onTogglePin={handleTogglePin}
+              onStatusChange={handleStatusChange}
+              onNavigateToSchedules={() => setActivePage('schedules')}
+            />
+          )}
+
+          {/* ════════ PAGE 2: AUTOMATION DASHBOARD ════════ */}
+          {activePage === 'schedules' && (
+          <>
           {/* ── Top Stats Bar ── */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 20, marginBottom: 24 }}>
             <StatBox label="Total Processed" value={stats?.total || 0} icon="📁" />
             <StatBox label="Queued Review" value={stats?.queued || 0} icon="⏳" highlight="#3b82f6" />
-            <StatBox label="Applied" value={stats?.applied || 0} icon="✅" highlight="#10b981" onClick={() => setShowAppliedModal(true)} badge="View List ↗" />
-            <StatBox label="Interviews/Responses" value={(stats?.response_received || 0) + (stats?.interview || 0)} icon="🎉" highlight="#8b5cf6" />
+            <StatBox label="Applied" value={stats?.applied || 0} icon="✅" highlight="#10b981" onClick={() => setActivePage('calendar')} badge="View List ↗" />
+            <StatBox label="Interviews" value={(stats?.response_received || 0) + (stats?.interview || 0)} icon="🎉" highlight="#8b5cf6" onClick={() => setActivePage('calendar')} badge="Calendar 📅" />
             <StatBox label="Avg Match Score" value={stats?.avg_match_score ? `${Math.round(stats.avg_match_score)}%` : '—'} icon="🎯" />
+          </div>
+
+          {/* ── Automation Schedule Rows ── */}
+          <div className="neu-card" style={{ padding: 24, marginBottom: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h3 style={{ fontSize: 16, fontWeight: 800 }}>🎛️ Active Automation Schedules</h3>
+              <button
+                type="button"
+                onClick={() => {
+                  const title = prompt('Schedule name (e.g. "Everyday 8am-10am AI roles"):');
+                  if (title) handleCreateSchedule({ title, start_time: '08:00', end_time: '10:00', duration_hours: 2 });
+                }}
+                className="neu-button neu-button-primary"
+                style={{ padding: '8px 16px', fontSize: 12 }}
+              >
+                ➕ Add Schedule
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {assistantSchedules.length === 0 ? (
+                <div style={{ padding: '20px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+                  No schedules yet. Click &quot;+ Add Schedule&quot; above or tell the AI Orb: &quot;Apply everyday 8am-10am&quot;
+                </div>
+              ) : (
+                assistantSchedules.map((s) => (
+                  <div
+                    key={s.id}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '14px 20px', borderRadius: 14,
+                      background: 'var(--bg-neu-inset)', border: '1px solid var(--border-subtle)',
+                      flexWrap: 'wrap', gap: 12,
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                      <span style={{ fontSize: 20 }}>⏰</span>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-primary)' }}>{s.title}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+                          Window: {s.start_time || '08:00'} - {s.end_time || '10:00'} •{' '}
+                          <span style={{ fontWeight: 700, color: s.is_running ? 'var(--accent-green)' : 'var(--text-muted)' }}>
+                            {(s.status || 'paused').toUpperCase()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button type="button" onClick={() => handleToggleScheduleItem(s.id)} className="neu-button" style={{ padding: '6px 12px', fontSize: 12, color: s.is_running ? 'var(--text-primary)' : 'var(--accent-green)' }}>
+                        {s.is_running ? '⏸️ Pause' : '▶️ Start'}
+                      </button>
+                      <button type="button" onClick={() => handleDeleteSchedule(s.id)} className="neu-button" style={{ padding: '6px 12px', fontSize: 12, color: 'var(--accent-red)' }}>
+                        🗑️ Delete
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
 
 
@@ -2363,6 +2473,8 @@ export default function DashboardPage() {
             </div>
           )}
         </>
+        )}
+        </>
       )}
       {/* ── Applied Organizations & Applications Modal ── */}
       {showAppliedModal && (
@@ -2574,30 +2686,5 @@ export default function DashboardPage() {
         </div>
       </div>
     </AuthLayout>
-  );
-}
-
-function StatBox({ label, value, icon, highlight, onClick, badge }) {
-  return (
-    <div
-      className={`neu-card ${onClick ? 'neu-card-hover' : ''}`}
-      style={{ padding: '18px 20px', cursor: onClick ? 'pointer' : 'default', position: 'relative' }}
-      onClick={onClick}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-        <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>{label}</span>
-        <span style={{ fontSize: 18 }}>{icon}</span>
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <div style={{ fontSize: 24, fontWeight: 800, color: highlight || 'var(--text-primary)' }}>
-          {value}
-        </div>
-        {badge && (
-          <span style={{ fontSize: 10, fontWeight: 700, color: highlight || 'var(--text-accent)', background: 'rgba(16, 185, 129, 0.12)', padding: '2px 8px', borderRadius: 10 }}>
-            {badge}
-          </span>
-        )}
-      </div>
-    </div>
   );
 }

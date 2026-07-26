@@ -89,6 +89,7 @@ class DashboardStats(BaseModel):
     reviewed: int
     applied: int
     response_received: int
+    interview: int
     avg_match_score: float | None
 
 
@@ -114,8 +115,44 @@ async def get_stats(
         reviewed=status_counts.get("reviewed", 0),
         applied=status_counts.get("applied", 0),
         response_received=status_counts.get("response_received", 0),
+        interview=status_counts.get("interview", 0),
         avg_match_score=sum(scores) / len(scores) if scores else None,
     )
+
+
+@router.get("/calendar")
+async def get_calendar_applications(
+    db: AsyncSession = Depends(get_db),
+    _user: str = Depends(verify_token),
+):
+    """Return applications with interview/response_received status for the calendar view."""
+    result = await db.execute(
+        select(Application)
+        .options(joinedload(Application.job))
+        .where(
+            Application.status.in_([
+                ApplicationStatus.INTERVIEW,
+                ApplicationStatus.RESPONSE_RECEIVED,
+            ])
+        )
+        .order_by(Application.updated_at.desc())
+    )
+    apps = result.unique().scalars().all()
+
+    # Group by date string for the calendar grid
+    calendar_events = []
+    for app in apps:
+        event_date = app.updated_at or app.created_at
+        calendar_events.append({
+            "id": app.id,
+            "date": event_date.strftime("%Y-%m-%d"),
+            "company": app.job.company if app.job else "Unknown",
+            "title": app.job.title if app.job else "Position",
+            "status": app.status.value,
+            "match_score": app.match_score,
+        })
+
+    return calendar_events
 
 
 @router.get("", response_model=list[ApplicationSummary])

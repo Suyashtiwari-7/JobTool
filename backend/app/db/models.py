@@ -194,3 +194,34 @@ class CompanyList(Base):
     name = Column(String(255), nullable=True, doc="Human-readable company name")
     is_enabled = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class UserMemory(Base):
+    """Stores user availability, preferences, and career history memory for the AI Co-Pilot."""
+
+    __tablename__ = "user_memories"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    category = Column(String(50), nullable=False, default="preference")  # availability, preference, skill, note
+    memory_key = Column(String(100), nullable=False)
+    memory_value = Column(Text, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
+
+
+class AutomationSchedule(Base):
+    """Stores configured pipeline schedule windows and continuous runs."""
+
+    __tablename__ = "automation_schedules"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    title = Column(String(255), nullable=False)  # e.g. "Everyday morning 8am-10am", "5-Hour AI Sourcing Run"
+    start_time = Column(String(10), nullable=True, default="08:00")
+    end_time = Column(String(10), nullable=True, default="10:00")
+    duration_hours = Column(Integer, nullable=True, default=2)
+    keywords = Column(ARRAY(String), nullable=True)
+    company_scope = Column(String(50), nullable=True, default="all")  # big_tech, startups, all
+    status = Column(String(50), nullable=False, default="active")  # active, paused, stopped
+    is_running = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+
