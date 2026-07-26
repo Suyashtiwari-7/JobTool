@@ -1,5 +1,9 @@
 'use client';
 
+/**
+ * SidebarNav — Floating Capsule Vertical Navigation Bar.
+ * Cuts off right after the last navigation button with rounded capsule borders.
+ */
 export default function SidebarNav({ activePage, setActivePage }) {
   const navItems = [
     { id: 'hub', label: 'Co-Pilot Hub', icon: '🔮' },
@@ -11,16 +15,18 @@ export default function SidebarNav({ activePage, setActivePage }) {
     <aside
       className="neu-card"
       style={{
-        width: 72,
-        minHeight: 'calc(100vh - 48px)',
+        width: 68,
+        height: 'fit-content',
+        alignSelf: 'flex-start',
         margin: '24px 0 24px 24px',
-        padding: '24px 8px',
+        padding: '16px 8px 20px 8px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: 24,
-        borderRadius: 'var(--radius-lg)',
+        gap: 16,
+        borderRadius: 28,
         zIndex: 10,
+        boxShadow: 'var(--neu-flat)',
       }}
     >
       {/* VS Code Style Branding Symbol */}
@@ -28,7 +34,7 @@ export default function SidebarNav({ activePage, setActivePage }) {
         style={{
           width: 44,
           height: 44,
-          borderRadius: 12,
+          borderRadius: 14,
           background: 'var(--accent-blue-gradient)',
           display: 'flex',
           alignItems: 'center',
@@ -37,7 +43,7 @@ export default function SidebarNav({ activePage, setActivePage }) {
           fontWeight: 900,
           fontSize: 20,
           boxShadow: 'var(--neu-flat)',
-          marginBottom: 12,
+          marginBottom: 4,
         }}
         title="JobTool AI Engine"
       >
@@ -45,7 +51,7 @@ export default function SidebarNav({ activePage, setActivePage }) {
       </div>
 
       {/* Nav Icons */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, width: '100%', alignItems: 'center' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%', alignItems: 'center' }}>
         {navItems.map((item) => {
           const isActive = activePage === item.id;
           return (
@@ -55,8 +61,8 @@ export default function SidebarNav({ activePage, setActivePage }) {
               onClick={() => setActivePage(item.id)}
               className={`neu-button ${isActive ? 'active' : ''}`}
               style={{
-                width: 46,
-                height: 46,
+                width: 44,
+                height: 44,
                 padding: 0,
                 borderRadius: 14,
                 display: 'inline-flex',
