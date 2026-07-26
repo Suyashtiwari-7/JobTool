@@ -4,10 +4,11 @@ import { useEffect, useState } from 'react';
 import { getCalendarApplications, getResumePdfUrl, getCoverLetterPdfUrl } from '../lib/api';
 
 /**
- * AppliedCalendar — 3-Card View Workspace:
- * Card 1: Queued Applications (Live Progress Table)
- * Card 2: Applied (Companies, Resume View/Download, Cover Letter View/Download, Match %, 60-day Timer)
- * Card 3: Scheduled Interviews (Interactive Calendar with Video Link, Interviewer Name, Credentials)
+ * AppliedCalendar — Neumorphic Capsule Switch Workspace:
+ * Features a sleek capsule toggle switch (matching exact user screenshot).
+ * Option 1: Queued Applications (Live Progress Table)
+ * Option 2: Applied (Companies, Resume View/Download, Cover Letter View/Download, Match %, 60-day Timer)
+ * Option 3: Scheduled Interviews (Interactive Calendar with Video Link, Interviewer Name, Credentials)
  */
 export default function AppliedCalendar({
   applications = [],
@@ -23,7 +24,7 @@ export default function AppliedCalendar({
   const [currentMonth, setCurrentMonth] = useState(new Date());
   
   // PDF Viewer Modal state
-  const [pdfModalDoc, setPdfModalDoc] = useState(null); // { title: string, url: string, isDownloadable: boolean }
+  const [pdfModalDoc, setPdfModalDoc] = useState(null); // { title: string, url: string }
   // Interview Credentials Modal state
   const [selectedInterview, setSelectedInterview] = useState(null);
 
@@ -72,76 +73,106 @@ export default function AppliedCalendar({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      {/* ── 3-Card View Selector Bar ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
-        {/* Card 1: Queued */}
-        <div
+      
+      {/* ── Neumorphic Capsule Segmented Switch Bar (Matching User Screenshot) ── */}
+      <div
+        className="neu-inset"
+        style={{
+          display: 'flex',
+          padding: 6,
+          borderRadius: 30,
+          background: 'var(--bg-neu-inset)',
+          boxShadow: 'var(--neu-pressed)',
+          gap: 6,
+          border: '1px solid var(--border-subtle)',
+        }}
+      >
+        {/* Segment 1: Queued */}
+        <button
+          type="button"
           onClick={() => setViewMode('queued')}
-          className={`neu-card ${viewMode === 'queued' ? 'neu-card-hover' : ''}`}
           style={{
-            padding: '16px 20px',
+            flex: 1,
+            padding: '12px 18px',
+            borderRadius: 24,
+            border: 'none',
+            outline: 'none',
+            fontSize: 13,
+            fontWeight: 800,
             cursor: 'pointer',
-            border: viewMode === 'queued' ? '2px solid var(--accent-orange)' : '1px solid var(--border-subtle)',
-            background: viewMode === 'queued' ? 'rgba(240, 94, 45, 0.1)' : 'var(--bg-card)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+            background: viewMode === 'queued' ? 'var(--bg-card)' : 'transparent',
+            boxShadow: viewMode === 'queued' ? 'var(--neu-flat)' : 'none',
+            color: viewMode === 'queued' ? 'var(--accent-orange)' : 'var(--text-muted)',
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-muted)' }}>⏳ Queued Applications</span>
-            <span style={{ fontSize: 18 }}>⏳</span>
-          </div>
-          <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--accent-orange)' }}>
+          <span>⏳ Queued Applications</span>
+          <span style={{ fontSize: 11, background: viewMode === 'queued' ? 'rgba(240, 94, 45, 0.15)' : 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: 12 }}>
             {queuedList.length}
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
-            In-progress tailoring & form filling
-          </div>
-        </div>
+          </span>
+        </button>
 
-        {/* Card 2: Applied */}
-        <div
+        {/* Segment 2: Applied */}
+        <button
+          type="button"
           onClick={() => setViewMode('applied')}
-          className={`neu-card ${viewMode === 'applied' ? 'neu-card-hover' : ''}`}
           style={{
-            padding: '16px 20px',
+            flex: 1,
+            padding: '12px 18px',
+            borderRadius: 24,
+            border: 'none',
+            outline: 'none',
+            fontSize: 13,
+            fontWeight: 800,
             cursor: 'pointer',
-            border: viewMode === 'applied' ? '2px solid var(--accent-green)' : '1px solid var(--border-subtle)',
-            background: viewMode === 'applied' ? 'rgba(16, 185, 129, 0.1)' : 'var(--bg-card)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+            background: viewMode === 'applied' ? 'var(--bg-card)' : 'transparent',
+            boxShadow: viewMode === 'applied' ? 'var(--neu-flat)' : 'none',
+            color: viewMode === 'applied' ? 'var(--accent-green)' : 'var(--text-muted)',
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-muted)' }}>✅ Applied</span>
-            <span style={{ fontSize: 18 }}>📤</span>
-          </div>
-          <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--accent-green)' }}>
+          <span>✅ Applied</span>
+          <span style={{ fontSize: 11, background: viewMode === 'applied' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: 12 }}>
             {appliedList.length}
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
-            Resumes, Cover Letters & Match %
-          </div>
-        </div>
+          </span>
+        </button>
 
-        {/* Card 3: Scheduled Interviews */}
-        <div
+        {/* Segment 3: Scheduled Interviews */}
+        <button
+          type="button"
           onClick={() => setViewMode('calendar')}
-          className={`neu-card ${viewMode === 'calendar' ? 'neu-card-hover' : ''}`}
           style={{
-            padding: '16px 20px',
+            flex: 1,
+            padding: '12px 18px',
+            borderRadius: 24,
+            border: 'none',
+            outline: 'none',
+            fontSize: 13,
+            fontWeight: 800,
             cursor: 'pointer',
-            border: viewMode === 'calendar' ? '2px solid var(--accent-purple)' : '1px solid var(--border-subtle)',
-            background: viewMode === 'calendar' ? 'rgba(139, 92, 246, 0.1)' : 'var(--bg-card)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+            background: viewMode === 'calendar' ? 'var(--bg-card)' : 'transparent',
+            boxShadow: viewMode === 'calendar' ? 'var(--neu-flat)' : 'none',
+            color: viewMode === 'calendar' ? 'var(--accent-purple)' : 'var(--text-muted)',
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-muted)' }}>📅 Scheduled Interviews</span>
-            <span style={{ fontSize: 18 }}>📞</span>
-          </div>
-          <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--accent-purple)' }}>
+          <span>📅 Scheduled Interviews</span>
+          <span style={{ fontSize: 11, background: viewMode === 'calendar' ? 'rgba(139, 92, 246, 0.15)' : 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: 12 }}>
             {calendarEvents.length}
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
-            Calendar & Interviewer Credentials
-          </div>
-        </div>
+          </span>
+        </button>
       </div>
 
       {/* ════════════════════════════════════════════════════════════════ */}
