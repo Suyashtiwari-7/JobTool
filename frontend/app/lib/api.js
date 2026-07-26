@@ -294,3 +294,27 @@ export async function getCalendarApplications() {
 export function getLLMStatus() {
   return apiFetch('/api/settings/llm-status');
 }
+
+// ── Profile Endpoints ────────────────────────────────────
+
+export async function getProfile() {
+  return apiFetch('/api/assistant/profile');
+}
+
+export async function updateProfileField(memoryId, value) {
+  return apiFetch(`/api/assistant/profile/${memoryId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ value }),
+  });
+}
+
+// ── Chat History ─────────────────────────────────────────
+
+export async function getChatHistory(limit = 50) {
+  return apiFetch(`/api/assistant/chat/history?limit=${limit}`);
+}
+
+export async function clearChatHistory() {
+  return apiFetch('/api/assistant/chat/history', { method: 'DELETE' });
+}
+

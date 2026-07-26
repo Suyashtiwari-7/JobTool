@@ -76,3 +76,28 @@ async def init_db():
             )
         except Exception:
             pass
+
+        # v2.0 migrations: automation_schedules new columns
+        for col_sql in [
+            "ALTER TABLE automation_schedules ADD COLUMN IF NOT EXISTS days_of_week VARCHAR[] DEFAULT '{}'",
+            "ALTER TABLE automation_schedules ADD COLUMN IF NOT EXISTS repeat_type VARCHAR(20) DEFAULT 'daily'",
+            "ALTER TABLE automation_schedules ADD COLUMN IF NOT EXISTS target_count INTEGER DEFAULT 10",
+            "ALTER TABLE automation_schedules ADD COLUMN IF NOT EXISTS last_run_at TIMESTAMPTZ",
+            "ALTER TABLE automation_schedules ADD COLUMN IF NOT EXISTS next_run_at TIMESTAMPTZ",
+            "ALTER TABLE automation_schedules ADD COLUMN IF NOT EXISTS total_runs INTEGER DEFAULT 0",
+        ]:
+            try:
+                await conn.execute(text(col_sql))
+            except Exception:
+                pass
+
+        # v2.0: performance indexes
+        for idx_sql in [
+            "CREATE INDEX IF NOT EXISTS idx_chat_messages_created_at ON chat_messages(created_at DESC)",
+            "CREATE INDEX IF NOT EXISTS idx_user_memories_category ON user_memories(category)",
+            "CREATE INDEX IF NOT EXISTS idx_user_memories_key ON user_memories(memory_key)",
+        ]:
+            try:
+                await conn.execute(text(idx_sql))
+            except Exception:
+                pass

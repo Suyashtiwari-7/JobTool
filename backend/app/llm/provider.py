@@ -180,3 +180,142 @@ async def _call_openrouter(prompt: str, json_mode: bool) -> str:
 
     response = await client.chat.completions.create(**kwargs)
     return response.choices[0].message.content or ""
+
+
+async def llm_chat(messages: list[dict], json_mode: bool = False) -> str:
+    """
+    Multi-turn conversation call with automatic failover across providers.
+    
+    Args:
+        messages: List of {"role": "system"|"user"|"assistant", "content": "..."}
+        json_mode: If True, request JSON output format
+    
+    Returns:
+        The LLM's text response
+    """
+    providers = _get_providers()
+    if not providers:
+        raise RuntimeError("No LLM API keys configured.")
+
+    errors: list[str] = []
+
+    for provider in providers:
+        try:
+            logger.info(f"Attempting LLM chat with {provider.name}")
+
+            if provider.name == "groq":
+                return await _chat_groq(messages, json_mode)
+            elif provider.name == "openrouter":
+                return await _chat_openrouter(messages, json_mode)
+            elif provider.name == "gemini":
+                return await _chat_gemini(messages, json_mode)
+            elif provider.name == "deepseek":
+                return await _chat_deepseek(messages, json_mode)
+
+        except Exception as e:
+            error_msg = f"{provider.name} chat failed: {str(e)}"
+            logger.warning(error_msg)
+            errors.append(error_msg)
+            continue
+
+    raise RuntimeError(f"All LLM providers failed for chat: {'; '.join(errors)}")
+
+
+async def _chat_gemini(messages: list[dict], json_mode: bool) -> str:
+    """Multi-turn chat with Gemini."""
+    genai.configure(api_key=settings.gemini_api_key)
+
+    generation_config = {}
+    if json_mode:
+        generation_config["response_mime_type"] = "application/json"
+
+    # Separate system instruction from conversation history
+    system_instruction = None
+    chat_history = []
+    for msg in messages:
+        if msg["role"] == "system":
+            system_instruction = msg["content"]
+        elif msg["role"] == "user":
+            chat_history.append({"role": "user", "parts": [msg["content"]]})
+        elif msg["role"] == "assistant":
+            chat_history.append({"role": "model", "parts": [msg["content"]]})
+
+    models_to_try = ["gemini-2.0-flash", "gemini-1.5-flash"]
+    last_error = None
+
+    for m_name in models_to_try:
+        try:
+            model = genai.GenerativeModel(
+                m_name,
+                system_instruction=system_instruction,
+                generation_config=generation_config if generation_config else None,
+            )
+            # Use the last user message as the current input, all prior as history
+            if len(chat_history) > 1:
+                chat = model.start_chat(history=chat_history[:-1])
+                response = chat.send_message(chat_history[-1]["parts"][0])
+            else:
+                response = model.generate_content(chat_history[-1]["parts"][0] if chat_history else "Hello")
+            if response and response.text:
+                return response.text
+        except Exception as e:
+            last_error = e
+            logger.warning(f"Gemini chat model {m_name} failed: {e}")
+
+    raise RuntimeError(f"Gemini chat failed: {last_error}")
+
+
+async def _chat_groq(messages: list[dict], json_mode: bool) -> str:
+    """Multi-turn chat with Groq."""
+    client = AsyncGroq(api_key=settings.groq_api_key)
+    kwargs = {
+        "model": "llama-3.3-70b-versatile",
+        "messages": messages,
+        "temperature": 0.4,
+        "max_tokens": 4096,
+    }
+    if json_mode:
+        kwargs["response_format"] = {"type": "json_object"}
+    response = await client.chat.completions.create(**kwargs)
+    return response.choices[0].message.content or ""
+
+
+async def _chat_openrouter(messages: list[dict], json_mode: bool) -> str:
+    """Multi-turn chat with OpenRouter."""
+    client = AsyncOpenAI(
+        api_key=settings.openrouter_api_key,
+        base_url="https://openrouter.ai/api/v1",
+        default_headers={
+            "HTTP-Referer": "https://github.com/Suyashtiwari-7/JobTool",
+            "X-Title": "JobTool Autonomous Agent",
+        }
+    )
+    kwargs = {
+        "model": "deepseek/deepseek-chat",
+        "messages": messages,
+        "temperature": 0.4,
+        "max_tokens": 4096,
+    }
+    if json_mode:
+        kwargs["response_format"] = {"type": "json_object"}
+    response = await client.chat.completions.create(**kwargs)
+    return response.choices[0].message.content or ""
+
+
+async def _chat_deepseek(messages: list[dict], json_mode: bool) -> str:
+    """Multi-turn chat with DeepSeek."""
+    client = AsyncOpenAI(
+        api_key=settings.deepseek_api_key,
+        base_url="https://api.deepseek.com",
+    )
+    kwargs = {
+        "model": "deepseek-chat",
+        "messages": messages,
+        "temperature": 0.4,
+        "max_tokens": 4096,
+    }
+    if json_mode:
+        kwargs["response_format"] = {"type": "json_object"}
+    response = await client.chat.completions.create(**kwargs)
+    return response.choices[0].message.content or ""
+

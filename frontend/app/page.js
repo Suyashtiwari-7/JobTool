@@ -37,6 +37,7 @@ import {
   toggleAssistantSchedule,
   createAssistantSchedule,
   deleteAssistantSchedule,
+  getChatHistory,
 } from './lib/api';
 
 const ROLE_SUGGESTIONS = [
@@ -351,7 +352,7 @@ export default function DashboardPage() {
 
   async function loadAllData() {
     try {
-      const [s, p, f, rList, apps, mems, scheds] = await Promise.all([
+      const [s, p, f, rList, apps, mems, scheds, chatHist] = await Promise.all([
         getStats().catch(() => null),
         getPipelineStatus().catch(() => null),
         getActiveFilter().catch(() => null),
@@ -359,6 +360,7 @@ export default function DashboardPage() {
         getApplications({ limit: 50 }).catch(() => []),
         getAssistantMemories().catch(() => []),
         getAssistantSchedules().catch(() => []),
+        getChatHistory().catch(() => []),
       ]);
 
       setStats(s);
@@ -368,6 +370,14 @@ export default function DashboardPage() {
       setApplications(apps);
       if (mems) setAssistantMemories(mems);
       if (scheds) setAssistantSchedules(scheds);
+      if (chatHist && chatHist.length > 0) {
+        setAssistantChatHistory(
+          chatHist.map((msg) => ({
+            sender: msg.role === 'assistant' ? 'assistant' : 'user',
+            text: msg.content,
+          }))
+        );
+      }
 
       if (f) {
         setFilter(f);

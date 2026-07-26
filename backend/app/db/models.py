@@ -221,7 +221,26 @@ class AutomationSchedule(Base):
     duration_hours = Column(Integer, nullable=True, default=2)
     keywords = Column(ARRAY(String), nullable=True)
     company_scope = Column(String(50), nullable=True, default="all")  # big_tech, startups, all
-    status = Column(String(50), nullable=False, default="active")  # active, paused, stopped
+    days_of_week = Column(ARRAY(String), nullable=True, default=list, doc="e.g. ['Mon','Tue','Wed']")
+    repeat_type = Column(String(20), nullable=True, default="daily", doc="daily, weekly, custom, once")
+    target_count = Column(Integer, nullable=True, default=10, doc="Jobs per run")
+    last_run_at = Column(DateTime(timezone=True), nullable=True)
+    next_run_at = Column(DateTime(timezone=True), nullable=True)
+    total_runs = Column(Integer, default=0)
+    status = Column(String(50), nullable=False, default="active")  # active, paused, stopped, completed
     is_running = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class ChatMessage(Base):
+    """Stores conversation history for the AI Co-Pilot's multi-turn memory."""
+
+    __tablename__ = "chat_messages"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    role = Column(String(20), nullable=False, doc="'user' or 'assistant'")
+    content = Column(Text, nullable=False)
+    metadata_json = Column(JSONB, nullable=True, doc="Optional structured data: actions taken, profile updates, etc.")
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+
 
