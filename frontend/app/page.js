@@ -648,14 +648,14 @@ export default function DashboardPage() {
           {/* ── Top Header Bar (Canva Split Floating Cards) ── */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
             {/* Left Header Card */}
-            <div className="neu-card" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '10px 18px', borderRadius: 16 }}>
-              <img src="/logo.png" alt="JobTool Logo" style={{ width: 44, height: 44, borderRadius: 12, objectFit: 'cover', boxShadow: 'var(--neu-flat)' }} />
+            <div className="neu-card" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 18px', borderRadius: 16 }}>
+              <img src="/logo.png" alt="JobTool Logo" style={{ width: 42, height: 42, borderRadius: 12, objectFit: 'cover', boxShadow: 'var(--neu-flat)' }} />
               <div>
-                <h1 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  🤖 <span>JobTool AI — Conversational Career Co-Pilot</span>
+                <h1 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.2px' }}>
+                  JobTool
                 </h1>
-                <p style={{ color: 'var(--text-secondary)', fontSize: 12, fontWeight: 600, marginTop: 2, margin: 0 }}>
-                  Engine Status: {running ? <span style={{ color: 'var(--accent-green)' }}>🟢 Active Sourcing</span> : <span style={{ color: 'var(--accent-amber)' }}>🟡 Standby</span>}
+                <p style={{ color: 'var(--text-secondary)', fontSize: 12, fontWeight: 500, marginTop: 1, margin: 0 }}>
+                  your career co-pilot
                 </p>
               </div>
             </div>
