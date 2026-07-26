@@ -735,7 +735,19 @@ export default function DashboardPage() {
               onDeleteApplication={handleDeleteApplicationItem}
               onTogglePin={handleTogglePin}
               onStatusChange={handleStatusChange}
-              onNavigateToSchedules={() => setActivePage('schedules')}
+              initialView="calendar"
+            />
+          )}
+
+          {/* ════════ PAGE 2: QUEUE & AUTOMATION WORKSPACE ════════ */}
+          {activePage === 'schedules' && (
+            <AppliedCalendar
+              applications={applications}
+              stats={stats}
+              onDeleteApplication={handleDeleteApplicationItem}
+              onTogglePin={handleTogglePin}
+              onStatusChange={handleStatusChange}
+              initialView="queued"
             />
           )}
 
