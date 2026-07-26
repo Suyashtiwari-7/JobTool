@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import GlowingOrb from './GlowingOrb';
 
 /**
- * CoPilotHub — Page 1: Ultra-clean Particle Orb + Dual Neon Input Bar workspace.
- * Initial View: Purely the 3D Particle Orb centered + Input Bar at bottom.
+ * CoPilotHub — Page 1: Particle Orb + Dual Neon Input Bar workspace.
+ * Initial View: Particle Orb at upper-center, Chat Bar in center area right below it.
  * Active View: Smoothly transitions into full ChatGPT conversation stream on first command.
  */
 export default function CoPilotHub({
@@ -54,28 +54,163 @@ export default function CoPilotHub({
     setTimeout(() => setCopiedIdx(null), 2000);
   }
 
+  // Render the Input Bar Component for reusability
+  const renderInputBar = () => (
+    <div
+      style={{
+        width: '100%',
+        borderRadius: 24,
+        background: 'var(--bg-neu-inset)',
+        padding: '14px 18px',
+        boxShadow: '0 0 35px rgba(240, 94, 45, 0.2), 0 0 35px rgba(139, 92, 246, 0.2), inset 0 2px 4px rgba(255,255,255,0.05)',
+        border: '1.5px solid transparent',
+        backgroundImage: 'linear-gradient(var(--bg-neu-inset), var(--bg-neu-inset)), linear-gradient(135deg, #f05e2d 0%, #3b82f6 50%, #8b5cf6 100%)',
+        backgroundOrigin: 'border-box',
+        backgroundClip: 'padding-box, border-box',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+      }}
+    >
+      {/* Main Text Input */}
+      <textarea
+        rows={1}
+        value={assistantInput}
+        onChange={(e) => setAssistantInput(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSend();
+          }
+        }}
+        placeholder="Ask anything or command Co-Pilot..."
+        style={{
+          width: '100%',
+          background: 'transparent',
+          border: 'none',
+          outline: 'none',
+          color: 'var(--text-primary)',
+          fontSize: 14,
+          fontWeight: 500,
+          resize: 'none',
+          fontFamily: 'inherit',
+        }}
+      />
+
+      {/* Bottom Toolbar inside Input Bar */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+        {/* Left Action Pills */}
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            className="neu-button"
+            style={{ width: 30, height: 30, padding: 0, borderRadius: '50%', fontSize: 14, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+            title="Add attachment or resume context"
+          >
+            ＋
+          </button>
+
+          {[
+            '⚡ Enhance Prompt',
+            '🎯 Target Scope',
+            '🎓 Apprenticeships',
+            '🏛️ Big Tech Only',
+          ].map((chip, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => handleSend(`Set preference: ${chip.replace(/^[^\s]+\s/, '')}`)}
+              className="neu-pill"
+              style={{ fontSize: 11, padding: '4px 10px', background: 'rgba(255, 255, 255, 0.04)', border: '1px solid var(--border-subtle)' }}
+            >
+              {chip}
+            </button>
+          ))}
+        </div>
+
+        {/* Right Action Buttons */}
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {/* Voice Mic Button */}
+          <button
+            type="button"
+            onClick={handleVoiceToggle}
+            className={`neu-button ${isVoiceActive ? 'active' : ''}`}
+            style={{
+              padding: '5px 10px',
+              borderRadius: 18,
+              fontSize: 11,
+              fontWeight: 700,
+              color: isVoiceActive ? 'var(--accent-orange)' : 'var(--text-secondary)',
+              border: isVoiceActive ? '1px solid var(--accent-orange)' : '1px solid var(--border-subtle)',
+              background: isVoiceActive ? 'rgba(240, 94, 45, 0.15)' : 'transparent',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+            }}
+            title="Toggle Voice Mic Mode"
+          >
+            🎙️ {isVoiceActive ? 'Voice ON' : 'Voice'}
+          </button>
+
+          {/* Glowing Send Button */}
+          <button
+            type="button"
+            onClick={() => handleSend()}
+            disabled={sendingChat}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              border: 'none',
+              background: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #3b82f6 100%)',
+              color: '#ffffff',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 15,
+              fontWeight: 800,
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(139, 92, 246, 0.5)',
+              transition: 'all 0.2s ease',
+            }}
+            title="Send Command"
+          >
+            {sendingChat ? '...' : '🚀'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 120px)', maxWidth: 920, margin: '0 auto', width: '100%', position: 'relative', justifyContent: 'space-between' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 140px)', maxWidth: 920, margin: '0 auto', width: '100%', position: 'relative' }}>
       
       {/* ════════════════════════════════════════════════════════════════ */}
-      {/* STATE 1: INITIAL CLEAN HERO VIEW (PURE ORB + INPUT BAR ONLY)     */}
+      {/* STATE 1: INITIAL CLEAN HERO VIEW (ORB UP + CHAT BAR AT CENTER)   */}
       {/* ════════════════════════════════════════════════════════════════ */}
       {!chatStarted ? (
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'fadeIn 0.4s ease' }}>
-          {/* Centered 3D Particle Orb */}
-          <GlowingOrb
-            onClick={() => {
-              setUserHasSubmitted(true);
-              setIsChatOpen(!isChatOpen);
-            }}
-            isListening={sendingChat || isVoiceActive}
-          />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 32, animation: 'fadeIn 0.4s ease', paddingBottom: 60 }}>
+          {/* Particle Orb (Positioned Upper-Center) */}
+          <div style={{ transform: 'scale(0.95)', marginTop: -20 }}>
+            <GlowingOrb
+              onClick={() => {
+                setUserHasSubmitted(true);
+                setIsChatOpen(!isChatOpen);
+              }}
+              isListening={sendingChat || isVoiceActive}
+            />
+          </div>
+
+          {/* Dual Neon Chat Input Bar (Positioned Center Screen directly below Orb) */}
+          <div style={{ width: '100%', maxWidth: 840 }}>
+            {renderInputBar()}
+          </div>
         </div>
       ) : (
         /* ════════════════════════════════════════════════════════════════ */
         /* STATE 2: ACTIVE CHAT STREAM WORKSPACE (AFTER COMMAND)            */
         /* ════════════════════════════════════════════════════════════════ */
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', animation: 'slideUpFade 0.4s ease-out' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', animation: 'slideUpFade 0.4s ease-out', justifyContent: 'space-between' }}>
           {/* Top Header Bar */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, padding: '0 8px', flexShrink: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -246,137 +381,13 @@ export default function CoPilotHub({
               )}
             </div>
           )}
+
+          {/* Bottom-Pinned Input Bar for Active Chat Mode */}
+          <div style={{ flexShrink: 0 }}>
+            {renderInputBar()}
+          </div>
         </div>
       )}
-
-      {/* ════════════════════════════════════════════════════════════════ */}
-      {/* BOTTOM-PINNED DUAL NEON AURA INPUT BAR                            */}
-      {/* ════════════════════════════════════════════════════════════════ */}
-      <div
-        style={{
-          flexShrink: 0,
-          width: '100%',
-          borderRadius: 24,
-          background: 'var(--bg-neu-inset)',
-          padding: '14px 18px',
-          boxShadow: '0 0 30px rgba(240, 94, 45, 0.18), 0 0 30px rgba(139, 92, 246, 0.18), inset 0 2px 4px rgba(255,255,255,0.05)',
-          border: '1.5px solid transparent',
-          backgroundImage: 'linear-gradient(var(--bg-neu-inset), var(--bg-neu-inset)), linear-gradient(135deg, #f05e2d 0%, #3b82f6 50%, #8b5cf6 100%)',
-          backgroundOrigin: 'border-box',
-          backgroundClip: 'padding-box, border-box',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 10,
-        }}
-      >
-        {/* Main Text Input */}
-        <textarea
-          rows={1}
-          value={assistantInput}
-          onChange={(e) => setAssistantInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              handleSend();
-            }
-          }}
-          placeholder="Ask anything or command Co-Pilot..."
-          style={{
-            width: '100%',
-            background: 'transparent',
-            border: 'none',
-            outline: 'none',
-            color: 'var(--text-primary)',
-            fontSize: 14,
-            fontWeight: 500,
-            resize: 'none',
-            fontFamily: 'inherit',
-          }}
-        />
-
-        {/* Bottom Toolbar inside Input Bar */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-          {/* Left Action Pills */}
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              className="neu-button"
-              style={{ width: 30, height: 30, padding: 0, borderRadius: '50%', fontSize: 14, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
-              title="Add attachment or resume context"
-            >
-              ＋
-            </button>
-
-            {[
-              '⚡ Enhance Prompt',
-              '🎯 Target Scope',
-              '🎓 Apprenticeships',
-              '🏛️ Big Tech Only',
-            ].map((chip, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => handleSend(`Set preference: ${chip.replace(/^[^\s]+\s/, '')}`)}
-                className="neu-pill"
-                style={{ fontSize: 11, padding: '4px 10px', background: 'rgba(255, 255, 255, 0.04)', border: '1px solid var(--border-subtle)' }}
-              >
-                {chip}
-              </button>
-            ))}
-          </div>
-
-          {/* Right Action Buttons */}
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            {/* Voice Mic Button */}
-            <button
-              type="button"
-              onClick={handleVoiceToggle}
-              className={`neu-button ${isVoiceActive ? 'active' : ''}`}
-              style={{
-                padding: '5px 10px',
-                borderRadius: 18,
-                fontSize: 11,
-                fontWeight: 700,
-                color: isVoiceActive ? 'var(--accent-orange)' : 'var(--text-secondary)',
-                border: isVoiceActive ? '1px solid var(--accent-orange)' : '1px solid var(--border-subtle)',
-                background: isVoiceActive ? 'rgba(240, 94, 45, 0.15)' : 'transparent',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 4,
-              }}
-              title="Toggle Voice Mic Mode"
-            >
-              🎙️ {isVoiceActive ? 'Voice ON' : 'Voice'}
-            </button>
-
-            {/* Glowing Send Button */}
-            <button
-              type="button"
-              onClick={() => handleSend()}
-              disabled={sendingChat}
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: '50%',
-                border: 'none',
-                background: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #3b82f6 100%)',
-                color: '#ffffff',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 15,
-                fontWeight: 800,
-                cursor: 'pointer',
-                boxShadow: '0 4px 12px rgba(139, 92, 246, 0.5)',
-                transition: 'all 0.2s ease',
-              }}
-              title="Send Command"
-            >
-              {sendingChat ? '...' : '🚀'}
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
