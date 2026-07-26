@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from 'react';
 import GlowingOrb from './GlowingOrb';
 
 /**
- * CoPilotHub — Page 1: ChatGPT-style structured AI Co-Pilot workspace.
- * Vertical chat thread flowing top-to-bottom with bottom-pinned floating dual-aura input bar.
+ * CoPilotHub — Page 1: Hero-to-Chat animated AI Co-Pilot workspace.
+ * Initial View: Shows ONLY Particle Orb + Input Bar.
+ * Active View: Smoothly transitions into full ChatGPT conversation stream on first command.
  */
 export default function CoPilotHub({
   assistantChatHistory,
@@ -22,19 +23,29 @@ export default function CoPilotHub({
   const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'memories'
   const [isVoiceActive, setIsVoiceActive] = useState(false);
   const [copiedIdx, setCopiedIdx] = useState(null);
+  const [userHasSubmitted, setUserHasSubmitted] = useState(false);
 
-  // Auto-scroll chat to bottom
+  // Check if chat has started (user sent a message or submitted)
+  const chatStarted = userHasSubmitted || assistantChatHistory.length > 1;
+
+  // Auto-scroll chat to bottom when new messages arrive
   useEffect(() => {
-    if (chatEndRef.current) {
+    if (chatEndRef.current && chatStarted) {
       chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [assistantChatHistory]);
+  }, [assistantChatHistory, chatStarted]);
 
   function handleVoiceToggle() {
     setIsVoiceActive(!isVoiceActive);
     if (!isVoiceActive) {
+      setUserHasSubmitted(true);
       onSendMessage('🎙️ [Voice Command Mode Activated]');
     }
+  }
+
+  function handleSend(customText) {
+    setUserHasSubmitted(true);
+    onSendMessage(customText);
   }
 
   function handleCopyText(text, idx) {
@@ -44,191 +55,236 @@ export default function CoPilotHub({
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 120px)', maxWidth: 920, margin: '0 auto', width: '100%', position: 'relative' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 120px)', maxWidth: 920, margin: '0 auto', width: '100%', position: 'relative', justifyContent: 'space-between' }}>
       
-      {/* ── Top Header Bar: 3D Orb & Tab Switcher ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, padding: '0 8px', flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ transform: 'scale(0.45)', transformOrigin: 'left center', width: 120, height: 60, display: 'flex', alignItems: 'center' }}>
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {/* STATE 1: INITIAL HERO VIEW (BEFORE COMMAND SUBMISSION)           */}
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {!chatStarted ? (
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24, textAlign: 'center', animation: 'fadeIn 0.4s ease' }}>
+          {/* Centered 3D Particle Orb */}
+          <div style={{ transform: 'scale(1.1)', transition: 'transform 0.5s ease' }}>
             <GlowingOrb
-              onClick={() => setIsChatOpen(!isChatOpen)}
+              onClick={() => {
+                setUserHasSubmitted(true);
+                setIsChatOpen(!isChatOpen);
+              }}
               isListening={sendingChat || isVoiceActive}
               activePrompt=""
             />
           </div>
-          <div>
-            <h2 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-              JobTool AI Co-Pilot
+
+          <div style={{ maxWidth: 520 }}>
+            <h2 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.3px' }}>
+              ✨ JobTool AI Career Co-Pilot
             </h2>
-            <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0, marginTop: 2 }}>
-              Conversational Career Broker • Ask anything or command actions
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 6, lineHeight: 1.5 }}>
+              Click the Particle Sphere or type a command below to automate job sourcing, tailoring, and schedules.
             </p>
           </div>
-        </div>
 
-        {/* View Tab Switcher */}
-        <div className="neu-inset" style={{ display: 'flex', gap: 4, padding: 4, borderRadius: 14 }}>
-          <button
-            type="button"
-            onClick={() => setActiveTab('chat')}
-            className={`neu-button ${activeTab === 'chat' ? 'neu-button-primary' : ''}`}
-            style={{ padding: '6px 14px', fontSize: 12, fontWeight: 700, borderRadius: 10 }}
-          >
-            💬 Chat Stream ({assistantChatHistory.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('memories')}
-            className={`neu-button ${activeTab === 'memories' ? 'neu-button-primary' : ''}`}
-            style={{ padding: '6px 14px', fontSize: 12, fontWeight: 700, borderRadius: 10 }}
-          >
-            🧠 Stored Memory ({assistantMemories.length})
-          </button>
-        </div>
-      </div>
-
-      {/* ── CENTRAL CHAT FEED (ChatGPT Style Vertical Flow) ── */}
-      {activeTab === 'chat' && (
-        <div
-          className="neu-card"
-          style={{
-            flex: 1,
-            overflowY: 'auto',
-            padding: '24px 20px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 20,
-            marginBottom: 16,
-            borderRadius: 20,
-            background: 'var(--bg-neu-base)',
-          }}
-        >
-          {assistantChatHistory.length === 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', textAlign: 'center', gap: 12 }}>
-              <span style={{ fontSize: 42 }}>✨</span>
-              <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)' }}>JobTool AI Co-Pilot Ready</div>
-              <p style={{ fontSize: 13, maxWidth: 440, lineHeight: 1.5 }}>
-                Type or speak commands like: &quot;Target Big Tech Apprenticeships everyday from 8am to 10am&quot; or &quot;My internship ends June 30&quot;.
-              </p>
-            </div>
-          ) : (
-            assistantChatHistory.map((msg, idx) => (
-              <div
+          {/* Quick Prompt Chips */}
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap', maxWidth: 680, marginTop: 4 }}>
+            {[
+              '🎓 Target Big Tech Apprenticeships',
+              '⏰ Apply everyday 8am-10am',
+              '🚀 Target AI & Machine Learning roles',
+              '🧠 My internship ends June 30',
+            ].map((chip, idx) => (
+              <button
                 key={idx}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: msg.sender === 'user' ? 'flex-end' : 'flex-start',
-                  width: '100%',
-                }}
+                type="button"
+                onClick={() => handleSend(chip)}
+                className="neu-pill"
+                style={{ fontSize: 12, padding: '8px 16px', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', boxShadow: 'var(--neu-flat)' }}
               >
-                {/* Message Bubble */}
+                {chip}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        /* ════════════════════════════════════════════════════════════════ */
+        /* STATE 2: ACTIVE CHAT STREAM WORKSPACE (AFTER COMMAND)            */
+        /* ════════════════════════════════════════════════════════════════ */
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', animation: 'slideUpFade 0.4s ease-out' }}>
+          {/* Top Header Bar */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, padding: '0 8px', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ transform: 'scale(0.42)', transformOrigin: 'left center', width: 110, height: 50, display: 'flex', alignItems: 'center' }}>
+                <GlowingOrb
+                  onClick={() => setIsChatOpen(!isChatOpen)}
+                  isListening={sendingChat || isVoiceActive}
+                  activePrompt=""
+                />
+              </div>
+              <div>
+                <h2 style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+                  JobTool AI Co-Pilot
+                </h2>
+                <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0, marginTop: 1 }}>
+                  Conversational Mode Active
+                </p>
+              </div>
+            </div>
+
+            {/* View Tab Switcher */}
+            <div className="neu-inset" style={{ display: 'flex', gap: 4, padding: 4, borderRadius: 14 }}>
+              <button
+                type="button"
+                onClick={() => setActiveTab('chat')}
+                className={`neu-button ${activeTab === 'chat' ? 'neu-button-primary' : ''}`}
+                style={{ padding: '6px 14px', fontSize: 12, fontWeight: 700, borderRadius: 10 }}
+              >
+                💬 Chat Stream ({assistantChatHistory.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('memories')}
+                className={`neu-button ${activeTab === 'memories' ? 'neu-button-primary' : ''}`}
+                style={{ padding: '6px 14px', fontSize: 12, fontWeight: 700, borderRadius: 10 }}
+              >
+                🧠 Stored Memory ({assistantMemories.length})
+              </button>
+            </div>
+          </div>
+
+          {/* Central Chat Stream */}
+          {activeTab === 'chat' && (
+            <div
+              className="neu-card"
+              style={{
+                flex: 1,
+                overflowY: 'auto',
+                padding: '24px 20px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 18,
+                marginBottom: 16,
+                borderRadius: 20,
+                background: 'var(--bg-neu-base)',
+              }}
+            >
+              {assistantChatHistory.map((msg, idx) => (
                 <div
+                  key={idx}
                   style={{
-                    maxWidth: '80%',
-                    background: msg.sender === 'user' ? 'var(--accent-blue-gradient)' : 'var(--bg-card)',
-                    color: msg.sender === 'user' ? '#ffffff' : 'var(--text-primary)',
-                    padding: '14px 18px',
-                    borderRadius: msg.sender === 'user' ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
-                    fontSize: 14,
-                    lineHeight: 1.6,
-                    boxShadow: 'var(--neu-flat)',
-                    border: '1px solid var(--border-subtle)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: msg.sender === 'user' ? 'flex-end' : 'flex-start',
+                    width: '100%',
                   }}
                 >
-                  <div style={{ whiteSpace: 'pre-wrap' }}>{msg.text}</div>
+                  {/* Message Bubble */}
+                  <div
+                    style={{
+                      maxWidth: '80%',
+                      background: msg.sender === 'user' ? 'var(--accent-blue-gradient)' : 'var(--bg-card)',
+                      color: msg.sender === 'user' ? '#ffffff' : 'var(--text-primary)',
+                      padding: '14px 18px',
+                      borderRadius: msg.sender === 'user' ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
+                      fontSize: 14,
+                      lineHeight: 1.6,
+                      boxShadow: 'var(--neu-flat)',
+                      border: '1px solid var(--border-subtle)',
+                    }}
+                  >
+                    <div style={{ whiteSpace: 'pre-wrap' }}>{msg.text}</div>
 
-                  {/* Actions Taken Badges */}
-                  {msg.actions && msg.actions.length > 0 && (
-                    <div style={{ marginTop: 10, display: 'flex', gap: 6, flexWrap: 'wrap', paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                      {msg.actions.map((act, aIdx) => (
-                        <span key={aIdx} style={{ fontSize: 11, background: 'rgba(16, 185, 129, 0.2)', color: '#10b981', padding: '3px 8px', borderRadius: 8, fontWeight: 700 }}>
-                          ⚡ {act}
-                        </span>
-                      ))}
+                    {/* Actions Taken Badges */}
+                    {msg.actions && msg.actions.length > 0 && (
+                      <div style={{ marginTop: 10, display: 'flex', gap: 6, flexWrap: 'wrap', paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                        {msg.actions.map((act, aIdx) => (
+                          <span key={aIdx} style={{ fontSize: 11, background: 'rgba(16, 185, 129, 0.2)', color: '#10b981', padding: '3px 8px', borderRadius: 8, fontWeight: 700 }}>
+                            ⚡ {act}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Assistant Message Actions Toolbar (Copy / Retry) */}
+                  {msg.sender === 'assistant' && (
+                    <div style={{ display: 'flex', gap: 10, marginTop: 6, paddingLeft: 4, alignItems: 'center' }}>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyText(msg.text, idx)}
+                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                        title="Copy response text"
+                      >
+                        {copiedIdx === idx ? '✓ Copied' : '📋 Copy'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSend("Retry previous request")}
+                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                        title="Regenerate response"
+                      >
+                        🔄 Retry
+                      </button>
                     </div>
                   )}
                 </div>
-
-                {/* Assistant Message Actions Toolbar (Copy / Retry) */}
-                {msg.sender === 'assistant' && (
-                  <div style={{ display: 'flex', gap: 10, marginTop: 6, paddingLeft: 4, alignItems: 'center' }}>
-                    <button
-                      type="button"
-                      onClick={() => handleCopyText(msg.text, idx)}
-                      style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
-                      title="Copy response text"
-                    >
-                      {copiedIdx === idx ? '✓ Copied' : '📋 Copy'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onSendMessage("Retry previous request")}
-                      style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
-                      title="Regenerate response"
-                    >
-                      🔄 Retry
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))
-          )}
-          <div ref={chatEndRef} />
-        </div>
-      )}
-
-      {/* ── MEMORY TAB VIEW ── */}
-      {activeTab === 'memories' && (
-        <div
-          className="neu-card"
-          style={{
-            flex: 1,
-            overflowY: 'auto',
-            padding: 20,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 12,
-            marginBottom: 16,
-            borderRadius: 20,
-          }}
-        >
-          <div style={{ fontWeight: 800, fontSize: 15, marginBottom: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>🧠 Stored Career Memory ({assistantMemories.length})</span>
-            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Auto-retrieved during pipeline execution</span>
-          </div>
-
-          {assistantMemories.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)', fontSize: 13 }}>
-              No career memories stored yet.<br />Tell the Co-Pilot: &quot;My internship ends June 30&quot; to save key dates automatically!
+              ))}
+              <div ref={chatEndRef} />
             </div>
-          ) : (
-            assistantMemories.map((m) => (
-              <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-neu-inset)', padding: '12px 16px', borderRadius: 12, border: '1px solid var(--border-subtle)' }}>
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-accent)', textTransform: 'capitalize' }}>
-                    {m.memory_key} ({m.category})
-                  </div>
-                  <div style={{ fontSize: 13, color: 'var(--text-primary)', marginTop: 2 }}>
-                    {m.memory_value}
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => onDeleteMemory(m.id)}
-                  className="neu-button"
-                  style={{ padding: '6px 10px', fontSize: 11, color: 'var(--accent-red)' }}
-                  title="Forget Memory"
-                >
-                  🗑️ Delete
-                </button>
+          )}
+
+          {/* Stored Memory Tab */}
+          {activeTab === 'memories' && (
+            <div
+              className="neu-card"
+              style={{
+                flex: 1,
+                overflowY: 'auto',
+                padding: 20,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 12,
+                marginBottom: 16,
+                borderRadius: 20,
+              }}
+            >
+              <div style={{ fontWeight: 800, fontSize: 15, marginBottom: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>🧠 Stored Career Memory ({assistantMemories.length})</span>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Auto-retrieved during pipeline execution</span>
               </div>
-            ))
+
+              {assistantMemories.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)', fontSize: 13 }}>
+                  No stored memories yet. Tell the AI: &quot;My internship ends June 30&quot; to save key dates automatically!
+                </div>
+              ) : (
+                assistantMemories.map((m) => (
+                  <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-neu-inset)', padding: '12px 16px', borderRadius: 12, border: '1px solid var(--border-subtle)' }}>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-accent)', textTransform: 'capitalize' }}>
+                        {m.memory_key} ({m.category})
+                      </div>
+                      <div style={{ fontSize: 13, color: 'var(--text-primary)', marginTop: 2 }}>
+                        {m.memory_value}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => onDeleteMemory(m.id)}
+                      className="neu-button"
+                      style={{ padding: '6px 10px', fontSize: 11, color: 'var(--accent-red)' }}
+                      title="Forget Memory"
+                    >
+                      🗑️ Delete
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
           )}
         </div>
       )}
 
-      {/* ── BOTTOM-PINNED FLOATING INPUT BAR (ChatGPT Style) ── */}
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {/* BOTTOM-PINNED DUAL NEON AURA INPUT BAR (ALWAYS VISIBLE AT BOTTOM)*/}
+      {/* ════════════════════════════════════════════════════════════════ */}
       <div
         style={{
           flexShrink: 0,
@@ -254,7 +310,7 @@ export default function CoPilotHub({
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
-              onSendMessage();
+              handleSend();
             }
           }}
           placeholder="Ask anything or command Co-Pilot..."
@@ -293,7 +349,7 @@ export default function CoPilotHub({
               <button
                 key={idx}
                 type="button"
-                onClick={() => onSendMessage(`Set preference: ${chip.replace(/^[^\s]+\s/, '')}`)}
+                onClick={() => handleSend(`Set preference: ${chip.replace(/^[^\s]+\s/, '')}`)}
                 className="neu-pill"
                 style={{ fontSize: 11, padding: '4px 10px', background: 'rgba(255, 255, 255, 0.04)', border: '1px solid var(--border-subtle)' }}
               >
@@ -329,7 +385,7 @@ export default function CoPilotHub({
             {/* Glowing Send Button */}
             <button
               type="button"
-              onClick={() => onSendMessage()}
+              onClick={() => handleSend()}
               disabled={sendingChat}
               style={{
                 width: 36,
