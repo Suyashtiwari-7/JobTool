@@ -4,9 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import GlowingOrb from './GlowingOrb';
 
 /**
- * CoPilotHub — Page 1: Particle Orb + Dual Neon Input Bar workspace.
- * Theme aware (Black particles in light mode, White particles in dark mode).
- * Repositioned significantly higher up on screen for max visibility.
+ * CoPilotHub — Page 1: Instagram DM Style AI Co-Pilot workspace.
+ * Features 3D Orb as Instagram Profile Avatar next to assistant name and messages.
  */
 export default function CoPilotHub({
   assistantChatHistory,
@@ -187,11 +186,11 @@ export default function CoPilotHub({
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 140px)', maxWidth: 920, margin: '0 auto', width: '100%', position: 'relative' }}>
       
       {/* ════════════════════════════════════════════════════════════════ */}
-      {/* STATE 1: INITIAL HERO VIEW (MOVED SIGNIFICANTLY HIGHER UP)       */}
+      {/* STATE 1: INITIAL HERO VIEW                                      */}
       {/* ════════════════════════════════════════════════════════════════ */}
       {!chatStarted ? (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: 20, gap: 20, animation: 'fadeIn 0.4s ease' }}>
-          {/* Particle Orb (High Upper Position with Theme Awareness) */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: 20, gap: 24, animation: 'fadeIn 0.4s ease' }}>
+          {/* Particle Orb */}
           <div style={{ transform: 'scale(0.95)' }}>
             <GlowingOrb
               onClick={() => {
@@ -200,48 +199,50 @@ export default function CoPilotHub({
               }}
               isListening={sendingChat || isVoiceActive}
               theme={theme}
+              size={260}
             />
           </div>
 
-          {/* Dual Neon Chat Input Bar (Lifted Up directly below Orb) */}
+          {/* Dual Neon Chat Input Bar */}
           <div style={{ width: '100%', maxWidth: 840 }}>
             {renderInputBar()}
           </div>
         </div>
       ) : (
         /* ════════════════════════════════════════════════════════════════ */
-        /* STATE 2: ACTIVE CHAT STREAM WORKSPACE (AFTER COMMAND)            */
+        /* STATE 2: INSTAGRAM DM STYLE ACTIVE CHAT WORKSPACE                */
         /* ════════════════════════════════════════════════════════════════ */
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', animation: 'slideUpFade 0.4s ease-out', justifyContent: 'space-between' }}>
-          {/* Top Header Bar */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, padding: '0 8px', flexShrink: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ transform: 'scale(0.38)', transformOrigin: 'left center', width: 100, height: 45, display: 'flex', alignItems: 'center' }}>
-                <GlowingOrb
-                  onClick={() => setIsChatOpen(!isChatOpen)}
-                  isListening={sendingChat || isVoiceActive}
-                  theme={theme}
-                />
-              </div>
+          
+          {/* ── Instagram DM Style Chat Header ── */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, padding: '6px 12px', background: 'var(--bg-card)', borderRadius: 16, border: '1px solid var(--border-subtle)', boxShadow: 'var(--neu-flat)', flexShrink: 0 }}>
+            {/* Instagram Style Profile Avatar + Name */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <GlowingOrb
+                onClick={() => setIsChatOpen(!isChatOpen)}
+                isListening={sendingChat || isVoiceActive}
+                theme={theme}
+                size={44}
+              />
               <div>
-                <h2 style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
                   JobTool AI Co-Pilot
                 </h2>
-                <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0, marginTop: 1 }}>
-                  Conversational Mode Active
+                <p style={{ fontSize: 11, color: 'var(--accent-green)', fontWeight: 700, margin: 0, marginTop: 1, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span>🟢 Active Co-Pilot</span>
                 </p>
               </div>
             </div>
 
             {/* View Tab Switcher */}
-            <div className="neu-inset" style={{ display: 'flex', gap: 4, padding: 4, borderRadius: 14 }}>
+            <div className="neu-inset" style={{ display: 'flex', gap: 4, padding: 4, borderRadius: 12 }}>
               <button
                 type="button"
                 onClick={() => setActiveTab('chat')}
                 className={`neu-button ${activeTab === 'chat' ? 'neu-button-primary' : ''}`}
                 style={{ padding: '6px 14px', fontSize: 12, fontWeight: 700, borderRadius: 10 }}
               >
-                💬 Chat Stream ({assistantChatHistory.length})
+                💬 Chat ({assistantChatHistory.length})
               </button>
               <button
                 type="button"
@@ -249,7 +250,7 @@ export default function CoPilotHub({
                 className={`neu-button ${activeTab === 'memories' ? 'neu-button-primary' : ''}`}
                 style={{ padding: '6px 14px', fontSize: 12, fontWeight: 700, borderRadius: 10 }}
               >
-                🧠 Stored Memory ({assistantMemories.length})
+                🧠 Memory ({assistantMemories.length})
               </button>
             </div>
           </div>
@@ -275,60 +276,74 @@ export default function CoPilotHub({
                   key={idx}
                   style={{
                     display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: msg.sender === 'user' ? 'flex-end' : 'flex-start',
-                    width: '100%',
+                    alignItems: 'flex-start',
+                    gap: 10,
+                    alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start',
+                    maxWidth: '85%',
+                    flexDirection: msg.sender === 'user' ? 'row-reverse' : 'row',
                   }}
                 >
-                  {/* Message Bubble */}
-                  <div
-                    style={{
-                      maxWidth: '80%',
-                      background: msg.sender === 'user' ? 'var(--accent-blue-gradient)' : 'var(--bg-card)',
-                      color: msg.sender === 'user' ? '#ffffff' : 'var(--text-primary)',
-                      padding: '14px 18px',
-                      borderRadius: msg.sender === 'user' ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
-                      fontSize: 14,
-                      lineHeight: 1.6,
-                      boxShadow: 'var(--neu-flat)',
-                      border: '1px solid var(--border-subtle)',
-                    }}
-                  >
-                    <div style={{ whiteSpace: 'pre-wrap' }}>{msg.text}</div>
+                  {/* Instagram DM Assistant Message Avatar */}
+                  {msg.sender === 'assistant' && (
+                    <div style={{ flexShrink: 0, marginTop: 2 }}>
+                      <GlowingOrb
+                        isListening={sendingChat}
+                        theme={theme}
+                        size={32}
+                      />
+                    </div>
+                  )}
 
-                    {/* Actions Taken Badges */}
-                    {msg.actions && msg.actions.length > 0 && (
-                      <div style={{ marginTop: 10, display: 'flex', gap: 6, flexWrap: 'wrap', paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                        {msg.actions.map((act, aIdx) => (
-                          <span key={aIdx} style={{ fontSize: 11, background: 'rgba(16, 185, 129, 0.2)', color: '#10b981', padding: '3px 8px', borderRadius: 8, fontWeight: 700 }}>
-                            ⚡ {act}
-                          </span>
-                        ))}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: msg.sender === 'user' ? 'flex-end' : 'flex-start' }}>
+                    {/* Message Bubble */}
+                    <div
+                      style={{
+                        background: msg.sender === 'user' ? 'var(--accent-blue-gradient)' : 'var(--bg-card)',
+                        color: msg.sender === 'user' ? '#ffffff' : 'var(--text-primary)',
+                        padding: '14px 18px',
+                        borderRadius: msg.sender === 'user' ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
+                        fontSize: 14,
+                        lineHeight: 1.6,
+                        boxShadow: 'var(--neu-flat)',
+                        border: '1px solid var(--border-subtle)',
+                      }}
+                    >
+                      <div style={{ whiteSpace: 'pre-wrap' }}>{msg.text}</div>
+
+                      {/* Actions Taken Badges */}
+                      {msg.actions && msg.actions.length > 0 && (
+                        <div style={{ marginTop: 10, display: 'flex', gap: 6, flexWrap: 'wrap', paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                          {msg.actions.map((act, aIdx) => (
+                            <span key={aIdx} style={{ fontSize: 11, background: 'rgba(16, 185, 129, 0.2)', color: '#10b981', padding: '3px 8px', borderRadius: 8, fontWeight: 700 }}>
+                              ⚡ {act}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Assistant Message Actions Toolbar (Copy / Retry) */}
+                    {msg.sender === 'assistant' && (
+                      <div style={{ display: 'flex', gap: 10, marginTop: 6, paddingLeft: 4, alignItems: 'center' }}>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyText(msg.text, idx)}
+                          style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                          title="Copy response text"
+                        >
+                          {copiedIdx === idx ? '✓ Copied' : '📋 Copy'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSend("Retry previous request")}
+                          style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                          title="Regenerate response"
+                        >
+                          🔄 Retry
+                        </button>
                       </div>
                     )}
                   </div>
-
-                  {/* Assistant Message Actions Toolbar (Copy / Retry) */}
-                  {msg.sender === 'assistant' && (
-                    <div style={{ display: 'flex', gap: 10, marginTop: 6, paddingLeft: 4, alignItems: 'center' }}>
-                      <button
-                        type="button"
-                        onClick={() => handleCopyText(msg.text, idx)}
-                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
-                        title="Copy response text"
-                      >
-                        {copiedIdx === idx ? '✓ Copied' : '📋 Copy'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleSend("Retry previous request")}
-                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
-                        title="Regenerate response"
-                      >
-                        🔄 Retry
-                      </button>
-                    </div>
-                  )}
                 </div>
               ))}
               <div ref={chatEndRef} />
