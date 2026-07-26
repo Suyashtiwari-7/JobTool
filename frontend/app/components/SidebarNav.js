@@ -30,26 +30,7 @@ export default function SidebarNav({ activePage, setActivePage }) {
         flexShrink: 0,
       }}
     >
-      {/* VS Code Style Branding Symbol */}
-      <div
-        style={{
-          width: 42,
-          height: 42,
-          borderRadius: 14,
-          background: 'var(--accent-blue-gradient)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#ffffff',
-          fontWeight: 900,
-          fontSize: 18,
-          boxShadow: 'var(--neu-flat)',
-          marginBottom: 2,
-        }}
-        title="JobTool AI Engine"
-      >
-        ⚡
-      </div>
+
 
       {/* Nav Icons */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', alignItems: 'center' }}>
