@@ -4,7 +4,7 @@
  * SidebarNav — Floating Capsule Vertical Navigation Bar.
  * Strictly limited to the last button with zero extra tail or stretching.
  */
-export default function SidebarNav({ activePage, setActivePage }) {
+export default function SidebarNav({ activePage, setActivePage, onOpenProfile }) {
   const navItems = [
     { id: 'hub', label: 'Co-Pilot Hub', icon: '🔮' },
     { id: 'schedules', label: 'Automation Workspace', icon: '🎛️' },
@@ -32,6 +32,7 @@ export default function SidebarNav({ activePage, setActivePage }) {
     >
       {/* User Profile Avatar */}
       <div
+        onClick={onOpenProfile}
         style={{
           width: 42,
           height: 42,
