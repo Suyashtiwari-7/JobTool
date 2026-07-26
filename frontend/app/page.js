@@ -645,26 +645,28 @@ export default function DashboardPage() {
         <SidebarNav activePage={activePage} setActivePage={setActivePage} />
 
         <div style={{ flex: 1, padding: '24px 32px', maxWidth: 1400, margin: '0 auto', width: '100%' }}>
-          {/* ── Top Header Bar ── */}
+          {/* ── Top Header Bar (Canva Split Floating Cards) ── */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <img src="/logo.png" alt="JobTool Logo" style={{ width: 56, height: 56, borderRadius: 14, objectFit: 'cover', boxShadow: 'var(--neu-flat)' }} />
+            {/* Left Header Card */}
+            <div className="neu-card" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '10px 18px', borderRadius: 16 }}>
+              <img src="/logo.png" alt="JobTool Logo" style={{ width: 44, height: 44, borderRadius: 12, objectFit: 'cover', boxShadow: 'var(--neu-flat)' }} />
               <div>
-                <h1 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-                  🤖 JobTool AI — Conversational Career Co-Pilot
+                <h1 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  🤖 <span>JobTool AI — Conversational Career Co-Pilot</span>
                 </h1>
-                <p style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600, marginTop: 2 }}>
-                  Engine Status: {running ? <span style={{ color: 'var(--accent-green)' }}>🟢 Active Sourcing</span> : '🟡 Standby'}
+                <p style={{ color: 'var(--text-secondary)', fontSize: 12, fontWeight: 600, marginTop: 2, margin: 0 }}>
+                  Engine Status: {running ? <span style={{ color: 'var(--accent-green)' }}>🟢 Active Sourcing</span> : <span style={{ color: 'var(--accent-amber)' }}>🟡 Standby</span>}
                 </p>
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            {/* Right Header Controls Card */}
+            <div className="neu-card" style={{ display: 'flex', gap: 14, alignItems: 'center', padding: '10px 16px', borderRadius: 16 }}>
               <button
                 onClick={handleClearHistory}
                 disabled={clearing}
                 className="neu-button neu-button-danger"
-                style={{ padding: '8px 14px', fontSize: 12 }}
+                style={{ padding: '8px 16px', fontSize: 12, borderRadius: 20, fontWeight: 700 }}
                 title="Clear old history and queue"
               >
                 🧹 {clearing ? 'Clearing...' : 'Clear History'}
@@ -673,30 +675,31 @@ export default function DashboardPage() {
               <div 
                 onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
                 className="neu-inset" 
-                style={{ width: 100, height: 40, borderRadius: 20, position: 'relative', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0 4px', border: '1px solid var(--border-subtle)' }}
+                style={{ width: 95, height: 38, borderRadius: 20, position: 'relative', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0 4px', border: '1px solid var(--border-subtle)' }}
               >
-                <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', padding: '0 10px', fontSize: 11, fontWeight: 800, color: 'var(--text-muted)' }}>
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', padding: '0 8px', fontSize: 11, fontWeight: 800, color: 'var(--text-muted)' }}>
+                  <span>ON</span>
                   <span>🌙</span>
-                  <span>☀️</span>
                 </div>
                 <div 
                   style={{ 
                     position: 'absolute', 
                     top: 3, 
-                    left: theme === 'light' ? 56 : 4, 
-                    width: 32, 
-                    height: 32, 
-                    borderRadius: 16, 
+                    left: theme === 'light' ? 52 : 4, 
+                    width: 38, 
+                    height: 30, 
+                    borderRadius: 15, 
                     background: 'var(--bg-card)', 
                     boxShadow: 'var(--neu-flat)', 
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'center',
                     transition: 'left 0.25s ease',
-                    fontSize: 13
+                    fontSize: 12,
+                    fontWeight: 800,
                   }}
                 >
-                  {theme === 'light' ? '☀️' : '🌙'}
+                  {theme === 'light' ? 'ON' : '🌙'}
                 </div>
               </div>
             </div>
