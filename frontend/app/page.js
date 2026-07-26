@@ -742,13 +742,11 @@ export default function DashboardPage() {
           {/* ════════ PAGE 2: AUTOMATION DASHBOARD ════════ */}
           {activePage === 'schedules' && (
           <>
-          {/* ── Top Stats Bar ── */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 20, marginBottom: 24 }}>
-            <StatBox label="Total Processed" value={stats?.total || 0} icon="📁" />
-            <StatBox label="Queued Review" value={stats?.queued || 0} icon="⏳" highlight="#3b82f6" />
+          {/* ── 3-Card Control & Stats Bar ── */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20, marginBottom: 24 }}>
+            <StatBox label="Queued Applications" value={stats?.queued || 0} icon="⏳" highlight="#3b82f6" onClick={() => setActivePage('calendar')} badge="View Queue ➔" />
             <StatBox label="Applied" value={stats?.applied || 0} icon="✅" highlight="#10b981" onClick={() => setActivePage('calendar')} badge="View List ↗" />
-            <StatBox label="Interviews" value={(stats?.response_received || 0) + (stats?.interview || 0)} icon="🎉" highlight="#8b5cf6" onClick={() => setActivePage('calendar')} badge="Calendar 📅" />
-            <StatBox label="Avg Match Score" value={stats?.avg_match_score ? `${Math.round(stats.avg_match_score)}%` : '—'} icon="🎯" />
+            <StatBox label="Scheduled Interviews" value={(stats?.response_received || 0) + (stats?.interview || 0)} icon="📅" highlight="#8b5cf6" onClick={() => setActivePage('calendar')} badge="Calendar 📅" />
           </div>
 
           {/* ── Automation Schedule Rows ── */}
