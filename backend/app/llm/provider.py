@@ -94,15 +94,20 @@ async def llm_call(prompt: str, json_mode: bool = False) -> str:
 
 
 async def _call_gemini(prompt: str, json_mode: bool) -> str:
-    """Call Google Gemini 1.5 Flash API directly."""
+    """Call Google Gemini API directly with multi-model fallback."""
     genai.configure(api_key=settings.gemini_api_key)
 
     generation_config = {}
     if json_mode:
         generation_config["response_mime_type"] = "application/json"
 
-    # Try stable gemini-1.5-flash first, then Google's dynamic 'gemini-flash' alias
-    models_to_try = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-flash"]
+    # Try valid, currently supported Gemini model aliases
+    models_to_try = [
+        "gemini-flash-latest",
+        "gemini-1.5-flash-latest",
+        "gemini-2.0-flash",
+        "gemini-1.5-pro",
+    ]
     last_error = None
 
     for m_name in models_to_try:
@@ -116,9 +121,9 @@ async def _call_gemini(prompt: str, json_mode: bool) -> str:
                 return response.text
         except Exception as e:
             last_error = e
-            logger.warning(f"Gemini model {m_name} call failed: {e}")
+            logger.warning(f"Gemini model '{m_name}' call failed ({e}). Trying next model...")
 
-    raise RuntimeError(f"Gemini Flash API failed: {last_error}")
+    raise RuntimeError(f"Gemini API failed across all models: {last_error}")
 
 
 async def _call_groq(prompt: str, json_mode: bool) -> str:
@@ -222,7 +227,7 @@ async def llm_chat(messages: list[dict], json_mode: bool = False) -> str:
 
 
 async def _chat_gemini(messages: list[dict], json_mode: bool) -> str:
-    """Multi-turn chat with Gemini."""
+    """Multi-turn chat with Gemini with multi-model fallback."""
     genai.configure(api_key=settings.gemini_api_key)
 
     generation_config = {}
@@ -240,7 +245,12 @@ async def _chat_gemini(messages: list[dict], json_mode: bool) -> str:
         elif msg["role"] == "assistant":
             chat_history.append({"role": "model", "parts": [msg["content"]]})
 
-    models_to_try = ["gemini-2.0-flash", "gemini-1.5-flash"]
+    models_to_try = [
+        "gemini-flash-latest",
+        "gemini-1.5-flash-latest",
+        "gemini-2.0-flash",
+        "gemini-1.5-pro",
+    ]
     last_error = None
 
     for m_name in models_to_try:
@@ -260,9 +270,9 @@ async def _chat_gemini(messages: list[dict], json_mode: bool) -> str:
                 return response.text
         except Exception as e:
             last_error = e
-            logger.warning(f"Gemini chat model {m_name} failed: {e}")
+            logger.warning(f"Gemini chat model '{m_name}' failed ({e}). Trying next model...")
 
-    raise RuntimeError(f"Gemini chat failed: {last_error}")
+    raise RuntimeError(f"Gemini chat failed across all models: {last_error}")
 
 
 async def _chat_groq(messages: list[dict], json_mode: bool) -> str:
