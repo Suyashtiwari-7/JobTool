@@ -63,7 +63,7 @@ app.mount(
 )
 
 # ── Register API routers ─────────────────────────────────
-from app.api import auth, filters, resume, applications, pipeline, settings_api, assistant  # noqa: E402
+from app.api import auth, filters, resume, applications, pipeline, settings_api, assistant, integrations_api  # noqa: E402
 
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(filters.router, prefix="/api/filters", tags=["Filters"])
@@ -72,6 +72,7 @@ app.include_router(applications.router, prefix="/api/applications", tags=["Appli
 app.include_router(pipeline.router, prefix="/api/pipeline", tags=["Pipeline"])
 app.include_router(settings_api.router, prefix="/api/settings", tags=["Settings"])
 app.include_router(assistant.router, prefix="/api/assistant", tags=["Assistant"])
+app.include_router(integrations_api.router, prefix="/api/integrations", tags=["Integrations"])
 
 
 @app.get("/")

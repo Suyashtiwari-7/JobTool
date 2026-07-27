@@ -244,3 +244,20 @@ class ChatMessage(Base):
     created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
 
 
+class UserIntegration(Base):
+    """Stores connected accounts (GitHub, Outlook, LinkedIn) with AES-256 encrypted credentials."""
+
+    __tablename__ = "user_integrations"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    service_name = Column(String(50), nullable=False, unique=True, doc="'github', 'outlook', 'linkedin'")
+    username_or_email = Column(String(255), nullable=False)
+    encrypted_credentials = Column(Text, nullable=True, doc="AES-256 encrypted password/token string")
+    config_json = Column(JSONB, nullable=True, doc="Extra configuration: IMAP host, port, sync flags")
+    is_active = Column(Boolean, default=True)
+    last_synced_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
+
+
+

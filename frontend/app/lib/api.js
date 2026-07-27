@@ -314,7 +314,42 @@ export async function getChatHistory(limit = 50) {
   return apiFetch(`/api/assistant/chat/history?limit=${limit}`);
 }
 
-export async function clearChatHistory() {
-  return apiFetch('/api/assistant/chat/history', { method: 'DELETE' });
+// ── Connected Accounts & Integrations ───────────────────
+
+export async function getIntegrations() {
+  return apiFetch('/api/integrations');
+}
+
+export async function connectGitHub(username) {
+  return apiFetch('/api/integrations/github', {
+    method: 'POST',
+    body: JSON.stringify({ username }),
+  });
+}
+
+export async function connectOutlook(email, password) {
+  return apiFetch('/api/integrations/outlook', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+export async function connectLinkedIn(profile_url) {
+  return apiFetch('/api/integrations/linkedin', {
+    method: 'POST',
+    body: JSON.stringify({ profile_url }),
+  });
+}
+
+export async function syncGitHub() {
+  return apiFetch('/api/integrations/github/sync', { method: 'POST' });
+}
+
+export async function scanOutlook() {
+  return apiFetch('/api/integrations/outlook/scan', { method: 'POST' });
+}
+
+export async function disconnectIntegration(serviceName) {
+  return apiFetch(`/api/integrations/${serviceName}`, { method: 'DELETE' });
 }
 

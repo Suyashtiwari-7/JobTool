@@ -96,6 +96,7 @@ async def init_db():
             "CREATE INDEX IF NOT EXISTS idx_chat_messages_created_at ON chat_messages(created_at DESC)",
             "CREATE INDEX IF NOT EXISTS idx_user_memories_category ON user_memories(category)",
             "CREATE INDEX IF NOT EXISTS idx_user_memories_key ON user_memories(memory_key)",
+            "CREATE INDEX IF NOT EXISTS idx_user_integrations_service ON user_integrations(service_name)",
         ]:
             try:
                 await conn.execute(text(idx_sql))
