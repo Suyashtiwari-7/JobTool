@@ -256,6 +256,24 @@ export default function DashboardPage() {
     }
   }
 
+  async function handleClearHistory() {
+    if (!confirm('Clear all conversation history?')) return;
+    try {
+      setClearing(true);
+      await clearChatHistory();
+      setAssistantChatHistory([
+        {
+          sender: 'assistant',
+          text: 'Hello! I am your AI Career Co-Pilot. How can I assist your job search today?',
+        },
+      ]);
+    } catch (err) {
+      console.error('Failed to clear chat history:', err);
+    } finally {
+      setClearing(false);
+    }
+  }
+
   async function handleDeleteMemoryItem(id) {
     setAssistantMemories((prev) => prev.filter((m) => m.id !== id));
     try {
