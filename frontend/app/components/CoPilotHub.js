@@ -24,9 +24,10 @@ export default function CoPilotHub({
   const [isVoiceActive, setIsVoiceActive] = useState(false);
   const [copiedIdx, setCopiedIdx] = useState(null);
   const [userHasSubmitted, setUserHasSubmitted] = useState(false);
+  const [showStream, setShowStream] = useState(false);
 
-  // Check if chat has started (user sent a message or submitted)
-  const chatStarted = userHasSubmitted || assistantChatHistory.length > 1;
+  // Check if chat has started (user sent a message or manually expanded stream)
+  const chatStarted = userHasSubmitted || showStream;
 
   // Auto-scroll chat to bottom when new messages arrive
   useEffect(() => {
@@ -162,8 +163,7 @@ export default function CoPilotHub({
           <div style={{ transform: 'scale(0.95)' }}>
             <GlowingOrb
               onClick={() => {
-                setUserHasSubmitted(true);
-                setIsChatOpen(!isChatOpen);
+                setShowStream(true);
               }}
               isListening={sendingChat || isVoiceActive}
               theme={theme}
@@ -172,8 +172,19 @@ export default function CoPilotHub({
           </div>
 
           {/* Dual Neon Chat Input Bar */}
-          <div style={{ width: '100%', maxWidth: 840 }}>
+          <div style={{ width: '100%', maxWidth: 840, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
             {renderInputBar()}
+
+            {assistantChatHistory && assistantChatHistory.length > 1 && (
+              <button
+                type="button"
+                onClick={() => setShowStream(true)}
+                className="neu-button"
+                style={{ padding: '8px 18px', borderRadius: 20, fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}
+              >
+                💬 View Conversation Stream ({assistantChatHistory.length} messages) ➔
+              </button>
+            )}
           </div>
         </div>
       ) : (
