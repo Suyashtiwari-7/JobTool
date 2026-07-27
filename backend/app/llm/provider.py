@@ -101,12 +101,12 @@ async def _call_gemini(prompt: str, json_mode: bool) -> str:
     if json_mode:
         generation_config["response_mime_type"] = "application/json"
 
-    # Try valid, currently supported Gemini model aliases
+    # Try Gemini Pro first (3rd rank), then Flash models (4th rank)
     models_to_try = [
+        "gemini-1.5-pro",
         "gemini-flash-latest",
         "gemini-1.5-flash-latest",
         "gemini-2.0-flash",
-        "gemini-1.5-pro",
     ]
     last_error = None
 
@@ -246,10 +246,10 @@ async def _chat_gemini(messages: list[dict], json_mode: bool) -> str:
             chat_history.append({"role": "model", "parts": [msg["content"]]})
 
     models_to_try = [
+        "gemini-1.5-pro",
         "gemini-flash-latest",
         "gemini-1.5-flash-latest",
         "gemini-2.0-flash",
-        "gemini-1.5-pro",
     ]
     last_error = None
 
