@@ -1,6 +1,6 @@
 """Multi-provider LLM client with automatic failover.
 
-Priority chain: Gemini Flash → Groq (Llama 3.3 70B) → DeepSeek V3
+Priority chain: Groq (Llama 3.3 70B) → OpenRouter (DeepSeek V3 / Llama 3.3) → Gemini → DeepSeek Direct
 If Provider 1 fails (rate limit, error), automatically retries with Provider 2.
 """
 
