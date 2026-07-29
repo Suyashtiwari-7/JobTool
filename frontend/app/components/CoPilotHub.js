@@ -105,7 +105,7 @@ export default function CoPilotHub({
     setTimeout(() => setCopiedIdx(null), 2000);
   }
 
-  // Render the Clean Minimalist Input Bar Component
+  // Render the Clean Docked Input Bar Component
   const renderInputBar = () => (
     <div
       style={{
@@ -113,11 +113,8 @@ export default function CoPilotHub({
         borderRadius: 24,
         background: 'var(--bg-neu-inset)',
         padding: '14px 18px',
-        boxShadow: '0 0 35px rgba(240, 94, 45, 0.2), 0 0 35px rgba(139, 92, 246, 0.2), inset 0 2px 4px rgba(255,255,255,0.05)',
-        border: '1.5px solid transparent',
-        backgroundImage: 'linear-gradient(var(--bg-neu-inset), var(--bg-neu-inset)), linear-gradient(135deg, #f05e2d 0%, #3b82f6 50%, #8b5cf6 100%)',
-        backgroundOrigin: 'border-box',
-        backgroundClip: 'padding-box, border-box',
+        boxShadow: 'var(--neu-pressed)',
+        border: '1px solid var(--border-subtle)',
         display: 'flex',
         alignItems: 'center',
         gap: 12,
@@ -134,7 +131,7 @@ export default function CoPilotHub({
             handleSend();
           }
         }}
-        placeholder="Ask anything or command Co-Pilot..."
+        placeholder="Ask Co-Pilot to search jobs or prepare applications..."
         style={{
           flex: 1,
           background: 'transparent',
@@ -148,56 +145,31 @@ export default function CoPilotHub({
         }}
       />
 
-      {/* Action Buttons: Voice + Send */}
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
-        {/* Voice Mic Button */}
-        <button
-          type="button"
-          onClick={handleVoiceToggle}
-          className={`neu-button ${isVoiceActive ? 'active' : ''}`}
-          style={{
-            padding: '6px 12px',
-            borderRadius: 18,
-            fontSize: 12,
-            fontWeight: 700,
-            color: isVoiceActive ? 'var(--accent-orange)' : 'var(--text-secondary)',
-            border: isVoiceActive ? '1px solid var(--accent-orange)' : '1px solid var(--border-subtle)',
-            background: isVoiceActive ? 'rgba(240, 94, 45, 0.15)' : 'transparent',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 4,
-          }}
-          title="Toggle Voice Mic Mode"
-        >
-          🎙️ {isVoiceActive ? 'Voice ON' : 'Voice'}
-        </button>
-
-        {/* Glowing Send Button */}
-        <button
-          type="button"
-          onClick={() => handleSend()}
-          disabled={sendingChat}
-          style={{
-            width: 38,
-            height: 38,
-            borderRadius: '50%',
-            border: 'none',
-            background: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #3b82f6 100%)',
-            color: '#ffffff',
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 16,
-            fontWeight: 800,
-            cursor: 'pointer',
-            boxShadow: '0 4px 14px rgba(139, 92, 246, 0.5)',
-            transition: 'all 0.2s ease',
-          }}
-          title="Send Command"
-        >
-          {sendingChat ? '...' : '🚀'}
-        </button>
-      </div>
+      {/* Glowing Send Button */}
+      <button
+        type="button"
+        onClick={() => handleSend()}
+        disabled={sendingChat}
+        style={{
+          width: 38,
+          height: 38,
+          borderRadius: '50%',
+          border: 'none',
+          background: 'linear-gradient(135deg, #f05e2d 0%, #3b82f6 100%)',
+          color: '#ffffff',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 16,
+          fontWeight: 800,
+          cursor: 'pointer',
+          boxShadow: 'var(--neu-flat)',
+          transition: 'all 0.2s ease',
+        }}
+        title="Send Command"
+      >
+        {sendingChat ? '...' : '🚀'}
+      </button>
     </div>
   );
 

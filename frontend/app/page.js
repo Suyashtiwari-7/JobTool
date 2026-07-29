@@ -8,6 +8,7 @@ import AppliedCalendar from './components/AppliedCalendar';
 import StatBox from './components/StatBox';
 import ProfileWorkspace from './components/ProfileWorkspace';
 import ControlTower from './components/ControlTower';
+import ManualWorkspace from './components/ManualWorkspace';
 import {
   API_URL,
   getToken,
@@ -794,34 +795,55 @@ export default function DashboardPage() {
         </div>
       ) : (
         <>
-          {/* Control Tower Dashboard Header */}
-          <ControlTower onRunPipeline={handleRunPipeline} />
-
-          {/* ════════ PAGE 1: AI CO-PILOT HUB ════════ */}
+          {/* ════════ PAGE 1: MANUAL TAB (🌱 Manual Mode) ════════ */}
           {activePage === 'hub' && (
-            <CoPilotHub
-              assistantChatHistory={assistantChatHistory}
+            <ManualWorkspace
+              applications={applications}
+              onSubmitApplication={handleSubmitApplication}
+              onRunTailor={handleRunPipeline}
               assistantInput={assistantInput}
               setAssistantInput={setAssistantInput}
-              assistantMemories={assistantMemories}
               sendingChat={sendingChat}
               onSendMessage={handleSendAssistantMessage}
-              onDeleteMemory={handleDeleteMemoryItem}
-              isChatOpen={isChatOpen}
-              setIsChatOpen={setIsChatOpen}
-              theme={theme}
             />
           )}
 
-          {/* ════════ PAGE 2: AUTOMATION WORKSPACE ════════ */}
+          {/* ════════ PAGE 2: AUTOMATED TAB (🤖 Automated Mode) ════════ */}
           {activePage === 'schedules' && (
-            <AppliedCalendar
-              applications={applications}
-              stats={stats}
-              onDeleteApplication={handleDeleteApplicationItem}
-              onTogglePin={handleTogglePin}
-              onStatusChange={handleStatusChange}
-            />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {/* Beta Framing Banner */}
+              <div
+                className="neu-card"
+                style={{
+                  padding: '12px 20px',
+                  borderRadius: 16,
+                  background: 'rgba(240, 94, 45, 0.1)',
+                  border: '1px solid var(--accent-orange)',
+                  color: 'var(--text-primary)',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                }}
+              >
+                <span>🧪</span>
+                <span>
+                  <strong>Beta Feature:</strong> Auto-Submit Engine behaves like Manual Mode (applications stop at QUEUED) until enabled in backend settings.
+                </span>
+              </div>
+
+              {/* Control Tower Dashboard (Kill Switch, Live Audit Feed, Autonomous Execution) */}
+              <ControlTower onRunPipeline={handleRunPipeline} />
+
+              <AppliedCalendar
+                applications={applications}
+                stats={stats}
+                onDeleteApplication={handleDeleteApplicationItem}
+                onTogglePin={handleTogglePin}
+                onStatusChange={handleStatusChange}
+              />
+            </div>
           )}
 
           {/* ════════ PAGE 3: CAREER PROFILE ════════ */}

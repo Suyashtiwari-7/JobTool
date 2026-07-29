@@ -1,0 +1,381 @@
+'use client';
+
+import { useState } from 'react';
+
+/**
+ * ManualWorkspace — Primary Manual Mode Workspace.
+ * Contains:
+ * 1. Discovery / Swipe Feed (job cards to swipe/tap through)
+ * 2. Applications Kanban (QUEUED items awaiting 1-tap Confirm & Submit)
+ * 3. Docked Co-Pilot chat input bar at the bottom.
+ */
+export default function ManualWorkspace({
+  applications = [],
+  onSubmitApplication,
+  onRunTailor,
+  assistantInput,
+  setAssistantInput,
+  sendingChat,
+  onSendMessage,
+}) {
+  const [activeTab, setActiveTab] = useState('feed'); // 'feed' | 'kanban'
+  const [selectedApp, setSelectedApp] = useState(null);
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [submittingId, setSubmittingId] = useState(null);
+
+  // Mock Discovery Feed Jobs for Manual Swipe/Tap
+  const [feedJobs, setFeedJobs] = useState([
+    {
+      id: 'job-101',
+      title: 'Senior Frontend Engineer (Next.js / React)',
+      company: 'Vercel',
+      location: 'Remote',
+      salary: '$140,000 - $180,000',
+      matchScore: 94,
+      tags: ['TypeScript', 'Next.js', 'CSS', 'Tailwind'],
+      description: 'Build state of the art web interfaces for developer tooling platform.',
+    },
+    {
+      id: 'job-102',
+      title: 'AI Product Systems Engineer',
+      company: 'OpenAI',
+      location: 'San Francisco, CA (Hybrid)',
+      salary: '$160,000 - $210,000',
+      matchScore: 89,
+      tags: ['Python', 'FastAPI', 'LLM', 'PostgreSQL'],
+      description: 'Scale Autonomous AI Agents & Graph Pipelines for enterprise customers.',
+    },
+    {
+      id: 'job-103',
+      title: 'Full Stack AI Engineer',
+      company: 'Anthropic',
+      location: 'Remote',
+      salary: '$150,000 - $195,000',
+      matchScore: 86,
+      tags: ['Python', 'React', 'LangChain', 'Docker'],
+      description: 'Design robust human-in-the-loop safety systems and AI agent interfaces.',
+    },
+  ]);
+
+  const [currentJobIdx, setCurrentJobIdx] = useState(0);
+  const currentJob = feedJobs[currentJobIdx];
+
+  const queuedApps = applications.filter((app) => app.status === 'QUEUED' || app.status === 'DRAFT');
+
+  function handleSwipeRight(job) {
+    if (onRunTailor) {
+      onRunTailor(job);
+    }
+    // Advance to next job
+    if (currentJobIdx < feedJobs.length - 1) {
+      setCurrentJobIdx(currentJobIdx + 1);
+    } else {
+      setCurrentJobIdx(feedJobs.length);
+    }
+  }
+
+  function handlePass() {
+    if (currentJobIdx < feedJobs.length - 1) {
+      setCurrentJobIdx(currentJobIdx + 1);
+    } else {
+      setCurrentJobIdx(feedJobs.length);
+    }
+  }
+
+  async function handleConfirmSubmit(app) {
+    try {
+      setSubmittingId(app.id);
+      if (onSubmitApplication) {
+        await onSubmitApplication(app.id);
+      }
+      setShowSubmitModal(false);
+      setSelectedApp(null);
+    } catch (err) {
+      console.error('Failed to submit application:', err);
+    } finally {
+      setSubmittingId(null);
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 1100, margin: '0 auto', width: '100%' }}>
+      
+      {/* ── Sub-Tab Switcher: Discovery Feed vs Queued Kanban ── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button
+            onClick={() => setActiveTab('feed')}
+            className={`neu-button ${activeTab === 'feed' ? 'neu-button-primary' : ''}`}
+            style={{ padding: '8px 18px', borderRadius: 16, fontSize: 13, fontWeight: 800 }}
+          >
+            🎯 Job Discovery Feed ({feedJobs.length - currentJobIdx} remaining)
+          </button>
+          <button
+            onClick={() => setActiveTab('kanban')}
+            className={`neu-button ${activeTab === 'kanban' ? 'neu-button-primary' : ''}`}
+            style={{ padding: '8px 18px', borderRadius: 16, fontSize: 13, fontWeight: 800 }}
+          >
+            📋 Queued for Submission ({queuedApps.length})
+          </button>
+        </div>
+
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 700 }}>
+          🌱 Manual Mode: Nothing submits without your explicit tap
+        </div>
+      </div>
+
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {/* TAB 1: DISCOVERY / SWIPE FEED                                    */}
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {activeTab === 'feed' && (
+        <div style={{ minHeight: 380, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          {currentJob ? (
+            <div
+              className="neu-card"
+              style={{
+                maxWidth: 620,
+                width: '100%',
+                padding: 28,
+                borderRadius: 24,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 16,
+                boxShadow: 'var(--neu-flat)',
+                position: 'relative',
+              }}
+            >
+              {/* Top Row: Title + Match Badge */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                <div>
+                  <span style={{ fontSize: 11, fontWeight: 900, textTransform: 'uppercase', color: 'var(--accent-orange)', letterSpacing: '0.5px' }}>
+                    {currentJob.company}
+                  </span>
+                  <h3 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', margin: '4px 0 0 0' }}>
+                    {currentJob.title}
+                  </h3>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>
+                    📍 {currentJob.location} • 💼 {currentJob.salary}
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    background: 'rgba(16, 185, 129, 0.15)',
+                    border: '1px solid #10b981',
+                    color: '#10b981',
+                    padding: '6px 12px',
+                    borderRadius: 16,
+                    fontSize: 13,
+                    fontWeight: 900,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {currentJob.matchScore}% Match
+                </div>
+              </div>
+
+              {/* Tags */}
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {currentJob.tags.map((tag, i) => (
+                  <span key={i} style={{ fontSize: 11, background: 'var(--bg-base)', color: 'var(--text-secondary)', padding: '4px 10px', borderRadius: 10, fontWeight: 700 }}>
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+
+              {/* Description */}
+              <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
+                {currentJob.description}
+              </p>
+
+              {/* Swipe / Tap Action Buttons */}
+              <div style={{ display: 'flex', gap: 14, marginTop: 12, paddingTop: 16, borderTop: '1px solid var(--border-subtle)' }}>
+                <button
+                  onClick={handlePass}
+                  className="neu-button"
+                  style={{ flex: 1, padding: '12px', borderRadius: 16, fontSize: 14, fontWeight: 800, color: 'var(--text-muted)' }}
+                >
+                  ❌ Pass
+                </button>
+                <button
+                  onClick={() => handleSwipeRight(currentJob)}
+                  className="neu-button neu-button-primary"
+                  style={{ flex: 2, padding: '12px', borderRadius: 16, fontSize: 14, fontWeight: 900 }}
+                >
+                  💚 Swipe Right & Tailor Resume
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="neu-card" style={{ padding: '40px 60px', borderRadius: 24, textAlign: 'center', color: 'var(--text-muted)' }}>
+              <div style={{ fontSize: 36, marginBottom: 12 }}>🎉</div>
+              <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 6px 0' }}>
+                All Matched Jobs Reviewed!
+              </h3>
+              <p style={{ fontSize: 13, margin: 0 }}>
+                Check your Queued tab to confirm & submit tailored applications.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {/* TAB 2: APPLICATIONS KANBAN QUEUE (CONFIRM & SUBMIT MODAL)       */}
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {activeTab === 'kanban' && (
+        <div className="neu-card" style={{ padding: 24, borderRadius: 24, minHeight: 380 }}>
+          <h3 style={{ fontSize: 16, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 16px 0' }}>
+            📋 Queued Applications Awaiting One-Tap Confirmation ({queuedApps.length})
+          </h3>
+
+          {queuedApps.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)', fontSize: 13 }}>
+              No queued applications right now. Swipe right on jobs in the Discovery Feed to populate your queue!
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+              {queuedApps.map((app) => (
+                <div
+                  key={app.id}
+                  style={{
+                    background: 'var(--bg-base)',
+                    border: '1px solid var(--border-subtle)',
+                    padding: 18,
+                    borderRadius: 18,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justify: 'space-between',
+                    gap: 12,
+                    boxShadow: 'var(--neu-flat)',
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 900, color: 'var(--accent-orange)' }}>
+                      {app.company || 'Target Company'}
+                    </div>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>
+                      {app.title || 'Software Engineer'}
+                    </div>
+                    <div style={{ fontSize: 11, color: '#f59e0b', fontWeight: 800, marginTop: 4 }}>
+                      🟡 Status: QUEUED (Awaiting Tap)
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setSelectedApp(app);
+                      setShowSubmitModal(true);
+                    }}
+                    className="neu-button neu-button-primary"
+                    style={{ padding: '10px 14px', borderRadius: 14, fontSize: 13, fontWeight: 900, width: '100%' }}
+                  >
+                    🚀 Confirm & Submit Application
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── ONE-TAP CONFIRM & SUBMIT MODAL ── */}
+      {showSubmitModal && selectedApp && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(6px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+          }}
+        >
+          <div className="neu-card" style={{ maxWidth: 520, width: '90%', padding: 28, borderRadius: 24 }}>
+            <h3 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 8px 0' }}>
+              Confirm & Submit Application
+            </h3>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5, margin: '0 0 16px 0' }}>
+              Review your tailored materials for <strong>{selectedApp.title}</strong> at <strong>{selectedApp.company}</strong> before submitting.
+            </p>
+
+            <div style={{ background: 'var(--bg-base)', padding: 14, borderRadius: 14, fontSize: 12, marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div>📄 <strong>Tailored Resume:</strong> {selectedApp.tailored_resume_pdf ? 'Generated & Ready' : 'Standard Profile PDF'}</div>
+              <div>✉️ <strong>Cover Letter:</strong> {selectedApp.cover_letter_pdf ? 'Generated & Ready' : 'Standard Cover Letter'}</div>
+              <div>✅ <strong>Screening Answers:</strong> Verified from Answer Bank</div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowSubmitModal(false)}
+                className="neu-button"
+                style={{ padding: '10px 18px', borderRadius: 14, fontSize: 13, fontWeight: 700 }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleConfirmSubmit(selectedApp)}
+                disabled={submittingId === selectedApp.id}
+                className="neu-button neu-button-primary"
+                style={{ padding: '10px 22px', borderRadius: 14, fontSize: 13, fontWeight: 900 }}
+              >
+                {submittingId === selectedApp.id ? 'Submitting...' : '🚀 Submit Now'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── DOCKED CO-PILOT CHAT INPUT BAR ── */}
+      <div
+        className="neu-card"
+        style={{
+          padding: '12px 18px',
+          borderRadius: 20,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          boxShadow: 'var(--neu-flat)',
+          marginTop: 10,
+        }}
+      >
+        <textarea
+          rows={1}
+          value={assistantInput}
+          onChange={(e) => setAssistantInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              onSendMessage();
+            }
+          }}
+          placeholder="Ask Co-Pilot to search jobs or prepare applications..."
+          style={{
+            flex: 1,
+            background: 'transparent',
+            border: 'none',
+            outline: 'none',
+            color: 'var(--text-primary)',
+            fontSize: 13,
+            fontWeight: 500,
+            resize: 'none',
+            fontFamily: 'inherit',
+          }}
+        />
+        <button
+          onClick={() => onSendMessage()}
+          disabled={sendingChat}
+          className="neu-button neu-button-primary"
+          style={{ padding: '8px 18px', borderRadius: 14, fontSize: 13, fontWeight: 800 }}
+        >
+          {sendingChat ? '...' : 'Send'}
+        </button>
+      </div>
+    </div>
+  );
+}
