@@ -690,6 +690,36 @@ export default function DashboardPage() {
               </div>
             </div>
 
+            {/* Top Navigation Tabs */}
+            <div className="neu-card" style={{ display: 'flex', gap: 8, padding: '6px 10px', borderRadius: 20 }}>
+              {[
+                { id: 'hub', label: '🔮 Co-Pilot Hub' },
+                { id: 'schedules', label: '🎛️ Automation Workspace' },
+                { id: 'profile', label: '👤 Profile & Guardrails' },
+              ].map((tab) => {
+                const isActive = activePage === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActivePage(tab.id)}
+                    className="neu-button"
+                    style={{
+                      padding: '8px 16px',
+                      fontSize: 12,
+                      fontWeight: 800,
+                      borderRadius: 14,
+                      background: isActive ? 'rgba(240, 94, 45, 0.15)' : 'transparent',
+                      border: isActive ? '1px solid var(--accent-orange)' : '1px solid transparent',
+                      color: isActive ? 'var(--text-accent)' : 'var(--text-secondary)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+
             {/* Right Header Controls Card */}
             <div className="neu-card" style={{ display: 'flex', gap: 14, alignItems: 'center', padding: '10px 16px', borderRadius: 16 }}>
               <button

@@ -1,39 +1,43 @@
 'use client';
 
 /**
- * SidebarNav — Floating Capsule Vertical Navigation Bar.
- * Strictly limited to the last button with zero extra tail or stretching.
+ * SidebarNav — Ultra-Sleek Expanded Neumorphic Navigation Sidebar.
+ * Displays icons, clear text labels, and glowing active indicators.
  */
 export default function SidebarNav({ activePage, setActivePage }) {
   const navItems = [
-    { id: 'hub', label: 'Co-Pilot Hub', icon: '🔮' },
-    { id: 'schedules', label: 'Automation Workspace', icon: '🎛️' },
-    { id: 'profile', label: 'Career Profile', icon: '👤' },
+    { id: 'hub', label: 'Co-Pilot Hub', subtitle: 'AI Chat & Control', icon: '🔮' },
+    { id: 'schedules', label: 'Automation Workspace', subtitle: 'Pipeline & Calendar', icon: '🎛️' },
+    { id: 'profile', label: 'Career Profile', subtitle: 'Guardrails & Resumes', icon: '👤' },
   ];
 
   return (
     <aside
       className="neu-card"
       style={{
-        width: 66,
+        width: 230,
         height: 'auto',
         maxHeight: 'fit-content',
         alignSelf: 'flex-start',
         margin: '24px 0 0 20px',
-        padding: '14px 6px 16px 6px',
+        padding: '16px 12px',
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        gap: 14,
-        borderRadius: 28,
+        gap: 10,
+        borderRadius: 24,
         zIndex: 100,
         boxShadow: 'var(--neu-flat)',
         flexShrink: 0,
       }}
     >
+      <div style={{ padding: '0 8px 6px 8px', borderBottom: '1px solid var(--border-subtle)', marginBottom: 4 }}>
+        <div style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.8px' }}>
+          Navigation
+        </div>
+      </div>
 
-      {/* Nav Icons */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', alignItems: 'center' }}>
+      {/* Nav Items */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}>
         {navItems.map((item) => {
           const isActive = activePage === item.id;
           return (
@@ -43,21 +47,25 @@ export default function SidebarNav({ activePage, setActivePage }) {
               onClick={() => setActivePage(item.id)}
               className={`neu-button ${isActive ? 'active' : ''}`}
               style={{
-                width: 42,
-                height: 42,
-                padding: 0,
-                borderRadius: 14,
-                display: 'inline-flex',
+                width: '100%',
+                padding: '10px 12px',
+                borderRadius: 16,
+                display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 18,
+                gap: 12,
+                textAlign: 'left',
                 background: isActive ? 'rgba(240, 94, 45, 0.15)' : 'var(--bg-card)',
                 border: isActive ? '1px solid var(--accent-orange)' : '1px solid var(--border-subtle)',
                 color: isActive ? 'var(--text-accent)' : 'var(--text-primary)',
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                cursor: 'pointer',
               }}
-              title={item.label}
             >
-              {item.icon}
+              <span style={{ fontSize: 20 }}>{item.icon}</span>
+              <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <span style={{ fontSize: 13, fontWeight: 800, whiteSpace: 'nowrap' }}>{item.label}</span>
+                <span style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 1, whiteSpace: 'nowrap' }}>{item.subtitle}</span>
+              </div>
             </button>
           );
         })}
