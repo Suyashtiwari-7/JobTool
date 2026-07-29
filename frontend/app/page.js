@@ -27,6 +27,7 @@ import {
   togglePinApplication,
   deleteApplication,
   clearApplications,
+  submitApplication,
   triggerPipeline,
   getResumePdfUrl,
   getCoverLetterPdfUrl,
@@ -463,6 +464,17 @@ export default function DashboardPage() {
       }
     } catch (e) {
       setPdfBlobUrl('error');
+    }
+  }
+
+  // Handle One-Tap Application Submission (Manual Mode)
+  async function handleSubmitApplication(id) {
+    try {
+      await submitApplication(id);
+      const updated = await getApplications();
+      setApplications(updated);
+    } catch (err) {
+      alert('Submission failed: ' + err.message);
     }
   }
 

@@ -192,6 +192,10 @@ export async function clearApplications() {
   return apiFetch('/api/applications/clear', { method: 'DELETE' });
 }
 
+export async function submitApplication(id) {
+  return apiFetch(`/api/applications/${id}/submit`, { method: 'POST' });
+}
+
 export async function generateScreeningAnswer(id, question) {
   return apiFetch(`/api/applications/${id}/screening-answer`, {
     method: 'POST',
