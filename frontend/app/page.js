@@ -704,9 +704,9 @@ export default function DashboardPage() {
             {/* Navigation Tabs (Center) */}
             <div style={{ display: 'flex', gap: 8, background: 'var(--bg-base)', padding: '6px 8px', borderRadius: 18, boxShadow: 'var(--neu-pressed)' }}>
               {[
-                { id: 'hub', label: '🔮 Co-Pilot Hub' },
-                { id: 'schedules', label: '🎛️ Automation Workspace' },
-                { id: 'profile', label: '🛡️ Safety & Profile' },
+                { id: 'hub', label: '🌱 Manual' },
+                { id: 'schedules', label: '🤖 Automated' },
+                { id: 'profile', label: '👤 Profile' },
               ].map((tab) => {
                 const isActive = activePage === tab.id;
                 return (
