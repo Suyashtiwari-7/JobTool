@@ -670,32 +670,43 @@ export default function DashboardPage() {
 
   return (
     <AuthLayout>
-      <div style={{ display: 'flex', minHeight: '100vh', width: '100%' }}>
-        {/* VS Code Style Left Vertical Navigation Sidebar */}
-        <SidebarNav activePage={activePage} setActivePage={setActivePage} />
-
-        <div style={{ flex: 1, padding: '24px 32px', maxWidth: 1400, margin: '0 auto', width: '100%' }}>
-          {/* ── Top Header Bar (Canva Split Floating Cards) ── */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
-            {/* Left Header Card / Branding */}
-            <div className="neu-card" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '10px 18px', borderRadius: 16 }}>
-              <img src="/logo.png" alt="JobTool Logo" style={{ width: 44, height: 44, borderRadius: 12, objectFit: 'cover', boxShadow: 'var(--neu-flat)' }} />
+      <div style={{ minHeight: '100vh', width: '100%', background: 'var(--bg-base)' }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '24px 32px', width: '100%' }}>
+          
+          {/* ── Single Full-Width Top Header Navbar (Linear / Canva Style) ── */}
+          <div
+            className="neu-card"
+            style={{
+              display: 'flex',
+              justify: 'space-between',
+              alignItems: 'center',
+              marginBottom: 24,
+              padding: '12px 24px',
+              borderRadius: 24,
+              flexWrap: 'wrap',
+              gap: 16,
+              boxShadow: 'var(--neu-flat)',
+            }}
+          >
+            {/* Branding */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <img src="/logo.png" alt="JobTool Logo" style={{ width: 42, height: 42, borderRadius: 12, objectFit: 'cover', boxShadow: 'var(--neu-flat)' }} />
               <div>
-                <h1 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.2px' }}>
+                <h1 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.3px' }}>
                   JobTool
                 </h1>
-                <p style={{ color: 'var(--text-secondary)', fontSize: 12, fontWeight: 600, marginTop: 1, margin: 0 }}>
-                  your career co-pilot
+                <p style={{ color: 'var(--text-secondary)', fontSize: 11, fontWeight: 700, marginTop: 1, margin: 0 }}>
+                  career co-pilot
                 </p>
               </div>
             </div>
 
-            {/* Top Navigation Tabs */}
-            <div className="neu-card" style={{ display: 'flex', gap: 8, padding: '6px 10px', borderRadius: 20 }}>
+            {/* Navigation Tabs (Center) */}
+            <div style={{ display: 'flex', gap: 8, background: 'var(--bg-base)', padding: '6px 8px', borderRadius: 18, boxShadow: 'var(--neu-pressed)' }}>
               {[
                 { id: 'hub', label: '🔮 Co-Pilot Hub' },
                 { id: 'schedules', label: '🎛️ Automation Workspace' },
-                { id: 'profile', label: '👤 Profile & Guardrails' },
+                { id: 'profile', label: '🛡️ Safety & Profile' },
               ].map((tab) => {
                 const isActive = activePage === tab.id;
                 return (
@@ -704,14 +715,16 @@ export default function DashboardPage() {
                     onClick={() => setActivePage(tab.id)}
                     className="neu-button"
                     style={{
-                      padding: '8px 16px',
-                      fontSize: 12,
+                      padding: '8px 20px',
+                      fontSize: 13,
                       fontWeight: 800,
                       borderRadius: 14,
-                      background: isActive ? 'rgba(240, 94, 45, 0.15)' : 'transparent',
+                      background: isActive ? 'var(--bg-card)' : 'transparent',
+                      boxShadow: isActive ? 'var(--neu-flat)' : 'none',
                       border: isActive ? '1px solid var(--accent-orange)' : '1px solid transparent',
                       color: isActive ? 'var(--text-accent)' : 'var(--text-secondary)',
                       cursor: 'pointer',
+                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                     }}
                   >
                     {tab.label}
@@ -720,13 +733,13 @@ export default function DashboardPage() {
               })}
             </div>
 
-            {/* Right Header Controls Card */}
-            <div className="neu-card" style={{ display: 'flex', gap: 14, alignItems: 'center', padding: '10px 16px', borderRadius: 16 }}>
+            {/* Right Controls */}
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
               <button
                 onClick={handleClearHistory}
                 disabled={clearing}
                 className="neu-button neu-button-danger"
-                style={{ padding: '8px 16px', fontSize: 12, borderRadius: 20, fontWeight: 700 }}
+                style={{ padding: '8px 16px', fontSize: 12, borderRadius: 16, fontWeight: 700 }}
                 title="Clear old history and queue"
               >
                 🧹 {clearing ? 'Clearing...' : 'Clear History'}
@@ -735,9 +748,9 @@ export default function DashboardPage() {
               <div 
                 onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
                 style={{ 
-                  width: 90, 
-                  height: 40, 
-                  borderRadius: 20, 
+                  width: 86, 
+                  height: 38, 
+                  borderRadius: 19, 
                   position: 'relative', 
                   cursor: 'pointer', 
                   display: 'flex', 
@@ -748,25 +761,25 @@ export default function DashboardPage() {
                   outline: 'none'
                 }}
               >
-                <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', padding: '0 12px', fontSize: 13, fontWeight: 900, alignItems: 'center' }}>
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', padding: '0 12px', fontSize: 12, fontWeight: 900, alignItems: 'center' }}>
                   <span style={{ color: '#5c8cf5', opacity: theme === 'dark' ? 1 : 0.4 }}>ON</span>
-                  <span style={{ fontSize: 13, opacity: theme === 'light' ? 1 : 0.4 }}>🌙</span>
+                  <span style={{ fontSize: 12, opacity: theme === 'light' ? 1 : 0.4 }}>🌙</span>
                 </div>
                 <div 
                   style={{ 
                     position: 'absolute', 
                     top: 3, 
-                    left: theme === 'light' ? 3 : 43, 
-                    width: 44, 
-                    height: 34, 
-                    borderRadius: 17, 
+                    left: theme === 'light' ? 3 : 41, 
+                    width: 42, 
+                    height: 32, 
+                    borderRadius: 16, 
                     background: 'var(--bg-card)', 
                     boxShadow: 'var(--neu-flat)', 
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'center',
                     transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    fontSize: 15,
+                    fontSize: 14,
                   }}
                 >
                   {theme === 'light' ? '☀️' : '🌙'}
