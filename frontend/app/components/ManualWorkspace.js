@@ -62,15 +62,26 @@ export default function ManualWorkspace({
 
   const queuedApps = applications.filter((app) => app.status === 'QUEUED' || app.status === 'DRAFT');
 
-  function handleSwipeRight(job) {
-    if (onRunTailor) {
-      onRunTailor(job);
-    }
-    // Advance to next job
-    if (currentJobIdx < feedJobs.length - 1) {
-      setCurrentJobIdx(currentJobIdx + 1);
-    } else {
-      setCurrentJobIdx(feedJobs.length);
+  const [tailoring, setTailoring] = useState(false);
+
+  async function handleSwipeRight(job) {
+    try {
+      setTailoring(true);
+      if (onRunTailor) {
+        await onRunTailor(job);
+      }
+    } catch (err) {
+      console.warn('Tailor call warning:', err);
+    } finally {
+      setTailoring(false);
+      // Advance to next job
+      if (currentJobIdx < feedJobs.length - 1) {
+        setCurrentJobIdx(currentJobIdx + 1);
+      } else {
+        setCurrentJobIdx(feedJobs.length);
+      }
+      // Switch to Queued tab to view the tailored application
+      setActiveTab('kanban');
     }
   }
 
@@ -199,10 +210,11 @@ export default function ManualWorkspace({
                 </button>
                 <button
                   onClick={() => handleSwipeRight(currentJob)}
+                  disabled={tailoring}
                   className="neu-button neu-button-primary"
                   style={{ flex: 2, padding: '12px', borderRadius: 16, fontSize: 14, fontWeight: 900 }}
                 >
-                  💚 Swipe Right & Tailor Resume
+                  {tailoring ? '⏳ Tailoring Resume...' : '💚 Swipe Right & Tailor Resume'}
                 </button>
               </div>
             </div>
