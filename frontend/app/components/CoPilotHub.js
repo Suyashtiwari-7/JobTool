@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import GlowingOrb from './GlowingOrb';
+import { getAgentStatus, pauseAgent, resumeAgent } from '../lib/api';
 
 /**
  * CoPilotHub — Page 1: Ultra-clean Instagram DM & ChatGPT style AI Co-Pilot workspace.
@@ -25,6 +26,55 @@ export default function CoPilotHub({
   const [copiedIdx, setCopiedIdx] = useState(null);
   const [userHasSubmitted, setUserHasSubmitted] = useState(false);
   const [showStream, setShowStream] = useState(false);
+
+  // Agent Kill Switch State
+  const [agentStatus, setAgentStatus] = useState({ is_running: false, paused_reason: '' });
+  const [loadingAgentStatus, setLoadingAgentStatus] = useState(true);
+  const [showResumeModal, setShowResumeModal] = useState(false);
+  const [togglingStatus, setTogglingStatus] = useState(false);
+
+  useEffect(() => {
+    fetchAgentStatus();
+    const interval = setInterval(fetchAgentStatus, 30000); // poll every 30s
+    return () => clearInterval(interval);
+  }, []);
+
+  async function fetchAgentStatus() {
+    try {
+      const res = await getAgentStatus();
+      setAgentStatus(res);
+    } catch (err) {
+      console.error('Failed to fetch agent status:', err);
+      setAgentStatus({ is_running: false, paused_reason: 'Status unknown (Backend unreachable)' });
+    } finally {
+      setLoadingAgentStatus(false);
+    }
+  }
+
+  async function handlePauseClick() {
+    try {
+      setTogglingStatus(true);
+      const res = await pauseAgent('User initiated pause from Kill Switch');
+      setAgentStatus(res);
+    } catch (err) {
+      console.error('Failed to pause agent:', err);
+    } finally {
+      setTogglingStatus(false);
+    }
+  }
+
+  async function handleConfirmResume() {
+    try {
+      setTogglingStatus(true);
+      const res = await resumeAgent();
+      setAgentStatus(res);
+      setShowResumeModal(false);
+    } catch (err) {
+      console.error('Failed to resume agent:', err);
+    } finally {
+      setTogglingStatus(false);
+    }
+  }
 
   // Check if chat has started (user sent a message or manually expanded stream)
   const chatStarted = userHasSubmitted || showStream;
@@ -154,6 +204,91 @@ export default function CoPilotHub({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 140px)', maxWidth: 920, margin: '0 auto', width: '100%', position: 'relative' }}>
       
+      {/* ── AGENT STATUS BAR & KILL SWITCH ── */}
+      <div style={{
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        padding: '10px 16px', borderRadius: 20, marginBottom: 16,
+        background: 'var(--bg-card)', border: '1px solid var(--border-subtle)',
+        boxShadow: 'var(--neu-flat)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{
+            display: 'inline-block', width: 10, height: 10, borderRadius: '50%',
+            background: agentStatus.is_running ? '#10b981' : '#f59e0b',
+            boxShadow: agentStatus.is_running ? '0 0 10px #10b981' : '0 0 10px #f59e0b'
+          }} />
+          <div>
+            <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-primary)' }}>
+              {loadingAgentStatus ? 'Checking Agent Status...' : (agentStatus.is_running ? '🟢 Agent Live & Autonomous' : '⏸ Agent Paused (Kill Switch Active)')}
+            </span>
+            {agentStatus.paused_reason && !agentStatus.is_running && (
+              <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 8 }}>
+                ({agentStatus.paused_reason})
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div>
+          {agentStatus.is_running ? (
+            <button
+              onClick={handlePauseClick}
+              disabled={togglingStatus}
+              className="neu-button"
+              style={{ padding: '6px 14px', borderRadius: 14, fontSize: 12, fontWeight: 800, color: 'var(--accent-red)' }}
+            >
+              {togglingStatus ? 'Pausing...' : '⏸ Pause Agent'}
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowResumeModal(true)}
+              disabled={togglingStatus}
+              className="neu-button neu-button-primary"
+              style={{ padding: '6px 14px', borderRadius: 14, fontSize: 12, fontWeight: 800 }}
+            >
+              ▶ Resume Agent
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ── RESUME CONFIRMATION MODAL ── */}
+      {showResumeModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(6px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 9999, animation: 'fadeIn 0.2s ease'
+        }}>
+          <div className="neu-card" style={{ maxWidth: 440, width: '90%', padding: 28, borderRadius: 24, textAlign: 'center' }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>⚠️</div>
+            <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 8px 0' }}>
+              Confirm Autonomous Resume
+            </h3>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5, margin: '0 0 24px 0' }}>
+              Resuming will allow the AI Agent to autonomously source, score, tailor, and create job applications in the background according to your guardrails.
+            </p>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+              <button
+                onClick={() => setShowResumeModal(false)}
+                className="neu-button"
+                style={{ padding: '10px 20px', borderRadius: 16, fontSize: 13, fontWeight: 700 }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmResume}
+                disabled={togglingStatus}
+                className="neu-button neu-button-primary"
+                style={{ padding: '10px 24px', borderRadius: 16, fontSize: 13, fontWeight: 800 }}
+              >
+                {togglingStatus ? 'Resuming...' : '✅ Yes, Confirm Resume'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ════════════════════════════════════════════════════════════════ */}
       {/* STATE 1: INITIAL HERO VIEW (ORB UP + CLEAN CHAT BAR AT CENTER)   */}
       {/* ════════════════════════════════════════════════════════════════ */}

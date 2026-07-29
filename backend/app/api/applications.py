@@ -265,19 +265,35 @@ async def update_status(
     db: AsyncSession = Depends(get_db),
     _user: str = Depends(verify_token),
 ):
-    """Update application status (reviewed / applied / response_received)."""
+    """Update application status (reviewed / applied / response_received) with row locking and audit logging."""
+    from app.db.models import AuditLog
+    
     result = await db.execute(
         select(Application)
         .options(joinedload(Application.job))
         .where(Application.id == app_id)
+        .with_for_update()
     )
     app = result.unique().scalar_one_or_none()
     if not app:
         raise HTTPException(404, "Application not found")
 
+    old_status = app.status.value
+    new_status = body.status.value if hasattr(body.status, "value") else str(body.status)
+
     app.status = body.status
     if body.notes is not None:
         app.notes = body.notes
+
+    if old_status != new_status:
+        job_company = app.job.company if app.job else "Company"
+        job_title = app.job.title if app.job else "Role"
+        audit = AuditLog(
+            action_type="status_changed",
+            detail=f"Application status for {job_title} at {job_company} changed from {old_status} to {new_status}",
+            node_name="API"
+        )
+        db.add(audit)
 
     await db.flush()
     await db.refresh(app)
@@ -379,26 +395,46 @@ async def delete_single_application(
     db: AsyncSession = Depends(get_db),
     _user: str = Depends(verify_token),
 ):
-    """Delete a single application and its generated PDF files."""
-    result = await db.execute(select(Application).where(Application.id == app_id))
-    app = result.scalar_one_or_none()
+    """Safely cancel/delete a single application. Guarded against wiping active tracking states."""
+    from app.db.models import AuditLog
+    
+    result = await db.execute(
+        select(Application)
+        .options(joinedload(Application.job))
+        .where(Application.id == app_id)
+        .with_for_update()
+    )
+    app = result.unique().scalar_one_or_none()
     if not app:
         raise HTTPException(404, "Application not found")
 
-    if app.tailored_resume_pdf and os.path.exists(app.tailored_resume_pdf):
-        try:
-            os.remove(app.tailored_resume_pdf)
-        except Exception:
-            pass
-    if app.cover_letter_pdf and os.path.exists(app.cover_letter_pdf):
-        try:
-            os.remove(app.cover_letter_pdf)
-        except Exception:
-            pass
+    # Guard: Do not allow wiping active or historical tracking states
+    protected_statuses = {
+        ApplicationStatus.INTERVIEW,
+        ApplicationStatus.RESPONSE_RECEIVED,
+        ApplicationStatus.APPLIED,
+    }
+    if app.status in protected_statuses:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot delete application with status '{app.status.value}'. Applications in active tracking stages cannot be deleted to preserve history."
+        )
 
-    await db.delete(app)
-    await db.flush()
-    return {"message": "Application deleted successfully"}
+    # Soft cancel to preserve audit trail
+    old_status = app.status.value
+    app.status = ApplicationStatus.CANCELLED
+
+    job_company = app.job.company if app.job else "Company"
+    job_title = app.job.title if app.job else "Role"
+    audit = AuditLog(
+        action_type="cancelled",
+        detail=f"Application for {job_title} at {job_company} cancelled (was {old_status})",
+        node_name="API"
+    )
+    db.add(audit)
+
+    await db.commit()
+    return {"message": "Application cancelled successfully", "id": app_id, "status": "cancelled"}
 
 
 class ScreeningRequest(BaseModel):

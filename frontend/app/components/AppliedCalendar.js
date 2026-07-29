@@ -302,24 +302,40 @@ export default function AppliedCalendar({
                         </div>
                       </td>
                       <td style={{ padding: '12px', textAlign: 'right' }}>
-                        <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-                          <button
-                            type="button"
-                            onClick={() => onTogglePin(app.id)}
-                            className="neu-button"
-                            style={{ padding: '4px 8px', fontSize: 11, color: app.is_pinned ? 'var(--accent-amber)' : 'var(--text-muted)' }}
-                          >
-                            📌 Pin
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => onDeleteApplication(app.id)}
-                            className="neu-button"
-                            style={{ padding: '4px 8px', fontSize: 11, color: 'var(--accent-red)' }}
-                          >
-                            🗑️ Cancel
-                          </button>
-                        </div>
+                        {(() => {
+                          const createdTime = new Date(app.created_at || Date.now()).getTime();
+                          const nowTime = Date.now();
+                          const diffMinutes = Math.floor((nowTime - createdTime) / (1000 * 60));
+                          const inGracePeriod = diffMinutes < 30;
+                          const remainingMins = Math.max(0, 30 - diffMinutes);
+
+                          return (
+                            <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', alignItems: 'center' }}>
+                              {inGracePeriod && (
+                                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-orange)', background: 'rgba(245, 158, 11, 0.15)', padding: '3px 8px', borderRadius: 10 }}>
+                                  ⏱️ Review Grace Period ({remainingMins}m)
+                                </span>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => onTogglePin(app.id)}
+                                className="neu-button"
+                                style={{ padding: '4px 8px', fontSize: 11, color: app.is_pinned ? 'var(--accent-amber)' : 'var(--text-muted)' }}
+                              >
+                                📌 Pin
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => onDeleteApplication(app.id)}
+                                className="neu-button"
+                                style={{ padding: '4px 8px', fontSize: 11, color: 'var(--accent-red)' }}
+                                title={inGracePeriod ? "Cancel before submission" : "Remove application"}
+                              >
+                                🗑️ {inGracePeriod ? 'Cancel' : 'Delete'}
+                              </button>
+                            </div>
+                          );
+                        })()}
                       </td>
                     </tr>
                   ))}

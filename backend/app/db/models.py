@@ -31,10 +31,12 @@ def utcnow():
 class ApplicationStatus(str, enum.Enum):
     QUEUED = "queued"
     REVIEWED = "reviewed"
+    REVIEW_REQUIRED = "review_required"
     APPLIED = "applied"
     RESPONSE_RECEIVED = "response_received"
     REJECTED = "rejected"
     INTERVIEW = "interview"
+    CANCELLED = "cancelled"
 
 
 class PipelineStatus(str, enum.Enum):
@@ -259,5 +261,74 @@ class UserIntegration(Base):
     created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
     updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
 
+class GraphRun(Base):
+    """Write-ahead state persistence for the graph engine."""
+
+    __tablename__ = "graph_runs"
+
+    id = Column(String(50), primary_key=True)         # run_id (UUID)
+    batch_id = Column(String(50), nullable=False)
+    current_node = Column(String(50), nullable=False)
+    state_json = Column(JSONB, nullable=False)         # Full GraphState snapshot
+    error_count = Column(Integer, default=0)
+    is_terminal = Column(Boolean, default=False)       # True for COMPLETED/FAILED
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
 
 
+class AuditLog(Base):
+    """Logs autonomous actions performed by the graph engine."""
+
+    __tablename__ = "audit_log"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    run_id = Column(String(50), nullable=True)          # Correlation ID
+    action_type = Column(String(50), nullable=False)    # sourced, scored, tailored, skipped, failed, paused
+    detail = Column(Text, nullable=True)
+    node_name = Column(String(50), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class ReviewQueue(Base):
+    """Dead-letter queue for failed graph runs."""
+
+    __tablename__ = "review_queue"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    run_id = Column(String(50), nullable=False)
+    reason = Column(String(100), nullable=False)        # max_retries_exceeded, unregistered_node, etc.
+    state_snapshot = Column(JSONB, nullable=False)
+    is_resolved = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+    resolved_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class AgentStatus(Base):
+    """Kill switch state for the autonomous agent."""
+
+    __tablename__ = "agent_status"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    is_running = Column(Boolean, default=False)
+    paused_reason = Column(String(255), nullable=True)
+    paused_at = Column(DateTime(timezone=True), nullable=True)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)
+
+
+class Guardrails(Base):
+    """User-defined safety constraints applied before LLM calls."""
+
+    __tablename__ = "guardrails"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    min_salary = Column(Integer, nullable=True)         # Skip jobs below this
+    blocked_companies = Column(ARRAY(String), default=list)  # Never apply here
+    required_keywords = Column(ARRAY(String), default=list)  # Must contain at least one
+    excluded_keywords = Column(ARRAY(String), default=list)  # Skip if contains any
+    max_commute_km = Column(Integer, nullable=True)
+    remote_only = Column(Boolean, default=False)
+    daily_max_applications = Column(Integer, default=25, nullable=True)  # Daily application cap
+    auto_submit_enabled = Column(Boolean, default=False)  # Dual-mode auto-submit toggle
+    is_complete = Column(Boolean, default=False)        # Onboarding gate
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False)

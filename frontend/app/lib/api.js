@@ -353,3 +353,51 @@ export async function disconnectIntegration(serviceName) {
   return apiFetch(`/api/integrations/${serviceName}`, { method: 'DELETE' });
 }
 
+// ── Graph Engine & Agent Control v2.0 ─────────────────────
+
+export async function getAgentStatus() {
+  return apiFetch('/api/agent/status');
+}
+
+export async function pauseAgent(reason = 'User initiated pause') {
+  return apiFetch('/api/agent/pause', {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
+  });
+}
+
+export async function resumeAgent() {
+  return apiFetch('/api/agent/resume', {
+    method: 'POST',
+    body: JSON.stringify({ confirm: true }),
+  });
+}
+
+export async function getAuditLog(limit = 50) {
+  return apiFetch(`/api/audit-log?limit=${limit}`);
+}
+
+export async function getReviewQueue() {
+  return apiFetch('/api/review-queue');
+}
+
+export async function resolveReviewItem(id) {
+  return apiFetch(`/api/review-queue/${id}/resolve`, { method: 'POST' });
+}
+
+export async function retryReviewItem(id) {
+  return apiFetch(`/api/review-queue/${id}/retry`, { method: 'POST' });
+}
+
+export async function getGuardrails() {
+  return apiFetch('/api/guardrails');
+}
+
+export async function updateGuardrails(guardrailsData) {
+  return apiFetch('/api/guardrails', {
+    method: 'POST',
+    body: JSON.stringify(guardrailsData),
+  });
+}
+
+

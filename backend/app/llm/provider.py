@@ -79,16 +79,8 @@ async def llm_call(prompt: str, json_mode: bool = False) -> str:
             continue
 
     if json_mode:
-        logger.warning(f"All LLM providers failed ({errors}). Returning safe JSON fallback.")
-        return json.dumps({
-            "status": "fallback",
-            "score": 80,
-            "real_odds_score": 88,
-            "callback_tier": "🔥 High Callback Odds",
-            "matching_skills": ["Python", "JavaScript", "React", "REST APIs"],
-            "missing_skills": ["Docker", "AWS"],
-            "reasoning": "Heuristic match evaluated via local fallback engine."
-        })
+        logger.warning(f"All LLM providers failed ({errors}). Raising error instead of fallback.")
+        raise RuntimeError(f"All LLM providers failed in JSON mode: {'; '.join(errors)}")
 
     raise RuntimeError(f"All LLM providers failed: {'; '.join(errors)}")
 

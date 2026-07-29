@@ -26,3 +26,12 @@ services:
         sync: false
       - key: FRONTEND_URL
         sync: false
+
+  - type: cron
+    name: jobtool-cron-scheduler
+    schedule: "0 */4 * * *"   # Every 4 hours
+    buildCommand: echo "Cron build"
+    startCommand: |
+      curl -X POST https://jobtool-1qr5.onrender.com/api/pipeline/run/cron \
+        -H "X-Cron-Secret: $CRON_SECRET"
+

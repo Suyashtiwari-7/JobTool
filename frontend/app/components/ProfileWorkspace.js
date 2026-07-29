@@ -11,11 +11,13 @@ import {
   syncGitHub,
   scanOutlook,
   disconnectIntegration,
+  getGuardrails,
+  updateGuardrails,
 } from '../lib/api';
 
 /**
- * ProfileWorkspace — Read-only auto-filled dashboard + Connected Accounts tab.
- * Allows managing connected accounts (GitHub, Outlook, LinkedIn) with AES-256 encryption.
+ * ProfileWorkspace — Read-only auto-filled dashboard + Connected Accounts tab + Guardrails tab.
+ * Allows managing connected accounts and autonomous safety guardrails.
  */
 
 const FIELD_LABELS = {
@@ -72,7 +74,7 @@ const CATEGORY_BORDERS = {
 };
 
 export default function ProfileWorkspace() {
-  const [mainTab, setMainTab] = useState('profile'); // 'profile' | 'integrations'
+  const [mainTab, setMainTab] = useState('profile'); // 'profile' | 'integrations' | 'guardrails'
   const [profileData, setProfileData] = useState({});
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
@@ -88,10 +90,76 @@ export default function ProfileWorkspace() {
   const [savingInteg, setSavingInteg] = useState('');
   const [integStatusMsg, setIntegStatusMsg] = useState('');
 
+  // Guardrails State
+  const [guardrails, setGuardrails] = useState({
+    min_salary: '',
+    blocked_companies: '',
+    required_keywords: '',
+    excluded_keywords: '',
+    daily_max_applications: 25,
+    auto_submit_enabled: false,
+    remote_only: false,
+    is_complete: false,
+  });
+  const [savingGuardrails, setSavingGuardrails] = useState(false);
+  const [guardrailsStatusMsg, setGuardrailsStatusMsg] = useState('');
+
   useEffect(() => {
     loadProfile();
     loadIntegrationsData();
+    loadGuardrailsData();
   }, []);
+
+  async function loadGuardrailsData() {
+    try {
+      const g = await getGuardrails();
+      setGuardrails({
+        min_salary: g.min_salary || '',
+        blocked_companies: (g.blocked_companies || []).join(', '),
+        required_keywords: (g.required_keywords || []).join(', '),
+        excluded_keywords: (g.excluded_keywords || []).join(', '),
+        daily_max_applications: g.daily_max_applications ?? 25,
+        remote_only: g.remote_only || false,
+        is_complete: g.is_complete || false,
+      });
+    } catch (err) {
+      console.error('Failed to load guardrails:', err);
+    }
+  }
+
+  async function handleSaveGuardrails(e) {
+    e.preventDefault();
+    try {
+      setSavingGuardrails(true);
+      setGuardrailsStatusMsg('');
+
+      const reqBody = {
+        min_salary: guardrails.min_salary ? parseInt(guardrails.min_salary, 10) : null,
+        blocked_companies: guardrails.blocked_companies.split(',').map((s) => s.trim()).filter(Boolean),
+        required_keywords: guardrails.required_keywords.split(',').map((s) => s.trim()).filter(Boolean),
+        excluded_keywords: guardrails.excluded_keywords.split(',').map((s) => s.trim()).filter(Boolean),
+        daily_max_applications: parseInt(guardrails.daily_max_applications, 10) || 25,
+        remote_only: !!guardrails.remote_only,
+      };
+
+      const updated = await updateGuardrails(reqBody);
+      setGuardrails({
+        min_salary: updated.min_salary || '',
+        blocked_companies: (updated.blocked_companies || []).join(', '),
+        required_keywords: (updated.required_keywords || []).join(', '),
+        excluded_keywords: (updated.excluded_keywords || []).join(', '),
+        daily_max_applications: updated.daily_max_applications ?? 25,
+        remote_only: updated.remote_only || false,
+        is_complete: updated.is_complete || false,
+      });
+
+      setGuardrailsStatusMsg('✅ Guardrails saved successfully! Agent safety rules are active.');
+    } catch (err) {
+      setGuardrailsStatusMsg(`❌ Failed to save guardrails: ${err.message}`);
+    } finally {
+      setSavingGuardrails(false);
+    }
+  }
 
   async function loadProfile() {
     try {
@@ -247,6 +315,18 @@ export default function ProfileWorkspace() {
             }}
           >
             🔌 Connected Accounts
+          </button>
+          <button
+            onClick={() => setMainTab('guardrails')}
+            style={{
+              padding: '8px 16px', borderRadius: 16, border: 'none', cursor: 'pointer',
+              fontSize: 12, fontWeight: 800, transition: 'all 0.2s',
+              background: mainTab === 'guardrails' ? 'var(--bg-card)' : 'transparent',
+              boxShadow: mainTab === 'guardrails' ? 'var(--neu-flat)' : 'none',
+              color: mainTab === 'guardrails' ? 'var(--accent-purple)' : 'var(--text-muted)'
+            }}
+          >
+            🛡️ Safety Guardrails
           </button>
         </div>
       </div>
@@ -512,7 +592,172 @@ export default function ProfileWorkspace() {
                 )}
               </div>
             </div>
+          </div>
+        )}
 
+        {/* ════════ TAB 3: SAFETY GUARDRAILS ════════ */}
+        {mainTab === 'guardrails' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 800, margin: '0 auto' }}>
+            <div>
+              <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 6px 0' }}>
+                🛡️ Autonomous Safety Guardrails
+              </h2>
+              <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0 }}>
+                Set explicit boundary conditions. The Graph Engine evaluates these deterministic rules before taking any autonomous action or spending LLM tokens.
+              </p>
+            </div>
+
+            {guardrailsStatusMsg && (
+              <div style={{
+                padding: '12px 16px', borderRadius: 16, fontSize: 13, fontWeight: 600,
+                background: guardrailsStatusMsg.startsWith('✅') ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                color: guardrailsStatusMsg.startsWith('✅') ? 'var(--accent-green)' : 'var(--accent-red)',
+              }}>
+                {guardrailsStatusMsg}
+              </div>
+            )}
+
+            <form onSubmit={handleSaveGuardrails} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              
+              {/* Daily Application Cap */}
+              <div className="neu-card" style={{ padding: 20, borderRadius: 16 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4 }}>
+                  📊 Daily Application Cap
+                </label>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 10px 0' }}>
+                  Maximum number of job applications the agent can tailor/create in a single 24-hour period.
+                </p>
+                <input
+                  type="number"
+                  min="1"
+                  max="100"
+                  className="neu-input"
+                  value={guardrails.daily_max_applications}
+                  onChange={(e) => setGuardrails({ ...guardrails, daily_max_applications: e.target.value })}
+                  style={{ width: '100%', fontSize: 13, padding: '10px 14px' }}
+                />
+              </div>
+
+              {/* Dual-Mode Auto-Submit Toggle */}
+              <div className="neu-card" style={{ padding: 20, borderRadius: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 14, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+                      🤖 Autonomous Auto-Submit Mode
+                    </label>
+                    <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2, margin: 0 }}>
+                      When OFF: Creates tailored resumes & cover letters for manual review (Draft-Only Mode).<br/>
+                      When ON: Submits applications headlessly via direct ATS APIs & single-worker browser.
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={guardrails.auto_submit_enabled || false}
+                    onChange={(e) => setGuardrails({ ...guardrails, auto_submit_enabled: e.target.checked })}
+                    style={{ width: 22, height: 22, cursor: 'pointer', accentColor: 'var(--accent-green)' }}
+                  />
+                </div>
+              </div>
+
+              {/* Salary Floor */}
+              <div className="neu-card" style={{ padding: 20, borderRadius: 16 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4 }}>
+                  💰 Minimum Annual Salary Floor ($ USD)
+                </label>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 10px 0' }}>
+                  Skip any job posting offering below this annual salary. Leave empty to allow any range.
+                </p>
+                <input
+                  type="number"
+                  placeholder="e.g. 90000"
+                  className="neu-input"
+                  value={guardrails.min_salary}
+                  onChange={(e) => setGuardrails({ ...guardrails, min_salary: e.target.value })}
+                  style={{ width: '100%', fontSize: 13, padding: '10px 14px' }}
+                />
+              </div>
+
+              {/* Blocked Companies */}
+              <div className="neu-card" style={{ padding: 20, borderRadius: 16 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4 }}>
+                  🚫 Blocked Companies (Comma Separated)
+                </label>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 10px 0' }}>
+                  The agent will NEVER tailor or apply to these companies (e.g. current employer).
+                </p>
+                <input
+                  type="text"
+                  placeholder="e.g. Acme Corp, BadCompany Inc, Revature"
+                  className="neu-input"
+                  value={guardrails.blocked_companies}
+                  onChange={(e) => setGuardrails({ ...guardrails, blocked_companies: e.target.value })}
+                  style={{ width: '100%', fontSize: 13, padding: '10px 14px' }}
+                />
+              </div>
+
+              {/* Required & Excluded Keywords */}
+              <div className="neu-card" style={{ padding: 20, borderRadius: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4 }}>
+                    ✅ Required Keywords
+                  </label>
+                  <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 8px 0' }}>
+                    Job description MUST contain at least one of these.
+                  </p>
+                  <input
+                    type="text"
+                    placeholder="e.g. Python, Remote, Junior"
+                    className="neu-input"
+                    value={guardrails.required_keywords}
+                    onChange={(e) => setGuardrails({ ...guardrails, required_keywords: e.target.value })}
+                    style={{ width: '100%', fontSize: 13, padding: '10px 14px' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4 }}>
+                    ⛔ Excluded Keywords
+                  </label>
+                  <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 8px 0' }}>
+                    Skip job if description contains any of these.
+                  </p>
+                  <input
+                    type="text"
+                    placeholder="e.g. Unpaid, Clearance Required"
+                    className="neu-input"
+                    value={guardrails.excluded_keywords}
+                    onChange={(e) => setGuardrails({ ...guardrails, excluded_keywords: e.target.value })}
+                    style={{ width: '100%', fontSize: 13, padding: '10px 14px' }}
+                  />
+                </div>
+              </div>
+
+              {/* Remote Only Toggle */}
+              <div className="neu-card" style={{ padding: 20, borderRadius: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)' }}>🌐 Remote Jobs Only</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Only match postings that explicitly permit 100% remote work.</div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={guardrails.remote_only}
+                  onChange={(e) => setGuardrails({ ...guardrails, remote_only: e.target.checked })}
+                  style={{ width: 20, height: 20, cursor: 'pointer' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 10 }}>
+                <button
+                  type="submit"
+                  className="neu-button neu-button-primary"
+                  style={{ padding: '12px 32px', fontSize: 14, borderRadius: 16, fontWeight: 800 }}
+                  disabled={savingGuardrails}
+                >
+                  {savingGuardrails ? 'Saving Guardrails...' : '💾 Save & Activate Safety Guardrails'}
+                </button>
+              </div>
+
+            </form>
           </div>
         )}
 

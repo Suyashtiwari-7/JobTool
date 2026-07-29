@@ -39,6 +39,7 @@ class Settings(BaseSettings):
     # ── Pipeline Defaults ──
     match_score_threshold: int = Field(default=50, description="Minimum match score to tailor resume (0-100)")
     default_target_count: int = Field(default=20, description="Default number of jobs to target")
+    use_graph_engine: bool = Field(default=False, description="Enable v2.0 graph engine instead of legacy pipeline")
 
     model_config = {
         "env_file": ".env",

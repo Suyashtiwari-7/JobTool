@@ -54,6 +54,7 @@ async def get_db() -> AsyncSession:
 
 async def init_db():
     """Create all tables and perform safe schema migrations."""
+    import app.db.models  # Ensure models are imported before create_all
     from sqlalchemy import text
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -97,6 +98,8 @@ async def init_db():
             "CREATE INDEX IF NOT EXISTS idx_user_memories_category ON user_memories(category)",
             "CREATE INDEX IF NOT EXISTS idx_user_memories_key ON user_memories(memory_key)",
             "CREATE INDEX IF NOT EXISTS idx_user_integrations_service ON user_integrations(service_name)",
+            "ALTER TABLE guardrails ADD COLUMN IF NOT EXISTS daily_max_applications INTEGER DEFAULT 25",
+            "ALTER TABLE guardrails ADD COLUMN IF NOT EXISTS auto_submit_enabled BOOLEAN DEFAULT FALSE",
         ]:
             try:
                 await conn.execute(text(idx_sql))

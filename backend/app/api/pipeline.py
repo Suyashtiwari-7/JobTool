@@ -40,13 +40,53 @@ async def trigger_pipeline(
     _user: str = Depends(verify_token),
 ):
     """Manually trigger the job sourcing + tailoring pipeline."""
-    from app.pipeline.orchestrator import run_pipeline
-
-    batch_id = await run_pipeline(db, background_tasks)
-    return PipelineTriggerResponse(
-        message="Pipeline started successfully",
-        batch_id=batch_id,
-    )
+    if settings.use_graph_engine:
+        import uuid
+        from app.graph.engine import JobToolGraphEngine
+        from app.graph.state import GraphState
+        
+        batch_id = uuid.uuid4().hex[:8]
+        run_id = str(uuid.uuid4())
+        
+        engine = JobToolGraphEngine()
+        initial_state = GraphState(
+            run_id=run_id,
+            batch_id=batch_id,
+            current_node="GUARDRAIL_CHECK_NODE",
+        )
+        
+        # In a real app we'd pass filter_id and resume_id, but here we assume the first active ones
+        from app.db.models import SearchFilter, Resume
+        from sqlalchemy import select
+        
+        filter_res = await db.execute(select(SearchFilter).where(SearchFilter.is_active.is_(True)).limit(1))
+        f_active = filter_res.scalar_one_or_none()
+        if f_active:
+            initial_state.filter_id = f_active.id
+            
+        resume_res = await db.execute(select(Resume).where(Resume.is_active.is_(True)).limit(1))
+        r_active = resume_res.scalar_one_or_none()
+        if r_active:
+            initial_state.resume_id = r_active.id
+            
+        # Background task must create its own session in FastAPI
+        async def run_graph_bg(state: GraphState):
+            from app.db.database import async_session
+            async with async_session() as bg_session:
+                await engine.run(state, bg_session)
+                
+        background_tasks.add_task(run_graph_bg, initial_state)
+        return PipelineTriggerResponse(
+            message="Graph Engine pipeline started",
+            batch_id=batch_id,
+        )
+    else:
+        from app.pipeline.orchestrator import run_pipeline
+        batch_id = await run_pipeline(db, background_tasks)
+        return PipelineTriggerResponse(
+            message="Legacy pipeline started successfully",
+            batch_id=batch_id,
+        )
 
 
 @router.post("/run/cron")
@@ -59,13 +99,60 @@ async def trigger_pipeline_cron(
     if x_cron_secret != settings.cron_secret:
         raise HTTPException(403, "Invalid cron secret")
 
-    from app.pipeline.orchestrator import run_pipeline
+    if settings.use_graph_engine:
+        import uuid
+        from app.graph.engine import JobToolGraphEngine
+        from app.graph.state import GraphState
+        from app.db.models import AgentStatus, Guardrails
+        
+        # Pre-check Agent Status & Guardrails before waking up full engine
+        status_res = await db.execute(select(AgentStatus).where(AgentStatus.id == 1))
+        status = status_res.scalar_one_or_none()
+        if status and not status.is_running:
+            return PipelineTriggerResponse(message="Agent is paused, skipping cron", batch_id="skipped")
+            
+        # We assume for now if Guardrails feature exists, it passes, the guardrail node checks it too.
 
-    batch_id = await run_pipeline(db, background_tasks)
-    return PipelineTriggerResponse(
-        message="Pipeline triggered by cron",
-        batch_id=batch_id,
-    )
+        batch_id = uuid.uuid4().hex[:8]
+        run_id = str(uuid.uuid4())
+        
+        engine = JobToolGraphEngine()
+        initial_state = GraphState(
+            run_id=run_id,
+            batch_id=batch_id,
+            current_node="GUARDRAIL_CHECK_NODE",
+        )
+        
+        from app.db.models import SearchFilter, Resume
+        from sqlalchemy import select
+        
+        filter_res = await db.execute(select(SearchFilter).where(SearchFilter.is_active.is_(True)).limit(1))
+        f_active = filter_res.scalar_one_or_none()
+        if f_active:
+            initial_state.filter_id = f_active.id
+            
+        resume_res = await db.execute(select(Resume).where(Resume.is_active.is_(True)).limit(1))
+        r_active = resume_res.scalar_one_or_none()
+        if r_active:
+            initial_state.resume_id = r_active.id
+            
+        async def run_graph_bg(state: GraphState):
+            from app.db.database import async_session
+            async with async_session() as bg_session:
+                await engine.run(state, bg_session)
+                
+        background_tasks.add_task(run_graph_bg, initial_state)
+        return PipelineTriggerResponse(
+            message="Graph Engine triggered by cron",
+            batch_id=batch_id,
+        )
+    else:
+        from app.pipeline.orchestrator import run_pipeline
+        batch_id = await run_pipeline(db, background_tasks)
+        return PipelineTriggerResponse(
+            message="Legacy pipeline triggered by cron",
+            batch_id=batch_id,
+        )
 
 
 @router.get("/status", response_model=PipelineRunResponse | None)

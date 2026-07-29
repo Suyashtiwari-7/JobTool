@@ -7,6 +7,7 @@ import CoPilotHub from './components/CoPilotHub';
 import AppliedCalendar from './components/AppliedCalendar';
 import StatBox from './components/StatBox';
 import ProfileWorkspace from './components/ProfileWorkspace';
+import ControlTower from './components/ControlTower';
 import {
   API_URL,
   getToken,
@@ -750,6 +751,9 @@ export default function DashboardPage() {
         </div>
       ) : (
         <>
+          {/* Control Tower Dashboard Header */}
+          <ControlTower onRunPipeline={handleRunPipeline} />
+
           {/* ════════ PAGE 1: AI CO-PILOT HUB ════════ */}
           {activePage === 'hub' && (
             <CoPilotHub
