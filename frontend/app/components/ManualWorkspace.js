@@ -15,8 +15,9 @@ export default function ManualWorkspace({
   setAssistantInput,
   sendingChat,
   onSendMessage,
+  initialTab = 'feed',
 }) {
-  const [activeTab, setActiveTab] = useState('feed'); // 'feed' | 'kanban'
+  const [activeTab, setActiveTab] = useState(initialTab); // 'feed' | 'kanban'
   const [selectedApp, setSelectedApp] = useState(null);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [showSetupModal, setShowSetupModal] = useState(false);
@@ -141,13 +142,6 @@ export default function ManualWorkspace({
             style={{ padding: '8px 18px', borderRadius: 16, fontSize: 13, fontWeight: 800 }}
           >
             🎯 Job Discovery Feed ({feedJobs.length - currentJobIdx} remaining)
-          </button>
-          <button
-            onClick={() => setActiveTab('kanban')}
-            className={`neu-button ${activeTab === 'kanban' ? 'neu-button-primary' : ''}`}
-            style={{ padding: '8px 18px', borderRadius: 16, fontSize: 13, fontWeight: 800 }}
-          >
-            📋 Queued for Submission ({allQueuedApps.length})
           </button>
         </div>
 

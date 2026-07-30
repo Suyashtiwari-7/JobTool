@@ -6,8 +6,6 @@
  */
 export default function SidebarNav({ activePage, setActivePage }) {
   const navItems = [
-    { id: 'hub', label: '🌱 Sprout Feed', subtitle: 'Manual Swipe Cards', icon: '🌱' },
-    { id: 'schedules', label: '🤖 Co-Pilot Hub', subtitle: 'Autonomous Execution', icon: '🤖' },
     { id: 'queued', label: '📋 Queued', subtitle: 'Awaiting 1-Tap Submit', icon: '📋' },
     { id: 'calendar', label: '📅 Calendar', subtitle: 'Application Timeline', icon: '📅' },
     { id: 'applied', label: '✅ Applied', subtitle: 'Submitted Records', icon: '✅' },

@@ -717,14 +717,35 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Active Workspace Title (Center) */}
-            <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-secondary)', background: 'var(--bg-base)', padding: '8px 16px', borderRadius: 16, boxShadow: 'var(--neu-pressed)' }}>
-              {activePage === 'hub' && '🌱 Sprout Manual Discovery Feed'}
-              {activePage === 'schedules' && '🤖 Autonomous Co-Pilot Workspace'}
-              {activePage === 'queued' && '📋 Queued Applications (Awaiting 1-Tap Submit)'}
-              {activePage === 'calendar' && '📅 Application History & Calendar Timeline'}
-              {activePage === 'applied' && '✅ Submitted Applications Record'}
-              {activePage === 'profile' && '👤 Master Career Profile & Guardrails'}
+            {/* Top Navigation Mode Tabs (Center) */}
+            <div style={{ display: 'flex', gap: 8, background: 'var(--bg-base)', padding: '6px 8px', borderRadius: 18, boxShadow: 'var(--neu-pressed)' }}>
+              {[
+                { id: 'hub', label: '🌱 Manual' },
+                { id: 'schedules', label: '🤖 Automated' },
+              ].map((tab) => {
+                const isActive = activePage === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActivePage(tab.id)}
+                    className="neu-button"
+                    style={{
+                      padding: '8px 20px',
+                      fontSize: 13,
+                      fontWeight: 800,
+                      borderRadius: 14,
+                      background: isActive ? 'var(--bg-card)' : 'transparent',
+                      boxShadow: isActive ? 'var(--neu-flat)' : 'none',
+                      border: isActive ? '1px solid var(--accent-orange)' : '1px solid transparent',
+                      color: isActive ? 'var(--text-accent)' : 'var(--text-secondary)',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                    }}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Right Controls */}
@@ -855,6 +876,7 @@ export default function DashboardPage() {
               setAssistantInput={setAssistantInput}
               sendingChat={sendingChat}
               onSendMessage={handleSendAssistantMessage}
+              initialTab="kanban"
             />
           )}
 
