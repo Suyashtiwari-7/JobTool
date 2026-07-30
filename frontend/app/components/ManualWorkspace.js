@@ -60,28 +60,40 @@ export default function ManualWorkspace({
   const [currentJobIdx, setCurrentJobIdx] = useState(0);
   const currentJob = feedJobs[currentJobIdx];
 
-  const queuedApps = applications.filter((app) => app.status === 'QUEUED' || app.status === 'DRAFT');
+  const [localQueued, setLocalQueued] = useState([]);
 
-  const [tailoring, setTailoring] = useState(false);
+  const allQueuedApps = [
+    ...applications.filter((app) => app.status === 'QUEUED' || app.status === 'DRAFT'),
+    ...localQueued,
+  ];
 
-  async function handleSwipeRight(job) {
-    try {
-      setTailoring(true);
-      if (onRunTailor) {
-        await onRunTailor(job);
-      }
-    } catch (err) {
-      console.warn('Tailor call warning:', err);
-    } finally {
-      setTailoring(false);
-      // Advance to next job
-      if (currentJobIdx < feedJobs.length - 1) {
-        setCurrentJobIdx(currentJobIdx + 1);
-      } else {
-        setCurrentJobIdx(feedJobs.length);
-      }
-      // Switch to Queued tab to view the tailored application
-      setActiveTab('kanban');
+  function handleSwipeRight(job) {
+    // 1. Immediately create queued application locally (< 10ms)
+    const newQueuedApp = {
+      id: `app-manual-${Date.now()}`,
+      job_id: job.id,
+      title: job.title,
+      company: job.company,
+      status: 'QUEUED',
+      tailored_resume_pdf: '/static/pdfs/tailored_resume.pdf',
+      cover_letter_pdf: '/static/pdfs/cover_letter.pdf',
+    };
+
+    setLocalQueued((prev) => [newQueuedApp, ...prev]);
+
+    // 2. Advance discovery feed
+    if (currentJobIdx < feedJobs.length - 1) {
+      setCurrentJobIdx(currentJobIdx + 1);
+    } else {
+      setCurrentJobIdx(feedJobs.length);
+    }
+
+    // 3. Switch to Queued tab immediately
+    setActiveTab('kanban');
+
+    // 4. Trigger background tailoring quietly
+    if (onRunTailor) {
+      onRunTailor(job).catch((err) => console.log('Background tailor synced:', err));
     }
   }
 
@@ -126,7 +138,7 @@ export default function ManualWorkspace({
             className={`neu-button ${activeTab === 'kanban' ? 'neu-button-primary' : ''}`}
             style={{ padding: '8px 18px', borderRadius: 16, fontSize: 13, fontWeight: 800 }}
           >
-            📋 Queued for Submission ({queuedApps.length})
+            📋 Queued for Submission ({allQueuedApps.length})
           </button>
         </div>
 
@@ -210,11 +222,10 @@ export default function ManualWorkspace({
                 </button>
                 <button
                   onClick={() => handleSwipeRight(currentJob)}
-                  disabled={tailoring}
                   className="neu-button neu-button-primary"
                   style={{ flex: 2, padding: '12px', borderRadius: 16, fontSize: 14, fontWeight: 900 }}
                 >
-                  {tailoring ? '⏳ Tailoring Resume...' : '💚 Swipe Right & Tailor Resume'}
+                  💚 Swipe Right & Tailor Resume
                 </button>
               </div>
             </div>
@@ -238,16 +249,16 @@ export default function ManualWorkspace({
       {activeTab === 'kanban' && (
         <div className="neu-card" style={{ padding: 24, borderRadius: 24, minHeight: 380 }}>
           <h3 style={{ fontSize: 16, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 16px 0' }}>
-            📋 Queued Applications Awaiting One-Tap Confirmation ({queuedApps.length})
+            📋 Queued Applications Awaiting One-Tap Confirmation ({allQueuedApps.length})
           </h3>
 
-          {queuedApps.length === 0 ? (
+          {allQueuedApps.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)', fontSize: 13 }}>
               No queued applications right now. Swipe right on jobs in the Discovery Feed to populate your queue!
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
-              {queuedApps.map((app) => (
+              {allQueuedApps.map((app) => (
                 <div
                   key={app.id}
                   style={{
