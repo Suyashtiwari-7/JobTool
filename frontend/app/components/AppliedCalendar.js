@@ -125,78 +125,20 @@ export default function AppliedCalendar({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       
-      {/* ── Neumorphic Capsule Segmented Switch Bar (Matching User Screenshot) ── */}
+      {/* ── CAPSULE SWITCHER (SCHEDULED INTERVIEWS & SCHEDULED TASKS) ── */}
       <div
-        className="neu-inset"
+        className="neu-card"
         style={{
           display: 'flex',
           padding: 6,
           borderRadius: 30,
-          background: 'var(--bg-neu-inset)',
+          background: 'var(--bg-base)',
           boxShadow: 'var(--neu-pressed)',
-          gap: 6,
-          border: '1px solid var(--border-subtle)',
+          maxWidth: 620,
+          margin: '0 auto 24px auto',
         }}
       >
-        {/* Segment 1: Queued */}
-        <button
-          type="button"
-          onClick={() => setViewMode('queued')}
-          style={{
-            flex: 1,
-            padding: '12px 18px',
-            borderRadius: 24,
-            border: 'none',
-            outline: 'none',
-            fontSize: 13,
-            fontWeight: 800,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-            transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-            background: viewMode === 'queued' ? 'var(--bg-card)' : 'transparent',
-            boxShadow: viewMode === 'queued' ? 'var(--neu-flat)' : 'none',
-            color: viewMode === 'queued' ? 'var(--accent-orange)' : 'var(--text-muted)',
-          }}
-        >
-          <span>⏳ Queued Applications</span>
-          <span style={{ fontSize: 11, background: viewMode === 'queued' ? 'rgba(240, 94, 45, 0.15)' : 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: 12 }}>
-            {queuedList.length}
-          </span>
-        </button>
-
-        {/* Segment 2: Applied */}
-        <button
-          type="button"
-          onClick={() => setViewMode('applied')}
-          style={{
-            flex: 1,
-            padding: '12px 18px',
-            borderRadius: 24,
-            border: 'none',
-            outline: 'none',
-            fontSize: 13,
-            fontWeight: 800,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-            transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-            background: viewMode === 'applied' ? 'var(--bg-card)' : 'transparent',
-            boxShadow: viewMode === 'applied' ? 'var(--neu-flat)' : 'none',
-            color: viewMode === 'applied' ? 'var(--accent-green)' : 'var(--text-muted)',
-          }}
-        >
-          <span>✅ Applied</span>
-          <span style={{ fontSize: 11, background: viewMode === 'applied' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: 12 }}>
-            {appliedList.length}
-          </span>
-        </button>
-
-        {/* Segment 3: Scheduled Interviews */}
+        {/* Segment 1: Scheduled Interviews */}
         <button
           type="button"
           onClick={() => setViewMode('calendar')}
