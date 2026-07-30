@@ -250,58 +250,99 @@ export default function ManualWorkspace({
       {/* TAB 2: APPLICATIONS KANBAN QUEUE (CONFIRM & SUBMIT MODAL)       */}
       {/* ════════════════════════════════════════════════════════════════ */}
       {activeTab === 'kanban' && (
-        <div className="neu-card" style={{ padding: 24, borderRadius: 24, minHeight: 380 }}>
-          <h3 style={{ fontSize: 16, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 16px 0' }}>
-            📋 Queued Applications Awaiting One-Tap Confirmation ({allQueuedApps.length})
-          </h3>
-
-          {allQueuedApps.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)', fontSize: 13 }}>
-              No queued applications right now. Swipe right on jobs in the Discovery Feed to populate your queue!
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {/* ⚡ SECTION A: HUMAN PROCEED REQUIRED (CAPTCHA / UNANSWERED QUESTIONS) */}
+          <div className="neu-card" style={{ padding: 24, borderRadius: 24, border: '1px solid rgba(239, 68, 68, 0.4)', background: 'rgba(239, 68, 68, 0.04)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+              <span style={{ fontSize: 18 }}>⚡</span>
+              <h3 style={{ fontSize: 16, fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>
+                Human Proceed Required ({allQueuedApps.filter(a => a.needs_human_action || a.status === 'review_required').length})
+              </h3>
             </div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
-              {allQueuedApps.map((app) => (
-                <div
-                  key={app.id}
-                  style={{
-                    background: 'var(--bg-base)',
-                    border: '1px solid var(--border-subtle)',
-                    padding: 18,
-                    borderRadius: 18,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justify: 'space-between',
-                    gap: 12,
-                    boxShadow: 'var(--neu-flat)',
-                  }}
-                >
-                  <div>
-                    <div style={{ fontSize: 11, fontWeight: 900, color: 'var(--accent-orange)' }}>
-                      {app.company || 'Target Company'}
+            <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '0 0 16px 0' }}>
+              Applications paused due to CAPTCHA verification or unverified screening questions requiring your human touch.
+            </p>
+
+            {allQueuedApps.filter(a => a.needs_human_action || a.status === 'review_required').length === 0 ? (
+              <div style={{ padding: '16px', borderRadius: 14, background: 'var(--bg-base)', color: 'var(--text-muted)', fontSize: 12, textAlign: 'center' }}>
+                ✓ No human action required right now! All queued items are fully prepared by AI.
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 14 }}>
+                {allQueuedApps.filter(a => a.needs_human_action || a.status === 'review_required').map((app) => (
+                  <div key={app.id} className="neu-card" style={{ padding: 16, borderRadius: 18, border: '1px solid var(--accent-orange)' }}>
+                    <div style={{ fontWeight: 900, color: 'var(--text-primary)', fontSize: 14 }}>{app.company || 'Target Company'}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>{app.title || 'Role'}</div>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--accent-red)', marginTop: 6 }}>
+                      ⚠️ Reason: {app.human_reason || 'CAPTCHA / Question Review Required'}
                     </div>
-                    <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>
-                      {app.title || 'Software Engineer'}
-                    </div>
-                    <div style={{ fontSize: 11, color: '#f59e0b', fontWeight: 800, marginTop: 4 }}>
-                      🟡 Status: QUEUED (Awaiting Tap)
-                    </div>
+                    <button
+                      onClick={() => { setSelectedApp(app); setShowSubmitModal(true); }}
+                      className="neu-button neu-button-danger"
+                      style={{ padding: '8px 12px', borderRadius: 12, fontSize: 12, fontWeight: 900, marginTop: 12, width: '100%' }}
+                    >
+                      ⚡ Solve & Submit
+                    </button>
                   </div>
+                ))}
+              </div>
+            )}
+          </div>
 
-                  <button
-                    onClick={() => {
-                      setSelectedApp(app);
-                      setShowSubmitModal(true);
+          {/* 🟢 SECTION B: READY FOR ONE-TAP CONFIRMATION */}
+          <div className="neu-card" style={{ padding: 24, borderRadius: 24, minHeight: 320 }}>
+            <h3 style={{ fontSize: 16, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 16px 0' }}>
+              📋 Ready for One-Tap Confirmation ({allQueuedApps.filter(a => !a.needs_human_action && a.status !== 'review_required').length})
+            </h3>
+
+            {allQueuedApps.filter(a => !a.needs_human_action && a.status !== 'review_required').length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '50px 0', color: 'var(--text-muted)', fontSize: 13 }}>
+                No queued applications right now. Swipe right on jobs in the Sprout Feed to populate your queue!
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+                {allQueuedApps.filter(a => !a.needs_human_action && a.status !== 'review_required').map((app) => (
+                  <div
+                    key={app.id}
+                    style={{
+                      background: 'var(--bg-base)',
+                      border: '1px solid var(--border-subtle)',
+                      padding: 18,
+                      borderRadius: 18,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      gap: 12,
+                      boxShadow: 'var(--neu-flat)',
                     }}
-                    className="neu-button neu-button-primary"
-                    style={{ padding: '10px 14px', borderRadius: 14, fontSize: 13, fontWeight: 900, width: '100%' }}
                   >
-                    🚀 Confirm & Submit Application
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 900, color: 'var(--accent-orange)' }}>
+                        {app.company || 'Target Company'}
+                      </div>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>
+                        {app.title || 'Software Engineer'}
+                      </div>
+                      <div style={{ fontSize: 11, color: '#10b981', fontWeight: 800, marginTop: 4 }}>
+                        🟢 Status: Ready (Tailored & Matched)
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setSelectedApp(app);
+                        setShowSubmitModal(true);
+                      }}
+                      className="neu-button neu-button-primary"
+                      style={{ padding: '10px 14px', borderRadius: 14, fontSize: 13, fontWeight: 900, width: '100%' }}
+                    >
+                      🚀 Confirm & Submit Application
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
