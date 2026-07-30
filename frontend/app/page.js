@@ -717,13 +717,36 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Quick Mode Indicator */}
-            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-muted)' }}>
-              {activePage === 'hub' && '🌱 Sprout Manual Mode'}
-              {activePage === 'schedules' && '🤖 Autonomous Co-Pilot Mode'}
-              {activePage === 'queued' && '📋 Application Review Queue'}
-              {activePage === 'calendar' && '📅 Application History & Calendar'}
-              {activePage === 'profile' && '👤 Profile & Safety Guardrails'}
+            {/* Navigation Mode Tabs (Center) */}
+            <div style={{ display: 'flex', gap: 8, background: 'var(--bg-base)', padding: '6px 8px', borderRadius: 18, boxShadow: 'var(--neu-pressed)' }}>
+              {[
+                { id: 'hub', label: '🌱 Manual' },
+                { id: 'schedules', label: '🤖 Automated' },
+                { id: 'profile', label: '👤 Profile' },
+              ].map((tab) => {
+                const isActive = activePage === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActivePage(tab.id)}
+                    className="neu-button"
+                    style={{
+                      padding: '8px 20px',
+                      fontSize: 13,
+                      fontWeight: 800,
+                      borderRadius: 14,
+                      background: isActive ? 'var(--bg-card)' : 'transparent',
+                      boxShadow: isActive ? 'var(--neu-flat)' : 'none',
+                      border: isActive ? '1px solid var(--accent-orange)' : '1px solid transparent',
+                      color: isActive ? 'var(--text-accent)' : 'var(--text-secondary)',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                    }}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Right Controls */}
@@ -857,8 +880,8 @@ export default function DashboardPage() {
             />
           )}
 
-          {/* ════════ PAGE 4: APPLIED CALENDAR ════════ */}
-          {activePage === 'calendar' && (
+          {/* ════════ PAGE 4: APPLIED CALENDAR & HISTORY ════════ */}
+          {(activePage === 'calendar' || activePage === 'applied') && (
             <AppliedCalendar
               applications={applications}
               stats={stats}

@@ -6,11 +6,9 @@
  */
 export default function SidebarNav({ activePage, setActivePage }) {
   const navItems = [
-    { id: 'hub', label: '🌱 Manual Mode', subtitle: 'Sprout Job Cards', icon: '🌱' },
-    { id: 'schedules', label: '🤖 Automated Mode', subtitle: 'Co-Pilot & Control', icon: '🤖' },
-    { id: 'queued', label: '📋 Queued Apps', subtitle: '1-Tap Confirmation', icon: '📋' },
-    { id: 'calendar', label: '📅 Applied Calendar', subtitle: 'Application Records', icon: '📅' },
-    { id: 'profile', label: '👤 Career Profile', subtitle: 'Resumes & Guardrails', icon: '👤' },
+    { id: 'queued', label: '📋 Queued', subtitle: 'Awaiting 1-Tap Submit', icon: '📋' },
+    { id: 'calendar', label: '📅 Calendar', subtitle: 'Application Timeline', icon: '📅' },
+    { id: 'applied', label: '✅ Applied', subtitle: 'Submitted Records', icon: '✅' },
   ];
 
   return (
