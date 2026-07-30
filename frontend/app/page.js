@@ -683,10 +683,13 @@ export default function DashboardPage() {
 
   return (
     <AuthLayout>
-      <div style={{ minHeight: '100vh', width: '100%', background: 'var(--bg-base)' }}>
-        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '24px 32px', width: '100%' }}>
+      <div style={{ display: 'flex', minHeight: '100vh', width: '100%', background: 'var(--bg-base)' }}>
+        {/* Left Navigation Sidebar */}
+        <SidebarNav activePage={activePage} setActivePage={setActivePage} />
+
+        <div style={{ flex: 1, padding: '24px 32px', maxWidth: 1400, margin: '0 auto', width: '100%' }}>
           
-          {/* ── Single Full-Width Top Header Navbar (Linear / Canva Style) ── */}
+          {/* ── Top Header Bar (Branding & Controls) ── */}
           <div
             className="neu-card"
             style={{
@@ -709,41 +712,18 @@ export default function DashboardPage() {
                   JobTool
                 </h1>
                 <p style={{ color: 'var(--text-secondary)', fontSize: 11, fontWeight: 700, marginTop: 1, margin: 0 }}>
-                  career co-pilot
+                  your career co-pilot
                 </p>
               </div>
             </div>
 
-            {/* Navigation Tabs (Center) */}
-            <div style={{ display: 'flex', gap: 8, background: 'var(--bg-base)', padding: '6px 8px', borderRadius: 18, boxShadow: 'var(--neu-pressed)' }}>
-              {[
-                { id: 'hub', label: '🌱 Manual' },
-                { id: 'schedules', label: '🤖 Automated' },
-                { id: 'profile', label: '👤 Profile' },
-              ].map((tab) => {
-                const isActive = activePage === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActivePage(tab.id)}
-                    className="neu-button"
-                    style={{
-                      padding: '8px 20px',
-                      fontSize: 13,
-                      fontWeight: 800,
-                      borderRadius: 14,
-                      background: isActive ? 'var(--bg-card)' : 'transparent',
-                      boxShadow: isActive ? 'var(--neu-flat)' : 'none',
-                      border: isActive ? '1px solid var(--accent-orange)' : '1px solid transparent',
-                      color: isActive ? 'var(--text-accent)' : 'var(--text-secondary)',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                    }}
-                  >
-                    {tab.label}
-                  </button>
-                );
-              })}
+            {/* Quick Mode Indicator */}
+            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-muted)' }}>
+              {activePage === 'hub' && '🌱 Sprout Manual Mode'}
+              {activePage === 'schedules' && '🤖 Autonomous Co-Pilot Mode'}
+              {activePage === 'queued' && '📋 Application Review Queue'}
+              {activePage === 'calendar' && '📅 Application History & Calendar'}
+              {activePage === 'profile' && '👤 Profile & Safety Guardrails'}
             </div>
 
             {/* Right Controls */}
@@ -861,18 +841,34 @@ export default function DashboardPage() {
 
               {/* Control Tower Dashboard (Kill Switch, Live Audit Feed, Autonomous Execution) */}
               <ControlTower onRunPipeline={handleRunPipeline} />
-
-              <AppliedCalendar
-                applications={applications}
-                stats={stats}
-                onDeleteApplication={handleDeleteApplicationItem}
-                onTogglePin={handleTogglePin}
-                onStatusChange={handleStatusChange}
-              />
             </div>
           )}
 
-          {/* ════════ PAGE 3: CAREER PROFILE ════════ */}
+          {/* ════════ PAGE 3: QUEUED APPLICATIONS ════════ */}
+          {activePage === 'queued' && (
+            <ManualWorkspace
+              applications={applications}
+              onSubmitApplication={handleSubmitApplication}
+              onRunTailor={handleRunPipeline}
+              assistantInput={assistantInput}
+              setAssistantInput={setAssistantInput}
+              sendingChat={sendingChat}
+              onSendMessage={handleSendAssistantMessage}
+            />
+          )}
+
+          {/* ════════ PAGE 4: APPLIED CALENDAR ════════ */}
+          {activePage === 'calendar' && (
+            <AppliedCalendar
+              applications={applications}
+              stats={stats}
+              onDeleteApplication={handleDeleteApplicationItem}
+              onTogglePin={handleTogglePin}
+              onStatusChange={handleStatusChange}
+            />
+          )}
+
+          {/* ════════ PAGE 5: CAREER PROFILE & GUARDRAILS ════════ */}
           {activePage === 'profile' && (
             <ProfileWorkspace />
           )}

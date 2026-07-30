@@ -6,9 +6,11 @@
  */
 export default function SidebarNav({ activePage, setActivePage }) {
   const navItems = [
-    { id: 'hub', label: 'Co-Pilot Hub', subtitle: 'AI Chat & Control', icon: '🔮' },
-    { id: 'schedules', label: 'Automation Workspace', subtitle: 'Pipeline & Calendar', icon: '🎛️' },
-    { id: 'profile', label: 'Career Profile', subtitle: 'Guardrails & Resumes', icon: '👤' },
+    { id: 'hub', label: '🌱 Manual Mode', subtitle: 'Sprout Job Cards', icon: '🌱' },
+    { id: 'schedules', label: '🤖 Automated Mode', subtitle: 'Co-Pilot & Control', icon: '🤖' },
+    { id: 'queued', label: '📋 Queued Apps', subtitle: '1-Tap Confirmation', icon: '📋' },
+    { id: 'calendar', label: '📅 Applied Calendar', subtitle: 'Application Records', icon: '📅' },
+    { id: 'profile', label: '👤 Career Profile', subtitle: 'Resumes & Guardrails', icon: '👤' },
   ];
 
   return (
