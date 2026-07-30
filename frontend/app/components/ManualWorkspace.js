@@ -1,13 +1,11 @@
-'use client';
-
 import { useState } from 'react';
+import ProfileSetupModal from './ProfileSetupModal';
 
 /**
  * ManualWorkspace — Primary Manual Mode Workspace.
  * Contains:
  * 1. Discovery / Swipe Feed (job cards to swipe/tap through)
  * 2. Applications Kanban (QUEUED items awaiting 1-tap Confirm & Submit)
- * 3. Docked Co-Pilot chat input bar at the bottom.
  */
 export default function ManualWorkspace({
   applications = [],
@@ -21,6 +19,7 @@ export default function ManualWorkspace({
   const [activeTab, setActiveTab] = useState('feed'); // 'feed' | 'kanban'
   const [selectedApp, setSelectedApp] = useState(null);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [showSetupModal, setShowSetupModal] = useState(false);
   const [submittingId, setSubmittingId] = useState(null);
 
   // Mock Discovery Feed Jobs for Manual Swipe/Tap
@@ -142,9 +141,13 @@ export default function ManualWorkspace({
           </button>
         </div>
 
-        <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 700 }}>
-          🌱 Manual Mode: Nothing submits without your explicit tap
-        </div>
+        <button
+          onClick={() => setShowSetupModal(true)}
+          className="neu-button neu-button-accent"
+          style={{ padding: '8px 16px', borderRadius: 16, fontSize: 12, fontWeight: 800, color: 'var(--accent-orange)' }}
+        >
+          📄 Drop Resume & Setup Profile
+        </button>
       </div>
 
       {/* ════════════════════════════════════════════════════════════════ */}
@@ -353,6 +356,15 @@ export default function ManualWorkspace({
           </div>
         </div>
       )}
+
+      {/* ── PROFILE SETUP MODAL (RESUME DROP & QUESTIONNAIRE) ── */}
+      <ProfileSetupModal
+        isOpen={showSetupModal}
+        onClose={() => setShowSetupModal(false)}
+        onProfileSaved={() => {
+          console.log('Profile updated cleanly!');
+        }}
+      />
     </div>
   );
 }
