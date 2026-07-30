@@ -61,12 +61,22 @@ export default function ManualWorkspace({
 
   const [localQueued, setLocalQueued] = useState([]);
 
+  const [pendingJob, setPendingJob] = useState(null);
+  const [profileComplete, setProfileComplete] = useState(false);
+
   const allQueuedApps = [
     ...applications.filter((app) => app.status === 'QUEUED' || app.status === 'DRAFT'),
     ...localQueued,
   ];
 
   function handleSwipeRight(job) {
+    // If profile/resume is not configured yet, pop up profile setup modal immediately!
+    if (!profileComplete && applications.length === 0 && localQueued.length === 0) {
+      setPendingJob(job);
+      setShowSetupModal(true);
+      return;
+    }
+
     // 1. Immediately create queued application locally (< 10ms)
     const newQueuedApp = {
       id: `app-manual-${Date.now()}`,
@@ -141,13 +151,9 @@ export default function ManualWorkspace({
           </button>
         </div>
 
-        <button
-          onClick={() => setShowSetupModal(true)}
-          className="neu-button neu-button-accent"
-          style={{ padding: '8px 16px', borderRadius: 16, fontSize: 12, fontWeight: 800, color: 'var(--accent-orange)' }}
-        >
-          📄 Drop Resume & Setup Profile
-        </button>
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 700 }}>
+          🌱 Manual Mode: Nothing submits without your explicit tap
+        </div>
       </div>
 
       {/* ════════════════════════════════════════════════════════════════ */}

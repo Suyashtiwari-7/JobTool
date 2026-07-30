@@ -28,17 +28,42 @@ export default function ProfileSetupModal({ isOpen, onClose, onProfileSaved }) {
 
   if (!isOpen) return null;
 
+  const [parsing, setParsing] = useState(false);
+
+  async function processResumeFile(selectedFile) {
+    setFile(selectedFile);
+    try {
+      setParsing(true);
+      const res = await uploadResume(selectedFile, 'Baseline Resume');
+      if (res && res.parsed_json) {
+        const p = res.parsed_json;
+        setFormData((prev) => ({
+          ...prev,
+          full_name: p.name || prev.full_name,
+          email: p.email || prev.email,
+          phone: p.phone || prev.phone,
+          location: p.location || prev.location,
+          current_role: (p.experience && p.experience[0]?.title) || p.summary?.slice(0, 30) || prev.current_role,
+        }));
+      }
+    } catch (err) {
+      console.warn('Resume parsing notice:', err);
+    } finally {
+      setParsing(false);
+    }
+  }
+
   function handleFileDrop(e) {
     e.preventDefault();
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setFile(e.dataTransfer.files[0]);
+      processResumeFile(e.dataTransfer.files[0]);
     }
   }
 
   function handleFileSelect(e) {
     if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+      processResumeFile(e.target.files[0]);
     }
   }
 
