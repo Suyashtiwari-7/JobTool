@@ -880,14 +880,29 @@ export default function DashboardPage() {
             />
           )}
 
-          {/* ════════ PAGE 4: APPLIED CALENDAR & HISTORY ════════ */}
-          {(activePage === 'calendar' || activePage === 'applied') && (
+          {/* ════════ PAGE 4: CALENDAR WORKSPACE (SCHEDULED INTERVIEWS & TASKS) ════════ */}
+          {activePage === 'calendar' && (
             <AppliedCalendar
               applications={applications}
               stats={stats}
               onDeleteApplication={handleDeleteApplicationItem}
               onTogglePin={handleTogglePin}
               onStatusChange={handleStatusChange}
+              initialView="calendar"
+              hideCapsule={false}
+            />
+          )}
+
+          {/* ════════ PAGE 5: APPLIED WORKSPACE (TABULAR APPLIED RECORDS) ════════ */}
+          {activePage === 'applied' && (
+            <AppliedCalendar
+              applications={applications}
+              stats={stats}
+              onDeleteApplication={handleDeleteApplicationItem}
+              onTogglePin={handleTogglePin}
+              onStatusChange={handleStatusChange}
+              initialView="applied"
+              hideCapsule={true}
             />
           )}
 

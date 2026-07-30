@@ -17,6 +17,7 @@ export default function AppliedCalendar({
   onTogglePin,
   onStatusChange,
   initialView = 'calendar',
+  hideCapsule = false,
 }) {
   const [calendarEvents, setCalendarEvents] = useState([]);
   const [viewMode, setViewMode] = useState(initialView); // 'queued' | 'applied' | 'calendar' | 'tasks'
@@ -126,76 +127,78 @@ export default function AppliedCalendar({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       
       {/* ── CAPSULE SWITCHER (SCHEDULED INTERVIEWS & SCHEDULED TASKS) ── */}
-      <div
-        className="neu-card"
-        style={{
-          display: 'flex',
-          padding: 6,
-          borderRadius: 30,
-          background: 'var(--bg-base)',
-          boxShadow: 'var(--neu-pressed)',
-          maxWidth: 620,
-          margin: '0 auto 24px auto',
-        }}
-      >
-        {/* Segment 1: Scheduled Interviews */}
-        <button
-          type="button"
-          onClick={() => setViewMode('calendar')}
+      {!hideCapsule && (
+        <div
+          className="neu-card"
           style={{
-            flex: 1,
-            padding: '12px 18px',
-            borderRadius: 24,
-            border: 'none',
-            outline: 'none',
-            fontSize: 13,
-            fontWeight: 800,
-            cursor: 'pointer',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-            transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-            background: viewMode === 'calendar' ? 'var(--bg-card)' : 'transparent',
-            boxShadow: viewMode === 'calendar' ? 'var(--neu-flat)' : 'none',
-            color: viewMode === 'calendar' ? 'var(--accent-purple)' : 'var(--text-muted)',
+            padding: 6,
+            borderRadius: 30,
+            background: 'var(--bg-base)',
+            boxShadow: 'var(--neu-pressed)',
+            maxWidth: 620,
+            margin: '0 auto 24px auto',
           }}
         >
-          <span>📅 Scheduled Interviews</span>
-          <span style={{ fontSize: 11, background: viewMode === 'calendar' ? 'rgba(139, 92, 246, 0.15)' : 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: 12 }}>
-            {calendarEvents.length}
-          </span>
-        </button>
+          {/* Segment 1: Scheduled Interviews */}
+          <button
+            type="button"
+            onClick={() => setViewMode('calendar')}
+            style={{
+              flex: 1,
+              padding: '12px 18px',
+              borderRadius: 24,
+              border: 'none',
+              outline: 'none',
+              fontSize: 13,
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+              background: viewMode === 'calendar' ? 'var(--bg-card)' : 'transparent',
+              boxShadow: viewMode === 'calendar' ? 'var(--neu-flat)' : 'none',
+              color: viewMode === 'calendar' ? 'var(--accent-purple)' : 'var(--text-muted)',
+            }}
+          >
+            <span>📅 Scheduled Interviews</span>
+            <span style={{ fontSize: 11, background: viewMode === 'calendar' ? 'rgba(139, 92, 246, 0.15)' : 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: 12 }}>
+              {calendarEvents.length}
+            </span>
+          </button>
 
-        {/* Segment 4: Scheduled Tasks */}
-        <button
-          type="button"
-          onClick={() => setViewMode('tasks')}
-          style={{
-            flex: 1,
-            padding: '12px 18px',
-            borderRadius: 24,
-            border: 'none',
-            outline: 'none',
-            fontSize: 13,
-            fontWeight: 800,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-            transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-            background: viewMode === 'tasks' ? 'var(--bg-card)' : 'transparent',
-            boxShadow: viewMode === 'tasks' ? 'var(--neu-flat)' : 'none',
-            color: viewMode === 'tasks' ? 'var(--accent-blue)' : 'var(--text-muted)',
-          }}
-        >
-          <span>⏰ Scheduled Tasks</span>
-          <span style={{ fontSize: 11, background: viewMode === 'tasks' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: 12 }}>
-            {scheduledTasks.filter(t => t.status === 'active').length}
-          </span>
-        </button>
-      </div>
+          {/* Segment 2: Scheduled Tasks */}
+          <button
+            type="button"
+            onClick={() => setViewMode('tasks')}
+            style={{
+              flex: 1,
+              padding: '12px 18px',
+              borderRadius: 24,
+              border: 'none',
+              outline: 'none',
+              fontSize: 13,
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+              background: viewMode === 'tasks' ? 'var(--bg-card)' : 'transparent',
+              boxShadow: viewMode === 'tasks' ? 'var(--neu-flat)' : 'none',
+              color: viewMode === 'tasks' ? 'var(--accent-blue)' : 'var(--text-muted)',
+            }}
+          >
+            <span>⏰ Scheduled Tasks</span>
+            <span style={{ fontSize: 11, background: viewMode === 'tasks' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: 12 }}>
+              {scheduledTasks.filter(t => t.status === 'active').length}
+            </span>
+          </button>
+        </div>
+      )}
 
       {/* ════════════════════════════════════════════════════════════════ */}
       {/* VIEW 1: QUEUED APPLICATIONS PROGRESS TABLE                       */}
