@@ -845,6 +845,20 @@ export default function DashboardPage() {
                 </span>
               </div>
 
+              {/* Co-Pilot Hub (Orb & Search Chat) */}
+              <CoPilotHub
+                assistantChatHistory={assistantChatHistory}
+                assistantInput={assistantInput}
+                setAssistantInput={setAssistantInput}
+                assistantMemories={assistantMemories}
+                sendingChat={sendingChat}
+                onSendMessage={handleSendAssistantMessage}
+                onDeleteMemory={handleDeleteMemoryItem}
+                isChatOpen={isChatOpen}
+                setIsChatOpen={setIsChatOpen}
+                theme={theme}
+              />
+
               {/* Control Tower Dashboard (Kill Switch, Live Audit Feed, Autonomous Execution) */}
               <ControlTower onRunPipeline={handleRunPipeline} />
 

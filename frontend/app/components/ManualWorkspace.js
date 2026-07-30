@@ -353,52 +353,6 @@ export default function ManualWorkspace({
           </div>
         </div>
       )}
-
-      {/* ── DOCKED CO-PILOT CHAT INPUT BAR ── */}
-      <div
-        className="neu-card"
-        style={{
-          padding: '12px 18px',
-          borderRadius: 20,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          boxShadow: 'var(--neu-flat)',
-          marginTop: 10,
-        }}
-      >
-        <textarea
-          rows={1}
-          value={assistantInput}
-          onChange={(e) => setAssistantInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              onSendMessage();
-            }
-          }}
-          placeholder="Ask Co-Pilot to search jobs or prepare applications..."
-          style={{
-            flex: 1,
-            background: 'transparent',
-            border: 'none',
-            outline: 'none',
-            color: 'var(--text-primary)',
-            fontSize: 13,
-            fontWeight: 500,
-            resize: 'none',
-            fontFamily: 'inherit',
-          }}
-        />
-        <button
-          onClick={() => onSendMessage()}
-          disabled={sendingChat}
-          className="neu-button neu-button-primary"
-          style={{ padding: '8px 18px', borderRadius: 14, fontSize: 13, fontWeight: 800 }}
-        >
-          {sendingChat ? '...' : 'Send'}
-        </button>
-      </div>
     </div>
   );
 }
