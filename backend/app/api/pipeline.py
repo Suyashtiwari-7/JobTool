@@ -225,7 +225,7 @@ async def get_live_job_feed(
     from app.sources.themuse import TheMuseSource
     from app.db.models import Profile, Resume
 
-    # 1. Fetch User Profile to get candidate skills and target title
+    # 1. Fetch User Profile & active Resume to get candidate skills and target title
     user_skills = ["Python", "React", "Next.js", "TypeScript", "FastAPI", "AI", "SQL"]
     target_role = "Software Engineer"
     
@@ -236,6 +236,13 @@ async def get_live_job_feed(
             user_skills = [s.strip() for s in profile_obj.technical_skills.split(",") if s.strip()]
         if profile_obj.target_titles:
             target_role = profile_obj.target_titles.split(",")[0].strip()
+
+    resume_res = await db.execute(select(Resume).where(Resume.is_active.is_(True)).limit(1))
+    resume_obj = resume_res.scalar_one_or_none()
+    if resume_obj and resume_obj.parsed_json:
+        r_skills = resume_obj.parsed_json.get("skills", [])
+        if r_skills and isinstance(r_skills, list) and len(r_skills) > 0:
+            user_skills = r_skills
 
     live_jobs = []
     seen_urls = set()

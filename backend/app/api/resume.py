@@ -130,6 +130,27 @@ async def upload_resume(
         is_active=True,
     )
     db.add(resume)
+
+    # ── Auto-populate / Sync Profile model in database ──
+    from app.db.models import Profile
+    prof_res = await db.execute(select(Profile).limit(1))
+    profile_obj = prof_res.scalar_one_or_none()
+    if not profile_obj:
+        profile_obj = Profile()
+        db.add(profile_obj)
+
+    skills_list = parsed_json.get("skills", [])
+    skills_str = ", ".join(skills_list) if isinstance(skills_list, list) else str(skills_list or "")
+
+    profile_obj.full_name = parsed_json.get("name") or name or profile_obj.full_name or "Candidate"
+    profile_obj.email = parsed_json.get("email") or email or profile_obj.email
+    profile_obj.phone = parsed_json.get("phone") or phone or profile_obj.phone
+    profile_obj.location = parsed_json.get("location") or location or profile_obj.location
+    profile_obj.technical_skills = skills_str or profile_obj.technical_skills or "Python, React, TypeScript, Node.js, SQL"
+    profile_obj.target_titles = "Software Engineer, Full Stack Developer, AI Systems Engineer"
+    profile_obj.summary = parsed_json.get("summary") or "Experienced engineer with AI, web, and backend development skills."
+    profile_obj.is_complete = True
+
     await db.commit()
     await db.refresh(resume)
 
