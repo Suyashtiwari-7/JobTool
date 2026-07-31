@@ -25,6 +25,19 @@ export default function ManualWorkspace({
   const [submittingId, setSubmittingId] = useState(null);
   const [loadingFeed, setLoadingFeed] = useState(false);
 
+  // Swiped Job IDs persistence (never show same job twice)
+  const [swipedIds, setSwipedIds] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('jobtool_swiped_ids');
+        return saved ? JSON.parse(saved) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+    return [];
+  });
+
   // Live Discovery Feed Jobs for Manual Swipe/Tap
   const [feedJobs, setFeedJobs] = useState([]);
   const [currentJobIdx, setCurrentJobIdx] = useState(0);
@@ -39,7 +52,9 @@ export default function ManualWorkspace({
       setLoadingFeed(true);
       const res = await getLiveJobFeed();
       if (res && res.jobs && res.jobs.length > 0) {
-        setFeedJobs(res.jobs);
+        // Filter out already swiped/seen jobs!
+        const unseenJobs = res.jobs.filter((j) => !swipedIds.includes(j.id));
+        setFeedJobs(unseenJobs.length > 0 ? unseenJobs : res.jobs);
         setCurrentJobIdx(0);
       }
     } catch (err) {
@@ -49,8 +64,17 @@ export default function ManualWorkspace({
     }
   }
 
-  const [localQueued, setLocalQueued] = useState([]);
+  function markJobSwiped(jobId) {
+    const updated = [...swipedIds, jobId];
+    setSwipedIds(updated);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('jobtool_swiped_ids', JSON.stringify(updated));
+      } catch (e) {}
+    }
+  }
 
+  const [localQueued, setLocalQueued] = useState([]);
   const [pendingJob, setPendingJob] = useState(null);
   const [profileComplete, setProfileComplete] = useState(false);
 
@@ -60,6 +84,8 @@ export default function ManualWorkspace({
   ];
 
   function handleSwipeRight(job) {
+    markJobSwiped(job.id);
+
     // If profile/resume is not configured yet, pop up profile setup modal immediately!
     if (!profileComplete && applications.length === 0 && localQueued.length === 0) {
       setPendingJob(job);
@@ -97,6 +123,9 @@ export default function ManualWorkspace({
   }
 
   function handlePass() {
+    if (currentJob) {
+      markJobSwiped(currentJob.id);
+    }
     if (currentJobIdx < feedJobs.length - 1) {
       setCurrentJobIdx(currentJobIdx + 1);
     } else {
