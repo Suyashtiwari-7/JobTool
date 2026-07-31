@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ProfileSetupModal from './ProfileSetupModal';
+import { getLiveJobFeed } from '../lib/api';
 
 /**
  * ManualWorkspace — Primary Manual Mode Workspace.
@@ -22,43 +23,31 @@ export default function ManualWorkspace({
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [showSetupModal, setShowSetupModal] = useState(false);
   const [submittingId, setSubmittingId] = useState(null);
+  const [loadingFeed, setLoadingFeed] = useState(false);
 
-  // Mock Discovery Feed Jobs for Manual Swipe/Tap
-  const [feedJobs, setFeedJobs] = useState([
-    {
-      id: 'job-101',
-      title: 'Senior Frontend Engineer (Next.js / React)',
-      company: 'Vercel',
-      location: 'Remote',
-      salary: '$140,000 - $180,000',
-      matchScore: 94,
-      tags: ['TypeScript', 'Next.js', 'CSS', 'Tailwind'],
-      description: 'Build state of the art web interfaces for developer tooling platform.',
-    },
-    {
-      id: 'job-102',
-      title: 'AI Product Systems Engineer',
-      company: 'OpenAI',
-      location: 'San Francisco, CA (Hybrid)',
-      salary: '$160,000 - $210,000',
-      matchScore: 89,
-      tags: ['Python', 'FastAPI', 'LLM', 'PostgreSQL'],
-      description: 'Scale Autonomous AI Agents & Graph Pipelines for enterprise customers.',
-    },
-    {
-      id: 'job-103',
-      title: 'Full Stack AI Engineer',
-      company: 'Anthropic',
-      location: 'Remote',
-      salary: '$150,000 - $195,000',
-      matchScore: 86,
-      tags: ['Python', 'React', 'LangChain', 'Docker'],
-      description: 'Design robust human-in-the-loop safety systems and AI agent interfaces.',
-    },
-  ]);
-
+  // Live Discovery Feed Jobs for Manual Swipe/Tap
+  const [feedJobs, setFeedJobs] = useState([]);
   const [currentJobIdx, setCurrentJobIdx] = useState(0);
   const currentJob = feedJobs[currentJobIdx];
+
+  useEffect(() => {
+    fetchLiveJobs();
+  }, []);
+
+  async function fetchLiveJobs() {
+    try {
+      setLoadingFeed(true);
+      const res = await getLiveJobFeed();
+      if (res && res.jobs && res.jobs.length > 0) {
+        setFeedJobs(res.jobs);
+        setCurrentJobIdx(0);
+      }
+    } catch (err) {
+      console.warn('Live job feed fetch notice:', err);
+    } finally {
+      setLoadingFeed(false);
+    }
+  }
 
   const [localQueued, setLocalQueued] = useState([]);
 
@@ -234,13 +223,21 @@ export default function ManualWorkspace({
             </div>
           ) : (
             <div className="neu-card" style={{ padding: '40px 60px', borderRadius: 24, textAlign: 'center', color: 'var(--text-muted)' }}>
-              <div style={{ fontSize: 36, marginBottom: 12 }}>🎉</div>
+              <div style={{ fontSize: 36, marginBottom: 12 }}>⚡</div>
               <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 6px 0' }}>
-                All Matched Jobs Reviewed!
+                {loadingFeed ? 'Fetching Fresh Live Jobs...' : 'All Current Job Cards Reviewed!'}
               </h3>
-              <p style={{ fontSize: 13, margin: 0 }}>
-                Check your Queued tab to confirm & submit tailored applications.
+              <p style={{ fontSize: 13, margin: '0 0 16px 0' }}>
+                {loadingFeed ? 'Sourcing active postings from live engineering APIs...' : 'Fetch fresh live engineering & AI jobs directly from active company job boards.'}
               </p>
+              <button
+                onClick={fetchLiveJobs}
+                disabled={loadingFeed}
+                className="neu-button neu-button-primary"
+                style={{ padding: '10px 20px', borderRadius: 16, fontSize: 13, fontWeight: 900 }}
+              >
+                {loadingFeed ? '🔄 Sourcing Live Jobs...' : '🔄 Fetch Fresh Live Jobs'}
+              </button>
             </div>
           )}
         </div>

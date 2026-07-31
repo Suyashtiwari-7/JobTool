@@ -237,6 +237,10 @@ export async function getPipelineHistory() {
   return apiFetch('/api/pipeline/history');
 }
 
+export async function getLiveJobFeed() {
+  return apiFetch('/api/pipeline/feed');
+}
+
 // ── Settings ────────────────────────────────────────────
 
 export async function getCompanies(source) {
