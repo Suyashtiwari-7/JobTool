@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import {
   getProfile,
   updateProfileField,
+  uploadResume,
   getIntegrations,
   connectGitHub,
   connectOutlook,
@@ -79,6 +80,26 @@ export default function ProfileWorkspace() {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [editValue, setEditValue] = useState('');
+
+  // Base Resume upload state
+  const [uploadingResume, setUploadingResume] = useState(false);
+  const [resumeUploadStatus, setResumeUploadStatus] = useState('');
+
+  async function handleProfileResumeUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploadingResume(true);
+      setResumeUploadStatus('⚡ Uploading & parsing resume with AI...');
+      await uploadResume(file);
+      setResumeUploadStatus('✅ Base Resume uploaded & parsed successfully! Career Profile created.');
+      await loadProfile();
+    } catch (err) {
+      setResumeUploadStatus(`❌ Resume upload failed: ${err.message}`);
+    } finally {
+      setUploadingResume(false);
+    }
+  }
 
   // Connected Accounts State
   const [integrations, setIntegrations] = useState({});
@@ -337,6 +358,37 @@ export default function ProfileWorkspace() {
         {/* ════════ TAB 1: AUTO-FILLED CAREER PROFILE ════════ */}
         {mainTab === 'profile' && (
           <>
+            {/* 📄 PROMINENT BASE RESUME UPLOAD & AI PARSER BOX */}
+            <div className="neu-card" style={{ padding: 24, borderRadius: 20, marginBottom: 28, background: 'rgba(240, 94, 45, 0.05)', border: '1.5px dashed var(--accent-orange)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+                <div>
+                  <h3 style={{ fontSize: 16, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    📄 Master Base Resume & AI Profile Auto-Builder
+                  </h3>
+                  <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: 0 }}>
+                    Upload your baseline resume (PDF or DOCX). AI will automatically parse your skills, experience, and contact details to build your profile!
+                  </p>
+                </div>
+
+                <label className="neu-button neu-button-primary" style={{ padding: '10px 20px', borderRadius: 16, fontSize: 13, fontWeight: 900, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                  📥 {uploadingResume ? 'Parsing Resume...' : 'Upload Base Resume (PDF/DOCX)'}
+                  <input
+                    type="file"
+                    accept=".pdf,.docx,.doc"
+                    onChange={handleProfileResumeUpload}
+                    disabled={uploadingResume}
+                    style={{ display: 'none' }}
+                  />
+                </label>
+              </div>
+
+              {resumeUploadStatus && (
+                <div style={{ marginTop: 12, fontSize: 12, fontWeight: 800, color: resumeUploadStatus.startsWith('✅') ? 'var(--accent-green)' : 'var(--accent-orange)' }}>
+                  {resumeUploadStatus}
+                </div>
+              )}
+            </div>
+
             {loading && (
               <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-muted)', fontSize: 14 }}>
                 Loading profile...
@@ -344,13 +396,13 @@ export default function ProfileWorkspace() {
             )}
 
             {!loading && isEmpty && (
-              <div style={{ textAlign: 'center', padding: 60 }}>
-                <div style={{ fontSize: 48, marginBottom: 16 }}>🧠</div>
-                <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 8 }}>
-                  Your profile is empty
+              <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>📄</div>
+                <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 6 }}>
+                  No Base Resume Uploaded Yet
                 </h3>
-                <p style={{ fontSize: 14, color: 'var(--text-secondary)', maxWidth: 500, margin: '0 auto', lineHeight: 1.6 }}>
-                  Head over to the <strong>Co-Pilot Hub</strong> and start chatting, or connect your <strong>GitHub</strong> account in Connected Accounts!
+                <p style={{ fontSize: 13, margin: 0 }}>
+                  Click <strong>Upload Base Resume (PDF/DOCX)</strong> above to upload your resume and auto-build your Master Profile with AI!
                 </p>
               </div>
             )}
